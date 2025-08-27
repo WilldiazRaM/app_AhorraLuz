@@ -91,21 +91,62 @@ DATABASES = {
     )
 }
 
-# Verificación de conexión a la base de datos
-if 'test' not in sys.argv:
+# Verificación de conexión a la base de datos (para desarrollo y producción)
+# Solo se ejecuta cuando no son tests y no son comandos de gestión de base de datos
+excluded_commands = ['test', 'migrate', 'makemigrations', 'shell', 'dbshell', 'showmigrations']
+
+should_check_db = (
+    'runserver' in sys.argv or 
+    'gunicorn' in ' '.join(sys.argv) or
+    os.environ.get('RENDER') or
+    (len(sys.argv) > 1 and sys.argv[1] not in excluded_commands)
+)
+
+if should_check_db and 'test' not in sys.argv:
     try:
         from django.db import connections
         conn = connections['default']
         c = conn.cursor()
         c.execute('SELECT 1')
-        print("✅ Conexión a la base de datos PostgreSQL exitosa!")
-        print(f"📊 Base de datos: {DATABASES['default']['NAME']}")
-        print(f"🌐 Host: {DATABASES['default']['HOST']}")
+        one = c.fetchone()
+        
+        # Información detallada de la conexión
+        print("🚀 ===========================================")
+        print("✅ CONEXIÓN A BASE DE DATOS EXITOSA")
+        print("🚀 ===========================================")
+        print(f"📊 Base de datos: {DATABASES['default'].get('NAME', 'No definida')}")
+        print(f"🌐 Host: {DATABASES['default'].get('HOST', 'No definido')}")
+        print(f"👤 Usuario: {DATABASES['default'].get('USER', 'No definido')}")
+        print(f"🔧 Puerto: {DATABASES['default'].get('PORT', 'Default (5432)')}")
+        print(f"🏷️  Motor: {DATABASES['default'].get('ENGINE', 'No definido')}")
         print(f"🔧 Modo: {'Desarrollo' if DEBUG else 'Producción'}")
-    except Exception as e:
-        print(f"❌ Error conectando a la base de datos: {e}")
+        print(f"🌍 Entorno: {'Render' if os.environ.get('RENDER') else 'Local'}")
+        print("🚀 ===========================================")
+        
+        # Información adicional del sistema
         if DEBUG:
-            print("💡 Asegúrate de que tu .env tenga la DATABASE_URL correcta")
+            print(f"🔑 DEBUG: {DEBUG}")
+            print(f"🔒 SECRET_KEY definida: {'Sí' if SECRET_KEY else 'No'}")
+            
+    except Exception as e:
+        print("❌ ===========================================")
+        print("❌ ERROR DE CONEXIÓN A BASE DE DATOS")
+        print("❌ ===========================================")
+        print(f"💥 Error: {e}")
+        print(f"🔧 Modo: {'Desarrollo' if DEBUG else 'Producción'}")
+        
+        if DEBUG:
+            print("💡 Posibles soluciones:")
+            print("1. Verifica que DATABASE_URL en .env sea correcta")
+            print("2. Revisa que la BD de Render esté activa")
+            print("3. Verifica tu conexión a internet")
+            print("4. Revisa el firewall si estás en redes restrictivas")
+        
+        print("❌ ===========================================")
+        
+        # En producción, no crashear la app, solo loguear el error
+        if not DEBUG:
+            print("⚠️  La aplicación continuará pero la BD podría no funcionar")
 
 STATIC_URL = '/static/'
 if not DEBUG:
