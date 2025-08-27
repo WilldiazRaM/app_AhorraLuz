@@ -67,10 +67,24 @@ WSGI_APPLICATION = 'ahorraluz.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=f'sqlite:///{BASE_DIR}/db.sqlite3',
-        conn_max_age=600
+        default=os.environ.get('DATABASE_URL'),
+        conn_max_age=600,
+        conn_health_checks=True,
     )
 }
+
+# Verificación de conexión a la base de datos (solo en producción)
+if not DEBUG and 'test' not in sys.argv:
+    try:
+        from django.db import connections
+        conn = connections['default']
+        c = conn.cursor()
+        c.execute('SELECT 1')
+        print("✅ Conexión a la base de datos PostgreSQL exitosa!")
+        print(f"📊 Base de datos: {DATABASES['default']['NAME']}")
+        print(f"🌐 Host: {DATABASES['default']['HOST']}")
+    except Exception as e:
+        print(f"❌ Error conectando a la base de datos: {e}")
 
 STATIC_URL = '/static/'
 if not DEBUG:
