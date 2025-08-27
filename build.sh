@@ -1,0 +1,11 @@
+cat > build.sh << 'EOF'
+#!/usr/bin/env bash
+set -o errexit
+
+pip install -r requirements.txt
+python manage.py collectstatic --no-input
+python manage.py migrate
+EOF
+
+chmod a+x build.sh
+git update-index --chmod=+x build.sh
