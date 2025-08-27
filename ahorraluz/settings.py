@@ -2,6 +2,16 @@
 from pathlib import Path
 import os
 import dj_database_url
+import sys
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {'class': 'logging.StreamHandler', 'stream': sys.stdout},
+    },
+    'root': {'handlers': ['console'], 'level': 'DEBUG'},
+}
 
 
 SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key')
