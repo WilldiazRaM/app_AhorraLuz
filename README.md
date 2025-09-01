@@ -13,6 +13,20 @@ La aplicación ofrece estadísticas claras, predicciones de consumo, y recomenda
 3. Incorporar técnicas de **minería de datos** para predecir patrones de alto consumo y alertar al usuario de forma preventiva.  
 
 ---
+---
+
+## 🌐 Demo en Producción
+
+La aplicación se encuentra desplegada en Render y puede ser accedida desde el siguiente enlace:  
+
+🔗 [App AhorraLuz – Producción](https://app-ahorraluz.onrender.com/)
+
+> ⚠️ Nota: Esta es una versión inicial de la aplicación, pueden existir limitaciones de rendimiento o disponibilidad debido al plan gratuito de Render.
+
+---
+
+
+
 
 ##  Funcionalidades (MVP v1.0)
 
