@@ -56,6 +56,7 @@ La aplicación ofrece estadísticas claras, predicciones de consumo, y recomenda
 ---
 
 ## 📂 Estructura del Repositorio (inicial)
+```
 ahorraluz/
 ├── ahorraluz/
 │   ├── __pycache__/
@@ -82,6 +83,7 @@ ahorraluz/
 ├── manage.py
 ├── render.yaml
 └── requirements.txt
+```
 
 
 
