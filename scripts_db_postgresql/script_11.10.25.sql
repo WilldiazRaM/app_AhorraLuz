@@ -5,10 +5,6 @@
 -- Extensión para UUIDs
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- Esquema
-CREATE SCHEMA IF NOT EXISTS energia AUTHORIZATION CURRENT_USER;
-SET search_path TO energia, public;
-
 -- ========================
 -- 1) Catálogos básicos
 -- ========================
