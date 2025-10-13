@@ -254,9 +254,9 @@ class Rol(models.Model):
 
 
 class RolPermiso(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    rol = models.ForeignKey(Rol, on_delete=models.CASCADE)
-    permiso = models.ForeignKey(Permiso, on_delete=models.CASCADE)
+
+    rol = models.OneToOneField('Rol', on_delete=models.CASCADE, primary_key=True)
+    permiso = models.ForeignKey('Permiso', on_delete=models.CASCADE)
 
     class Meta:
         db_table = "rol_permiso"
@@ -268,13 +268,14 @@ class RolPermiso(models.Model):
 
 
 class UsuarioRol(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    usuario = models.ForeignKey("Usuario", on_delete=models.CASCADE)
-    rol = models.ForeignKey(Rol, on_delete=models.CASCADE)
+    usuario = models.OneToOneField('Usuario', on_delete=models.CASCADE, primary_key=True)
+    rol = models.ForeignKey('Rol', on_delete=models.CASCADE)
 
     class Meta:
         db_table = "usuario_rol"
         unique_together = (("usuario", "rol"),)
+        managed = False
 
     def __str__(self):
         return f"{self.usuario} -> {self.rol}"
+
