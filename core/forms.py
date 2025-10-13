@@ -1,9 +1,9 @@
 from django import forms
-from .models import Perfiles, RegistroConsumo
+from .models import Perfil, RegistroConsumo
 
 class PerfilForm(forms.ModelForm):
     class Meta:
-        model = Perfiles
+        model = Perfil
         fields = ['rut', 'nombres', 'apellidos', 'tipo_vivienda']
         widgets = {
             'rut': forms.TextInput(attrs={'class': 'form-control'}),
