@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>{{ title }}</h1>
+  <p>Últimos registros:</p>
+  <ul>
+    {% for r in registros %}
+      <li>{{ r.fecha }} - {{ r.consumo_kwh }} kWh - {{ r.costo_clp }} CLP</li>
+    {% empty %}
+      <li>No hay registros</li>
+    {% endfor %}
+  </ul>
+  <p><a href="{% url 'core:consumo_new' %}">Agregar lectura</a></p>
+{% endblock %}

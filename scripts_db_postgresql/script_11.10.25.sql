@@ -254,6 +254,9 @@ INSERT INTO cat_tipo_notificacion (codigo, descripcion) VALUES
   ('SISTEMA','Mensajes del sistema')
 ON CONFLICT DO NOTHING;
 
+
+ALTER TABLE rol_permiso ADD COLUMN id BIGSERIAL PRIMARY KEY;
+ALTER TABLE usuario_rol ADD COLUMN id BIGSERIAL PRIMARY KEY;
 -- Ejemplos (opcional)
 -- INSERT INTO cat_tipo_vivienda (nombre) VALUES ('Casa'), ('Departamento') ON CONFLICT DO NOTHING;
 -- INSERT INTO cat_tipo_dispositivo (nombre) VALUES ('Refrigerador'), ('Lavadora'), ('Aire Acondicionado') ON CONFLICT DO NOTHING;

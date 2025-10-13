@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Historial de consumo</h2>
+  <table>
+    <thead><tr><th>Fecha</th><th>kWh</th><th>Costo</th></tr></thead>
+    <tbody>
+      {% for r in registros %}
+      <tr><td>{{ r.fecha }}</td><td>{{ r.consumo_kwh }}</td><td>{{ r.costo_clp }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

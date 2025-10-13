@@ -1,0 +1,4 @@
+body { font-family: Arial, sans-serif; margin: 20px; }
+header nav a { margin-right: 10px; text-decoration: none; }
+table { border-collapse: collapse; width: 100%; }
+table th, table td { border: 1px solid #ddd; padding: 8px; }
