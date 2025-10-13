@@ -24,7 +24,7 @@ class AuditoriaEvento(models.Model):
 
 class AuthIdentidad(models.Model):
     id = models.UUIDField(primary_key=True)
-    usuario = models.ForeignKey("Usuarios", on_delete=models.CASCADE)
+    usuario = models.ForeignKey("Usuario", on_delete=models.CASCADE)
     email = models.TextField()
     contrasena_hash = models.TextField()
     ultimo_acceso = models.DateTimeField(blank=True, null=True)
