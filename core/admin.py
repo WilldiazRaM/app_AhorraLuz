@@ -118,11 +118,13 @@ class RolAdmin(admin.ModelAdmin):
 
 @admin.register(models.RolPermiso)
 class RolPermisoAdmin(admin.ModelAdmin):
-    list_display = ("id", "rol", "permiso")
+    list_display = ("rol", "permiso")
     search_fields = ("rol__nombre", "permiso__codigo")
+    list_filter = ("rol",)
 
 
 @admin.register(models.UsuarioRol)
 class UsuarioRolAdmin(admin.ModelAdmin):
-    list_display = ("id", "usuario", "rol")
+    list_display = ("usuario", "rol") 
     search_fields = ("usuario__id", "rol__nombre")
+    list_filter = ("rol",)
