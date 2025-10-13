@@ -4,7 +4,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 from .forms import PerfilForm, RegistroConsumoForm
-from .models import RegistroConsumo, Usuario, Perfiles
+from .models import *
 
 def index(request):
     return render(request, "core/home.html", {})
