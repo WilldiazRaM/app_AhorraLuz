@@ -261,6 +261,7 @@ class RolPermiso(models.Model):
     class Meta:
         db_table = "rol_permiso"
         unique_together = (("rol", "permiso"),)
+        managed = False
 
     def __str__(self):
         return f"{self.rol} -> {self.permiso}"
