@@ -260,3 +260,18 @@ ALTER TABLE usuario_rol ADD COLUMN id BIGSERIAL PRIMARY KEY;
 -- Ejemplos (opcional)
 -- INSERT INTO cat_tipo_vivienda (nombre) VALUES ('Casa'), ('Departamento') ON CONFLICT DO NOTHING;
 -- INSERT INTO cat_tipo_dispositivo (nombre) VALUES ('Refrigerador'), ('Lavadora'), ('Aire Acondicionado') ON CONFLICT DO NOTHING;
+
+
+
+-- 1) Quitar CHECK de formato de RUT
+ALTER TABLE perfiles DROP CONSTRAINT IF EXISTS ck_perfiles_rut_formato;
+
+-- 2) Quitar UNIQUE(rut) si existe (nombre típico de constraint)
+ALTER TABLE perfiles DROP CONSTRAINT IF EXISTS perfiles_rut_key;
+
+-- 3) Agregar columna para hash del RUT (usaremos hex de SHA-256 en app)
+ALTER TABLE perfiles ADD COLUMN IF NOT EXISTS rut_hash TEXT;
+
+-- 4) Índice único por hash (garantiza unicidad del RUT real)
+CREATE UNIQUE INDEX IF NOT EXISTS ux_perfiles_rut_hash ON perfiles (rut_hash);
+

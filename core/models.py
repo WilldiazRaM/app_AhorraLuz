@@ -178,7 +178,8 @@ class Notificacion(models.Model):
 
 class Perfil(models.Model):
     usuario = models.OneToOneField("Usuario", on_delete=models.CASCADE, primary_key=True)
-    rut = models.TextField(unique=True, blank=True, null=True)
+    rut = models.TextField(blank=True, null=True)
+    rut_hash = models.TextField(blank=True, null=True)
     nombres = models.CharField(max_length=100, blank=True, null=True)
     apellidos = models.CharField(max_length=100, blank=True, null=True)
     tipo_vivienda = models.ForeignKey(TipoVivienda, on_delete=models.SET_NULL, blank=True, null=True)

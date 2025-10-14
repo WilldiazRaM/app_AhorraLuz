@@ -169,3 +169,5 @@ USE_I18N = True
 USE_TZ = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+##Fernet KEY Crypto
+FERNET_KEY = os.getenv("FERNET_KEY", None)

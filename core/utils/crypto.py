@@ -4,11 +4,10 @@ from django.conf import settings
 
 # Clave única en settings.SECRET_KEY (o .env)
 def get_cipher():
-    key = getattr(settings, "FERNET_KEY", None)
-    if not key:
-        key = Fernet.generate_key()
-        print("⚠️ FERNET_KEY no encontrada. Generada temporalmente:", key.decode())
-    return Fernet(key)
+  key = getattr(settings, "FERNET_KEY", None)
+  if not key:
+      raise RuntimeError("FERNET_KEY no configurada")
+  return Fernet(key)
 
 def encrypt_field(value: str) -> str:
     if not value:
