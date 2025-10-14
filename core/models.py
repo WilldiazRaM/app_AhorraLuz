@@ -1,7 +1,5 @@
 from django.db import models
-
-# Create your models here.
-from django.db import models
+from uuid import uuid4
 
 
 class AuditoriaEvento(models.Model):
@@ -23,7 +21,7 @@ class AuditoriaEvento(models.Model):
 
 
 class AuthIdentidad(models.Model):
-    id = models.UUIDField(primary_key=True)
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     usuario = models.ForeignKey("Usuario", on_delete=models.CASCADE)
     email = models.TextField()
     contrasena_hash = models.TextField()
@@ -98,7 +96,7 @@ class TipoVivienda(models.Model):
 
 
 class Usuario(models.Model):
-    id = models.UUIDField(primary_key=True)
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     activo = models.BooleanField()
     creado_en = models.DateTimeField()
     actualizado_en = models.DateTimeField()
