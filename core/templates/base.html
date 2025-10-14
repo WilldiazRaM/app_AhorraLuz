@@ -159,64 +159,63 @@
           <i class="fa-solid fa-user-gear"></i> Admin
         </button>
         {% endif %}
+        ...
+        {% if user.is_superuser %}
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="adminPanel" aria-labelledby="adminPanelLabel">
+          <div class="offcanvas-header">
+            <h5 id="adminPanelLabel"><i class="fa-solid fa-screwdriver-wrench me-2"></i>Panel Administrativo</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+          </div>
+          <div class="offcanvas-body">
+            <div class="list-group">
+              <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
+                href="{% url 'core:register_user_admin' %}">
+                <i class="fa-solid fa-user-plus"></i> Registrar usuario
+              </a>
+              <a class="list-group-item list-group-item-action d-flex align-items-center gap-2" href="#">
+                <i class="fa-solid fa-users"></i> Listar usuarios
+              </a>
+              <a class="list-group-item list-group-item-action d-flex align-items-center gap-2" href="#">
+                <i class="fa-solid fa-user-pen"></i> Editar / Desactivar
+              </a>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
       </div>
-  </div>
-  </nav>
+    </nav>
 
-  {% if user.is_superuser %}
-  <div class="offcanvas offcanvas-end" tabindex="-1" id="adminPanel" aria-labelledby="adminPanelLabel">
-    <div class="offcanvas-header">
-      <h5 id="adminPanelLabel"><i class="fa-solid fa-screwdriver-wrench me-2"></i>Panel Administrativo</h5>
-      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
-    </div>
-    <div class="offcanvas-body">
-      <div class="list-group">
-        <a href="{% url 'core:register_user_admin' %}" class="list-group-item list-group-item-action">
-          👤 Registrar Usuario
-        </a>
-        <a href="#" class="list-group-item list-group-item-action">
-          📋 Listar Usuarios
-        </a>
-        <a href="#" class="list-group-item list-group-item-action">
-          🔧 Editar / Desactivar
-        </a>
+    <!-- MENSAJES (opcional: Django messages) -->
+    {% if messages %}
+    <div class="container center-wrap mt-3">
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'primary' }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
       </div>
+      {% endfor %}
     </div>
-  </div>
-  {% endif %}
-  </div>
-  </nav>
+    {% endif %}
 
-  <!-- MENSAJES (opcional: Django messages) -->
-  {% if messages %}
-  <div class="container center-wrap mt-3">
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags|default:'primary' }} alert-dismissible fade show" role="alert">
-      {{ message }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-    </div>
-    {% endfor %}
-  </div>
-  {% endif %}
+    <!-- CONTENIDO -->
+    <main class="page-body">
+      <div class="container center-wrap py-4">
+        {% block content %}{% endblock %}
+      </div>
+    </main>
 
-  <!-- CONTENIDO -->
-  <main class="page-body">
-    <div class="container center-wrap py-4">
-      {% block content %}{% endblock %}
-    </div>
-  </main>
-
-  <!-- FOOTER -->
-  <footer class="border-top bg-white py-3">
-    <div class="container d-flex flex-column flex-md-row align-items-center justify-content-between gap-2">
-      <span class="small text-secondary">© {{ now|date:"Y" }} AhorraLuz — Hogares más eficientes</span>
-      <ul class="nav small">
-        <li class="nav-item"><a href="" class="nav-link text-secondary">Privacidad</a></li>
-        <li class="nav-item"><a href="" class="nav-link text-secondary">Términos</a></li>
-        <li class="nav-item"><a href="" class="nav-link text-secondary">Soporte</a></li>
-      </ul>
-    </div>
-  </footer>
+    <!-- FOOTER -->
+    <footer class="border-top bg-white py-3">
+      <div class="container d-flex flex-column flex-md-row align-items-center justify-content-between gap-2">
+        <span class="small text-secondary">© {{ now|date:"Y" }} AhorraLuz — Hogares más eficientes</span>
+        <ul class="nav small">
+          <li class="nav-item"><a href="" class="nav-link text-secondary">Privacidad</a></li>
+          <li class="nav-item"><a href="" class="nav-link text-secondary">Términos</a></li>
+          <li class="nav-item"><a href="" class="nav-link text-secondary">Soporte</a></li>
+        </ul>
+      </div>
+    </footer>
   </div>
 
   <!-- Bootstrap JS -->

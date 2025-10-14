@@ -13,5 +13,5 @@ urlpatterns = [
     path("profile/", views.profile_view, name="profile"),
     path("consumo/new/", views.consumo_new, name="consumo_new"),
     path("consumo/history/", views.consumo_history, name="consumo_history"),
-    path("admin/register_user/", views.register_user_admin, name="register_user_admin"),
+    path("mantenedor/usuarios/registrar/", views.register_user_admin, name="register_user_admin"),
 ]

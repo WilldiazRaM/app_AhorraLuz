@@ -1,5 +1,6 @@
 from django import forms
-from .models import *
+from django.contrib.auth.hashers import make_password
+from .models import Usuario, AuthIdentidad, Perfil, RegistroConsumo
 import bcrypt
 from .utils.crypto import encrypt_field
 
