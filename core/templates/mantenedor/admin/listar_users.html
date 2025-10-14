@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Usuarios — AhorraLuz{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h4 mb-0"><i class="fa-solid fa-users text-success me-2"></i>Usuarios</h1>
+    <form class="d-flex" role="search" method="get">
+      <input class="form-control me-2" type="search" placeholder="Buscar por email o UUID" name="q" value="{{ q }}">
+      <button class="btn btn-outline-success" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+    </form>
+  </div>
+
+  <div class="table-responsive shadow-sm rounded">
+    <table class="table align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th>Email</th>
+          <th>Nombre</th>
+          <th>Activo</th>
+          <th style="width:220px;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for i in page_obj %}
+        {% with p=perfiles.i.usuario.id %}
+        {% endwith %}
+        {% with perfil=perfiles.i.usuario.id %}
+        {% endwith %}
+        <tr>
+          <td>{{ i.email }}</td>
+          <td>
+            {% with p=perfiles.i.usuario.id %}{% endwith %}
+            {% if perfiles.i.usuario.id %}
+              {{ perfiles.i.usuario.id.nombres }} {{ perfiles.i.usuario.id.apellidos }}
+            {% else %}
+              <span class="text-secondary">—</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if i.usuario.activo %}
+              <span class="badge text-bg-success">Activo</span>
+            {% else %}
+              <span class="badge text-bg-secondary">Inactivo</span>
+            {% endif %}
+          </td>
+          <td class="d-flex gap-2">
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'core:admin_user_update' i.usuario.id %}">
+              <i class="fa-solid fa-pen"></i>
+            </a>
+            {% if i.usuario.activo %}
+              <a class="btn btn-sm btn-outline-warning" href="{% url 'core:admin_user_deactivate' i.usuario.id %}">
+                <i class="fa-solid fa-user-slash"></i>
+              </a>
+            {% endif %}
+            <a class="btn btn-sm btn-outline-danger" href="{% url 'core:admin_user_delete' i.usuario.id %}">
+              <i class="fa-solid fa-trash"></i>
+            </a>
+            <a class="btn btn-sm btn-outline-secondary" href="{% url 'core:admin_user_reset_password' i.usuario.id %}">
+              <i class="fa-solid fa-key"></i>
+            </a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4" class="text-center text-secondary py-4">No hay usuarios.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <nav class="mt-3">
+    <ul class="pagination pagination-sm">
+      {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link" href="?q={{ q }}&page={{ page_obj.previous_page_number }}">«</a></li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">«</span></li>
+      {% endif %}
+      <li class="page-item disabled"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+      {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link" href="?q={{ q }}&page={{ page_obj.next_page_number }}">»</a></li>
+      {% else %}
+        <li class="page-item disabled"><span class="page-link">»</span></li>
+      {% endif %}
+    </ul>
+  </nav>
+</div>
+{% endblock %}

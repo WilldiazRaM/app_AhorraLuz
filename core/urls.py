@@ -14,4 +14,9 @@ urlpatterns = [
     path("consumo/new/", views.consumo_new, name="consumo_new"),
     path("consumo/history/", views.consumo_history, name="consumo_history"),
     path("mantenedor/usuarios/registrar/", views.register_user_admin, name="register_user_admin"),
+    path("mantenedor/usuarios/", views.admin_users_list, name="admin_users_list"),
+    path("mantenedor/usuarios/<uuid:usuario_id>/editar/", views.admin_user_update, name="admin_user_update"),
+    path("mantenedor/usuarios/<uuid:usuario_id>/desactivar/", views.admin_user_deactivate, name="admin_user_deactivate"),
+    path("mantenedor/usuarios/<uuid:usuario_id>/eliminar/", views.admin_user_delete, name="admin_user_delete"),
+    path("mantenedor/usuarios/<uuid:usuario_id>/reset-password/", views.admin_user_reset_password, name="admin_user_reset_password"),
 ]

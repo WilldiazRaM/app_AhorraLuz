@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Editar Usuario — AhorraLuz{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="card border-0 shadow-sm rounded-4">
+    <div class="card-body p-4 p-md-5">
+      <h2 class="h5 fw-bold mb-3"><i class="fa-solid fa-user-pen text-success me-2"></i>Editar usuario</h2>
+      <form method="post" novalidate id="editForm">
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label for="id_email" class="form-label">Correo</label>
+            {{ form.email }}
+          </div>
+          <div class="col-md-6">
+            <label for="id_rut" class="form-label">RUT (opcional)</label>
+            {{ form.rut }}
+            <div class="form-text">Se almacena cifrado (no se muestra el valor actual).</div>
+          </div>
+          <div class="col-md-6">
+            <label for="id_nombres" class="form-label">Nombres</label>
+            {{ form.nombres }}
+          </div>
+          <div class="col-md-6">
+            <label for="id_apellidos" class="form-label">Apellidos</label>
+            {{ form.apellidos }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Nueva contraseña</label>
+            {{ form.password1 }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Confirmar contraseña</label>
+            {{ form.password2 }}
+            <div class="form-text" id="pwdHelp">Deja ambas vacías para mantener la actual.</div>
+          </div>
+          <div class="col-12">
+            <div class="form-check">
+              {{ form.activo }} <label class="form-check-label" for="id_activo">Usuario activo</label>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4 d-flex justify-content-end gap-2">
+          <a href="{% url 'core:admin_users_list' %}" class="btn btn-outline-secondary">Cancelar</a>
+          <button class="btn btn-brand" type="submit"><i class="fa-solid fa-save me-1"></i>Guardar cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function(){
+  const p1 = document.getElementById('id_password1');
+  const p2 = document.getElementById('id_password2');
+  const btns = document.querySelectorAll('#editForm button[type="submit"]');
+  function check(){
+    if(!p1 || !p2) return;
+    if((p1.value || p2.value) && p1.value !== p2.value){
+      p2.setCustomValidity('Las contraseñas no coinciden');
+      btns.forEach(b=>b.disabled=true);
+    }else{
+      p2.setCustomValidity('');
+      btns.forEach(b=>b.disabled=false);
+    }
+  }
+  if(p1 && p2){ p1.addEventListener('input',check); p2.addEventListener('input',check); }
+})();
+</script>
+{% endblock %}

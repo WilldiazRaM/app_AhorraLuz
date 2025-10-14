@@ -125,3 +125,84 @@ class AdminRegisterUserForm(forms.Form):
         )
 
         return usuario
+    
+
+
+class AdminUpdateUserForm(forms.Form):
+    email = forms.EmailField(label="Correo electrónico", required=True)
+    nombres = forms.CharField(label="Nombres", max_length=100, required=False)
+    apellidos = forms.CharField(label="Apellidos", max_length=100, required=False)
+    rut = forms.CharField(label="RUT", max_length=12, required=False)
+    password1 = forms.CharField(label="Nueva contraseña", widget=forms.PasswordInput, required=False)
+    password2 = forms.CharField(label="Confirmar contraseña", widget=forms.PasswordInput, required=False)
+    activo = forms.BooleanField(label="Usuario activo", required=False)
+
+    def __init__(self, *args, **kwargs):
+        self.usuario = kwargs.pop("usuario")  # instancia de Usuario
+        self.identidad = kwargs.pop("identidad")  # instancia de AuthIdentidad
+        self.perfil = kwargs.pop("perfil")  # instancia de Perfil (o None)
+        super().__init__(*args, **kwargs)
+        # iniciales
+        self.fields["email"].initial = self.identidad.email
+        self.fields["nombres"].initial = getattr(self.perfil, "nombres", "")
+        self.fields["apellidos"].initial = getattr(self.perfil, "apellidos", "")
+        self.fields["rut"].initial = ""  # seguridad: no mostramos el RUT; si cargamos, sería desencriptando
+        self.fields["activo"].initial = bool(self.usuario.activo)
+
+    def clean_email(self):
+        return self.cleaned_data["email"].strip().lower()
+
+    def clean(self):
+        cleaned = super().clean()
+        p1, p2 = cleaned.get("password1"), cleaned.get("password2")
+        if p1 or p2:
+            if p1 != p2:
+                self.add_error("password2", "Las contraseñas no coinciden.")
+        return cleaned
+
+    @transaction.atomic
+    def save(self):
+        import bcrypt
+        from .utils.crypto import encrypt_field
+        from .forms import _rut_hash_hex, _normaliza_rut  # reutilizamos helpers existentes
+
+        # email único (excluir la identidad actual)
+        new_email = self.cleaned_data["email"]
+        if AuthIdentidad.objects.filter(email__iexact=new_email).exclude(pk=self.identidad.pk).exists():
+            self.add_error("email", "Este correo ya está registrado.")
+            raise forms.ValidationError("Correo duplicado")
+
+        # actualizar identidad
+        self.identidad.email = new_email
+        # password opcional
+        p1 = self.cleaned_data.get("password1")
+        if p1:
+            self.identidad.contrasena_hash = bcrypt.hashpw(p1.encode(), bcrypt.gensalt()).decode()
+        self.identidad.actualizado_en = timezone.now()
+        self.identidad.save()
+
+        # actualizar usuario (activo)
+        self.usuario.activo = bool(self.cleaned_data.get("activo"))
+        self.usuario.actualizado_en = timezone.now()
+        self.usuario.save()
+
+        # actualizar/crear perfil
+        rut_plain = _normaliza_rut(self.cleaned_data.get("rut") or "")
+        rut_enc = encrypt_field(rut_plain) if rut_plain else None
+        rut_hex = _rut_hash_hex(rut_plain) if rut_plain else None
+
+        perfil = self.perfil
+        if perfil is None:
+            perfil = Perfil(usuario=self.usuario, creado_en=timezone.now())
+        # unicidad RUT por hash (excluye actual)
+        if rut_hex and Perfil.objects.filter(rut_hash=rut_hex).exclude(usuario=self.usuario).exists():
+            self.add_error("rut", "Este RUT ya está registrado.")
+            raise forms.ValidationError("RUT duplicado")
+
+        perfil.rut = rut_enc
+        perfil.rut_hash = rut_hex
+        perfil.nombres = self.cleaned_data.get("nombres") or perfil.nombres
+        perfil.apellidos = self.cleaned_data.get("apellidos") or perfil.apellidos
+        perfil.actualizado_en = timezone.now()
+        perfil.save()
+        return self.usuario
