@@ -1,8 +1,180 @@
 {% extends "base.html" %}
+
+{% block title %}Ingresar — AhorraLuz{% endblock %}
+
+{% block extra_css %}
+<style>
+  .auth-wrap{ min-height: 72svh; }
+  .auth-card{
+    border: 0;
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,.07);
+    overflow: hidden;
+  }
+  .auth-hero{
+    background: var(--brand-50);
+  }
+  .btn-brand{
+    transition: transform .06s ease, box-shadow .2s ease;
+  }
+  .btn-brand:hover{ transform: translateY(-1px); box-shadow: 0 0.5rem 1rem rgba(39, 174, 96,.25); }
+  .form-control:focus{
+    border-color: var(--brand);
+    box-shadow: 0 0 0 .25rem rgba(46, 204, 113,.15);
+  }
+  .muted-link:hover{ color: var(--brand-600)!important; }
+</style>
+{% endblock %}
+
 {% block content %}
-  <h2>Login</h2>
-  <form method="post">{% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Entrar</button>
-  </form>
+<div class="container auth-wrap d-flex align-items-center justify-content-center py-5">
+  <div class="card auth-card w-100" style="max-width: 980px;">
+    <div class="row g-0">
+
+      <!-- Lado ilustración / texto (se oculta en pantallas chicas) -->
+      <div class="col-lg-6 d-none d-lg-flex align-items-center justify-content-center auth-hero p-5">
+        <div class="text-center">
+          <div class="mb-3">
+            <span class="d-inline-flex justify-content-center align-items-center rounded-circle"
+                  style="width:64px;height:64px;background:#fff;">
+              <i class="fa-solid fa-leaf" style="color:var(--brand); font-size:28px;"></i>
+            </span>
+          </div>
+          <h1 class="h3 fw-bold mb-2">App Web de Ahorro Energético</h1>
+          <p class="text-secondary mb-4">Para hogares más eficientes</p>
+          <img src="{% static 'core/img/login-illustration.svg' %}" alt="Ahorro energético"
+               class="img-fluid" style="max-height: 260px;"
+               onerror="this.style.display='none'">
+        </div>
+      </div>
+
+      <!-- Lado formulario -->
+      <div class="col-lg-6">
+        <div class="p-4 p-md-5">
+          <h2 class="h3 fw-bold mb-1">Login</h2>
+          <p class="text-secondary mb-4">Ingresa con tu cuenta para ver tu consumo y ahorros.</p>
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert" aria-live="assertive">
+              {% for err in form.non_field_errors %}{{ err }}{% endfor %}
+            </div>
+          {% endif %}
+
+          <!-- Usamos nombres esperados por AuthenticationForm: username y password -->
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            <!-- Username (correo/usuario) -->
+            <div class="mb-3">
+              <label for="id_username" class="form-label">Correo electrónico</label>
+              <div class="input-group input-group-lg">
+                <span class="input-group-text" id="icon-username">
+                  <i class="fa-solid fa-envelope-open-text" aria-hidden="true"></i>
+                </span>
+                <input
+                  type="text"
+                  name="username"
+                  id="id_username"
+                  class="form-control"
+                  placeholder="tucorreo@dominio.cl"
+                  autocomplete="username"
+                  required
+                  aria-label="Correo electrónico"
+                  aria-describedby="icon-username"
+                  value="{{ form.username.value|default:'' }}"
+                >
+              </div>
+              {% if form.username.errors %}
+                <div class="text-danger small mt-1">
+                  {% for err in form.username.errors %}{{ err }}{% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Password -->
+            <div class="mb-3">
+              <label for="id_password" class="form-label">Contraseña</label>
+              <div class="input-group input-group-lg">
+                <span class="input-group-text" id="icon-password">
+                  <i class="fa-solid fa-lock" aria-hidden="true"></i>
+                </span>
+                <input
+                  type="password"
+                  name="password"
+                  id="id_password"
+                  class="form-control"
+                  placeholder="••••••••"
+                  autocomplete="current-password"
+                  required
+                  aria-label="Contraseña"
+                  aria-describedby="icon-password togglePassword"
+                >
+                <button class="btn btn-outline-secondary" type="button" id="togglePassword"
+                        aria-label="Mostrar u ocultar contraseña">
+                  <i class="fa-regular fa-eye" aria-hidden="true"></i>
+                </button>
+              </div>
+              {% if form.password.errors %}
+                <div class="text-danger small mt-1">
+                  {% for err in form.password.errors %}{{ err }}{% endfor %}
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="d-grid">
+              <button type="submit" class="btn btn-brand btn-lg">
+                <i class="fa-solid fa-right-to-bracket"></i> Ingresar
+              </button>
+            </div>
+
+            <div class="text-center mt-3">
+              <span class="text-secondary">¿No tienes cuenta?</span>
+              <a class="muted-link text-decoration-none" href="{% url 'core:register' %}">
+                <i class="fa-solid fa-user-plus"></i> Registrarse
+              </a>
+            </div>
+          </form>
+
+          <hr class="my-4">
+
+          <!-- Enlaces de ayuda (aún sin URLs reales si no existen) -->
+          <div class="d-flex gap-3 flex-wrap">
+            <a class="text-secondary text-decoration-none muted-link" href="">
+              <i class="fa-regular fa-comments"></i> Reseñas
+            </a>
+            <a class="text-secondary text-decoration-none muted-link" href="">
+              <i class="fa-solid fa-circle-info"></i> Acerca de
+            </a>
+            <a class="text-secondary text-decoration-none muted-link" href="">
+              <i class="fa-solid fa-envelope"></i> Contacto
+            </a>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Toggle mostrar/ocultar contraseña con icono
+  (function(){
+    const btn = document.getElementById('togglePassword');
+    const input = document.getElementById('id_password');
+    if(btn && input){
+      btn.addEventListener('click', function(){
+        const isPwd = input.getAttribute('type') === 'password';
+        input.setAttribute('type', isPwd ? 'text' : 'password');
+        const icon = this.querySelector('i');
+        if(icon){
+          icon.classList.toggle('fa-eye');
+          icon.classList.toggle('fa-eye-slash');
+        }
+      });
+    }
+  })();
+</script>
 {% endblock %}
