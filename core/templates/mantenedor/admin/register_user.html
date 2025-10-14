@@ -3,162 +3,88 @@
 
 {% block extra_css %}
 <style>
-  /* Paleta base */
-  :root{
-    --brand:#2ecc71;      /* verde principal */
-    --brand-600:#27ae60;  /* hover */
-    --brand-50:#eafaf1;   /* fondo suave */
-    --ink:#212529;
+  :root {
+    --brand:#2ecc71;
+    --brand-600:#27ae60;
+    --brand-50:#eafaf1;
   }
-
-  .admin-wrap{ min-height: 70svh; }
-  .admin-card{
-    border: 0;
-    border-radius: 1rem;
-    box-shadow: 0 12px 38px rgba(0,0,0,.08);
-    overflow: hidden;
-  }
-  .admin-header{
-    background: linear-gradient(180deg, var(--brand-50), #fff 70%);
-    border-bottom: 1px solid rgba(0,0,0,.06);
-  }
-
-  .form-label .req {
-    color:#d93025; /* rojo accesible para asterisco */
-    font-weight: 700;
-    margin-left: .25rem;
-  }
-
-  .input-group-text {
-    background: var(--brand-50);
-    border-color: #dee2e6;
-  }
-  .form-control:focus {
-    border-color: var(--brand);
-    box-shadow: 0 0 0 .25rem rgba(46,204,113,.15);
-  }
-
-  .btn-brand{
-    background: var(--brand);
-    border-color: var(--brand);
-    color: #fff;
-    transition: transform .06s ease, box-shadow .2s ease;
-  }
-  .btn-brand:hover { 
-    background: var(--brand-600);
-    border-color: var(--brand-600);
-    transform: translateY(-1px);
-    box-shadow: 0 .75rem 1.5rem rgba(39,174,96,.25);
-  }
+  .admin-card{ border:0; border-radius:1rem; box-shadow:0 12px 38px rgba(0,0,0,.08); }
+  .admin-header{ background:linear-gradient(180deg,var(--brand-50),#fff 70%); border-bottom:1px solid rgba(0,0,0,.06); }
+  .btn-brand{ background:var(--brand); border-color:var(--brand); color:#fff; }
+  .btn-brand:hover{ background:var(--brand-600); border-color:var(--brand-600); }
+  .input-group-text{ background:var(--brand-50); border-color:#dee2e6; }
+  .form-control:focus{ border-color:var(--brand); box-shadow:0 0 0 .25rem rgba(46,204,113,.15); }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container admin-wrap d-flex align-items-start justify-content-center py-4 py-md-5">
-  <div class="card admin-card w-100" style="max-width: 1100px;">
-    <!-- Encabezado -->
+<div class="container py-5">
+  <div class="card admin-card">
     <div class="admin-header p-4">
-      <h1 class="h4 fw-bold mb-1 d-flex align-items-center gap-2">
-        <span class="d-inline-flex justify-content-center align-items-center rounded-circle"
-              style="width:42px;height:42px;background:#fff;">
-          <i class="fa-solid fa-user-plus" style="color:var(--brand);"></i>
-        </span>
-        Registrar nuevo usuario
-      </h1>
-      <p class="text-secondary mb-0">Crea cuentas para tu equipo/usuarios finales. Los datos sensibles se guardan cifrados.</p>
+      <h2 class="h4 fw-bold mb-0"><i class="fa-solid fa-user-plus me-2 text-success"></i>Registrar nuevo usuario</h2>
+      <p class="text-secondary mb-0 small">Todos los datos sensibles se guardan cifrados.</p>
     </div>
 
-    <!-- Cuerpo -->
     <div class="card-body p-4 p-md-5">
-      <form method="post" novalidate aria-labelledby="formTitle" aria-describedby="formHelp">
+      <form method="post" novalidate id="registerForm" aria-labelledby="formTitle">
         {% csrf_token %}
-        <span id="formTitle" class="visually-hidden">Formulario de registro de usuario</span>
-        <p id="formHelp" class="visually-hidden">Todos los campos marcados con asterisco son obligatorios.</p>
-
         <div class="row g-4">
-          <!-- Email -->
-          <div class="col-12 col-md-6">
-            <label for="id_email" class="form-label">Correo electrónico <span class="req" aria-hidden="true">*</span></label>
+          <div class="col-md-6">
+            <label for="id_email" class="form-label">Correo electrónico</label>
             <div class="input-group">
-              <span class="input-group-text" aria-hidden="true">
-                <i class="fa-solid fa-envelope-open-text"></i>
-              </span>
-              {{ form.email.as_widget|safe }}
+              <span class="input-group-text"><i class="fa-solid fa-envelope"></i></span>
+              {{ form.email }}
             </div>
-            {% if form.email.errors %}
-              <div class="text-danger small mt-1" role="alert">{{ form.email.errors|striptags }}</div>
-            {% else %}
-              <div class="form-text">Usado para autenticación. No se compartirá.</div>
-            {% endif %}
+          </div>
+          <div class="col-md-6">
+            <label for="id_nombres" class="form-label">Nombres</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fa-solid fa-id-badge"></i></span>
+              {{ form.nombres }}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label for="id_apellidos" class="form-label">Apellidos</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+              {{ form.apellidos }}
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label for="id_rut" class="form-label">RUT</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fa-solid fa-id-card-clip"></i></span>
+              {{ form.rut }}
+            </div>
           </div>
 
-          <!-- Nombres -->
-          <div class="col-12 col-md-6">
-            <label for="id_nombres" class="form-label">Nombres <span class="req" aria-hidden="true">*</span></label>
+          <!-- Contraseña -->
+          <div class="col-md-6">
+            <label for="id_password" class="form-label">Contraseña</label>
             <div class="input-group">
-              <span class="input-group-text" aria-hidden="true">
-                <i class="fa-solid fa-id-badge"></i>
-              </span>
-              {{ form.nombres.as_widget|safe }}
-            </div>
-            {% if form.nombres.errors %}
-              <div class="text-danger small mt-1" role="alert">{{ form.nombres.errors|striptags }}</div>
-            {% endif %}
-          </div>
-
-          <!-- Apellidos -->
-          <div class="col-12 col-md-6">
-            <label for="id_apellidos" class="form-label">Apellidos <span class="req" aria-hidden="true">*</span></label>
-            <div class="input-group">
-              <span class="input-group-text" aria-hidden="true">
-                <i class="fa-solid fa-user"></i>
-              </span>
-              {{ form.apellidos.as_widget|safe }}
-            </div>
-            {% if form.apellidos.errors %}
-              <div class="text-danger small mt-1" role="alert">{{ form.apellidos.errors|striptags }}</div>
-            {% endif %}
-          </div>
-
-          <!-- RUT -->
-          <div class="col-12 col-md-6">
-            <label for="id_rut" class="form-label">RUT (opcional)</label>
-            <div class="input-group">
-              <span class="input-group-text" aria-hidden="true">
-                <i class="fa-solid fa-id-card-clip"></i>
-              </span>
-              {{ form.rut.as_widget|safe }}
-            </div>
-            {% if form.rut.errors %}
-              <div class="text-danger small mt-1" role="alert">{{ form.rut.errors|striptags }}</div>
-            {% else %}
-              <div class="form-text">Se almacena cifrado para proteger la privacidad.</div>
-            {% endif %}
-          </div>
-
-          <!-- Password -->
-          <div class="col-12 col-md-6">
-            <label for="id_password" class="form-label">Contraseña <span class="req" aria-hidden="true">*</span></label>
-            <div class="input-group">
-              <span class="input-group-text" id="icon-password" aria-hidden="true">
-                <i class="fa-solid fa-lock"></i>
-              </span>
-              {{ form.password.as_widget|safe }}
-              <button class="btn btn-outline-secondary" type="button" id="togglePassword"
-                      aria-label="Mostrar u ocultar contraseña">
-                <i class="fa-regular fa-eye" aria-hidden="true"></i>
+              <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+              {{ form.password }}
+              <button class="btn btn-outline-secondary" type="button" id="togglePassword" aria-label="Mostrar u ocultar contraseña">
+                <i class="fa-regular fa-eye"></i>
               </button>
             </div>
-            {% if form.password.errors %}
-              <div class="text-danger small mt-1" role="alert">{{ form.password.errors|striptags }}</div>
-            {% else %}
-              <div class="form-text" id="pwdHelp">Usaremos hash bcrypt para almacenarla de forma segura.</div>
-            {% endif %}
+          </div>
+
+          <!-- Confirmación -->
+          <div class="col-md-6">
+            <label for="id_password2" class="form-label">Confirmar contraseña</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="fa-solid fa-lock"></i></span>
+              <input type="password" class="form-control" id="id_password2" name="password2"
+                     placeholder="Repite la contraseña" autocomplete="new-password"
+                     aria-label="Confirmar contraseña" required>
+            </div>
+            <div id="pwdMatchMsg" class="form-text"></div>
           </div>
         </div>
 
         <div class="mt-4 d-flex justify-content-end">
-          <button type="submit" class="btn btn-brand btn-lg">
+          <button type="submit" class="btn btn-brand btn-lg" id="submitBtn">
             <i class="fa-solid fa-check me-2"></i>Guardar Usuario
           </button>
         </div>
@@ -170,30 +96,40 @@
 
 {% block extra_js %}
 <script>
-  // Mejora de accesibilidad 
-  (function(){
-    const email = document.getElementById('id_email');
-    const nombres = document.getElementById('id_nombres');
-    const apellidos = document.getElementById('id_apellidos');
-    const rut = document.getElementById('id_rut');
-    const pwd = document.getElementById('id_password');
+(function(){
+  const pwd1 = document.getElementById('id_password');
+  const pwd2 = document.getElementById('id_password2');
+  const msg  = document.getElementById('pwdMatchMsg');
+  const btn  = document.getElementById('submitBtn');
 
-    if(email){ email.placeholder = 'tucorreo@dominio.cl'; email.setAttribute('autocomplete','email'); email.setAttribute('aria-label','Correo electrónico'); }
-    if(nombres){ nombres.placeholder = 'Nombre(s)'; nombres.setAttribute('autocomplete','given-name'); nombres.setAttribute('aria-label','Nombres'); }
-    if(apellidos){ apellidos.placeholder = 'Apellido(s)'; apellidos.setAttribute('autocomplete','family-name'); apellidos.setAttribute('aria-label','Apellidos'); }
-    if(rut){ rut.placeholder = '12345678-9'; rut.setAttribute('aria-label','RUT'); }
-    if(pwd){ pwd.placeholder = '••••••••'; pwd.setAttribute('autocomplete','new-password'); pwd.setAttribute('aria-describedby','pwdHelp'); }
-
-    // Toggle password
-    const toggle = document.getElementById('togglePassword');
-    if(toggle && pwd){
-      toggle.addEventListener('click', function(){
-        const isPwd = pwd.getAttribute('type') === 'password';
-        pwd.setAttribute('type', isPwd ? 'text' : 'password');
-        const icon = this.querySelector('i');
-        if(icon){ icon.classList.toggle('fa-eye'); icon.classList.toggle('fa-eye-slash'); }
-      });
+  function checkMatch(){
+    const val1 = pwd1.value.trim();
+    const val2 = pwd2.value.trim();
+    if(!val2){ msg.textContent = ''; btn.disabled = false; return; }
+    if(val1 === val2){
+      msg.textContent = 'Las contraseñas coinciden';
+      msg.className = 'form-text text-success';
+      btn.disabled = false;
+    }else{
+      msg.textContent = '❌ Las contraseñas no coinciden ❌';
+      msg.className = 'form-text text-danger';
+      btn.disabled = true;
     }
-  })();
+  }
+  pwd1.addEventListener('input', checkMatch);
+  pwd2.addEventListener('input', checkMatch);
+
+  // Toggle visibilidad contraseña
+  const toggle = document.getElementById('togglePassword');
+  if(toggle && pwd1){
+    toggle.addEventListener('click', () => {
+      const type = pwd1.type === 'password' ? 'text' : 'password';
+      pwd1.type = type;
+      const icon = toggle.querySelector('i');
+      icon.classList.toggle('fa-eye');
+      icon.classList.toggle('fa-eye-slash');
+    });
+  }
+})();
 </script>
 {% endblock %}
