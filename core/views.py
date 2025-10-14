@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import user_passes_test, login_required
 from django.urls import reverse
-from .forms import PerfilForm, RegistroConsumoForm
+from .forms import PerfilForm, RegistroConsumoForm, AdminRegisterUserForm
 from .models import *
 
 def index(request):
@@ -66,3 +67,19 @@ def consumo_new(request):
 def consumo_history(request):
     qs = RegistroConsumo.objects.filter(usuario__id=request.user.id).order_by('-fecha')[:100]
     return render(request, "core/consumo_history.html", {"registros": qs})
+
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def register_user_admin(request):
+    if request.method == "POST":
+        form = AdminRegisterUserForm(request.POST)
+        if form.is_valid():
+            form.save(request.user)
+            messages.success(request, "✅ Usuario registrado exitosamente.")
+            return redirect("core:home")
+        else:
+            messages.error(request, "⚠️ Revisa los datos ingresados.")
+    else:
+        form = AdminRegisterUserForm()
+    return render(request, "mantenedor/admin/register_user.html", {"form": form})

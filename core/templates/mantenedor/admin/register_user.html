@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Registrar Usuario — AhorraLuz{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="card shadow-lg border-0 rounded-4">
+    <div class="card-body p-4">
+      <h2 class="h4 fw-bold mb-4">
+        <i class="fa-solid fa-user-plus me-2 text-success"></i>Registrar nuevo usuario
+      </h2>
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="row g-3">
+          {% for field in form %}
+            <div class="col-md-6">
+              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}
+                <div class="text-danger small">{{ field.errors|striptags }}</div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        <div class="mt-4 d-flex justify-content-end">
+          <button type="submit" class="btn btn-brand btn-lg">
+            <i class="fa-solid fa-check me-2"></i>Guardar Usuario
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
