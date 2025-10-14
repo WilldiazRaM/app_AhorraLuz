@@ -1,6 +1,248 @@
 {% extends "base.html" %}
-{% block title %}Inicio - AhorraLuz{% endblock %}
+
+{% block title %}Inicio — AhorraLuz{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Hero */
+  .hero {
+    background: linear-gradient(180deg, var(--brand-50), #fff 55%);
+    border-radius: 1.25rem;
+  }
+  .hero-badge{
+    display:inline-flex; align-items:center; gap:.5rem;
+    background:#fff; border:1px solid rgba(0,0,0,.06);
+    padding:.4rem .75rem; border-radius:999px;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+  }
+  .hero h1{
+    letter-spacing:.2px;
+    transition: transform .08s ease, text-shadow .2s ease;
+  }
+  .hero h1:hover{
+    transform: translateY(-1px);
+    text-shadow: 0 6px 18px rgba(39,174,96,.2);
+  }
+
+  /* Cards de pilares */
+  .feature-card{
+    border:0; border-radius:1rem; box-shadow:0 10px 30px rgba(0,0,0,.06);
+    transition: transform .12s ease, box-shadow .2s ease;
+  }
+  .feature-card:hover{
+    transform: translateY(-4px);
+    box-shadow:0 16px 40px rgba(0,0,0,.08);
+  }
+  .icon-pill{
+    width:52px;height:52px; border-radius:14px; background:var(--brand-50);
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* Bloques de texto */
+  .section{
+    border:1px solid rgba(0,0,0,.06); border-radius:1rem; background:#fff;
+    box-shadow:0 6px 20px rgba(0,0,0,.04);
+  }
+  .section h3{ letter-spacing:.2px; }
+
+  /* KPI counters */
+  .kpi{
+    border-radius:1rem; background:var(--brand-50);
+  }
+  .kpi .value{
+    font-size:2.25rem; font-weight:800; line-height:1;
+  }
+
+  /* Reveal on scroll */
+  .reveal { opacity:0; transform: translateY(8px); transition: all .5s ease; }
+  .reveal.in { opacity:1; transform:none; }
+</style>
+{% endblock %}
+
 {% block content %}
-  <h1>¡Hola AhorraLuz en Render!</h1>
-  <p>Página de inicio. <a href="{% url 'core:dashboard' %}">Ir al dashboard</a></p>
+<div class="container center-wrap py-4">
+
+  <!-- HERO -->
+  <section class="hero p-4 p-md-5 mb-4" aria-label="Bienvenida a la aplicación AhorraLuz">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-7">
+        <span class="hero-badge mb-3" aria-label="Proyecto orientado al ahorro energético">
+          <i class="fa-solid fa-leaf" style="color:var(--brand)"></i>
+          <strong>Ahorro energético para hogares</strong>
+        </span>
+        <h1 class="display-5 fw-bold mb-2">Bienvenido a <span style="color:var(--brand)">AhorraLuz</span></h1>
+        <p class="lead text-secondary mb-3">
+          Monitorea tu consumo, visualiza tus ahorros y recibe recomendaciones
+          inteligentes para gastar menos energía cada mes.
+        </p>
+        <ul class="text-secondary mb-0">
+          <li>Indicadores claros y medibles de consumo y ahorro.</li>
+          <li>Predicción de periodos de alto consumo y alertas preventivas.</li>
+          <li>Diseño accesible, seguro y listo para dispositivos móviles.</li>
+        </ul>
+      </div>
+      <div class="col-lg-5 text-center">
+        <div class="d-inline-flex align-items-center justify-content-center rounded-4"
+             style="width:220px;height:220px;background:#fff;box-shadow:0 12px 40px rgba(0,0,0,.08);">
+          <i class="fa-solid fa-lightbulb" style="font-size:84px;color:var(--brand);"></i>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PILARES -->
+  <section class="mb-4" aria-label="Pilares del producto">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="card feature-card h-100 p-3 reveal" tabindex="0" aria-label="Pilar ahorro y hábitos">
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <div class="icon-pill"><i class="fa-solid fa-piggy-bank" aria-hidden="true" style="font-size:22px;color:var(--brand)"></i></div>
+            <h3 class="h5 fw-bold mb-0">Ahorro &amp; Hábitos</h3>
+          </div>
+          <p class="text-secondary mb-0">Recomendaciones según tu comportamiento para reducir gastos mes a mes.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card feature-card h-100 p-3 reveal" tabindex="0" aria-label="Pilar indicadores e historial">
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <div class="icon-pill"><i class="fa-solid fa-chart-line" aria-hidden="true" style="font-size:22px;color:var(--brand)"></i></div>
+            <h3 class="h5 fw-bold mb-0">Indicadores</h3>
+          </div>
+          <p class="text-secondary mb-0">Historial, comparativas y métricas claras de consumo y ahorro acumulado.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card feature-card h-100 p-3 reveal" tabindex="0" aria-label="Pilar predicción y alertas">
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <div class="icon-pill"><i class="fa-solid fa-bell" aria-hidden="true" style="font-size:22px;color:var(--brand)"></i></div>
+            <h3 class="h5 fw-bold mb-0">Predicción &amp; Alertas</h3>
+          </div>
+          <p class="text-secondary mb-0">Modelos para anticipar picos de consumo y avisarte a tiempo.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTEXTO -->
+  <section class="section p-4 p-md-5 mb-4 reveal" aria-label="Contexto y justificación del proyecto">
+    <h3 class="h4 fw-bold mb-3"><i class="fa-solid fa-earth-americas me-2" aria-hidden="true"></i>Contexto en Chile</h3>
+    <p class="text-secondary mb-2">
+      Las alzas repetidas de la luz en Chile se originan en el congelamiento de precios iniciado en 2019.
+      Con el tiempo, se acumuló una deuda relevante y, al normalizarse, impactó las tarifas de los hogares.
+    </p>
+    <p class="text-secondary mb-0">
+      Este escenario exige herramientas que ayuden a las familias a gestionar y reducir su consumo eléctrico.
+    </p>
+  </section>
+
+  <!-- PROBLEMA -->
+  <section class="section p-4 p-md-5 mb-4 reveal" aria-label="Problema y necesidad">
+    <h3 class="h4 fw-bold mb-3"><i class="fa-solid fa-triangle-exclamation me-2" aria-hidden="true"></i>Problema — Necesidad</h3>
+    <p class="text-secondary mb-0">
+      El costo de la electricidad ha subido, presionando el presupuesto de los hogares.
+      Es clave reducir el gasto energético y contar con estadísticas históricas y comparativas
+      para tomar decisiones informadas y ahorrar cada mes.
+    </p>
+  </section>
+
+  <!-- SOLUCIÓN -->
+  <section class="section p-4 p-md-5 mb-4 reveal" aria-label="Descripción del producto y solución propuesta">
+    <h3 class="h4 fw-bold mb-3"><i class="fa-solid fa-screwdriver-wrench me-2" aria-hidden="true"></i>Solución Propuesta</h3>
+    <p class="text-secondary">
+      Una aplicación web para registrar y monitorear el consumo del hogar, con sugerencias personalizadas
+      para reducir uso, y visualizaciones históricas y comparativas que facilitan el análisis.
+    </p>
+    <ul class="text-secondary mb-0">
+      <li>Registro manual de consumos y costos.</li>
+      <li>Dashboard con indicadores clave y ahorro acumulado.</li>
+      <li>Predicción de alto consumo y alertas preventivas.</li>
+    </ul>
+  </section>
+
+  <!-- OBJETIVOS + KPIs -->
+  <section class="section p-4 p-md-5 mb-2 reveal" aria-label="Objetivos del proyecto y metas">
+    <h3 class="h4 fw-bold mb-4"><i class="fa-solid fa-bullseye me-2" aria-hidden="true"></i>Objetivos y metas</h3>
+
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="p-4 kpi h-100">
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <i class="fa-solid fa-seedling" aria-hidden="true" style="font-size:26px;color:var(--brand)"></i>
+            <h4 class="h6 fw-bold mb-0">Ahorro mensual objetivo</h4>
+          </div>
+          <div class="value" data-count="10" aria-live="polite">0</div>
+          <div class="text-secondary">Meta inicial de ahorro sobre el consumo actual.</div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="p-4 kpi h-100">
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <i class="fa-solid fa-shield-heart" aria-hidden="true" style="font-size:26px;color:var(--brand)"></i>
+            <h4 class="h6 fw-bold mb-0">Disponibilidad del sistema</h4>
+          </div>
+          <div class="value" data-count="99" aria-live="polite">0</div>
+          <div class="text-secondary">Operativo al menos el 99% del tiempo en 1 mes.</div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="p-4 kpi h-100">
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <i class="fa-solid fa-brain" aria-hidden="true" style="font-size:26px;color:var(--brand)"></i>
+            <h4 class="h6 fw-bold mb-0">Precisión de predicción</h4>
+          </div>
+          <div class="value" data-count="10" aria-live="polite">0</div>
+          <div class="text-secondary">Estimación con ±10% de margen de error.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Reveal on scroll + contadores KPI (sin dependencias)
+  (function(){
+    const els = document.querySelectorAll('.reveal');
+    const counters = document.querySelectorAll('.kpi .value');
+
+    const inView = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          entry.target.classList.add('in');
+          inView.unobserve(entry.target);
+        }
+      });
+    }, { threshold: .2 });
+
+    els.forEach(el=> inView.observe(el));
+
+    function animateCount(el){
+      const target = Number(el.dataset.count || 0);
+      const suffix = el.closest('.kpi').querySelector('h4').textContent.includes('predicción') ? '%' : '%';
+      const dur = 900, start = performance.now();
+      function tick(t){
+        const p = Math.min((t - start) / dur, 1);
+        const val = Math.round(target * (0.2 + 0.8*p)); // arranque suave
+        el.textContent = val + suffix;
+        if(p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    const kpiObserver = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting){
+          animateCount(e.target);
+          kpiObserver.unobserve(e.target);
+        }
+      });
+    }, { threshold: .6 });
+
+    counters.forEach(c=> kpiObserver.observe(c));
+  })();
+</script>
 {% endblock %}
