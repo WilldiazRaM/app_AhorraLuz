@@ -3,6 +3,7 @@ import os
 import dj_database_url
 import sys
 from dotenv import load_dotenv  # Importar para cargar .env
+import logging.config
 
 # Cargar variables de entorno del archivo .env
 load_dotenv()
@@ -11,12 +12,18 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Logging to console
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {'class': 'logging.StreamHandler', 'stream': sys.stdout},
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "default": {"format": "%(asctime)s %(levelname)s %(name)s: %(message)s"},
     },
-    'root': {'handlers': ['console'], 'level': 'DEBUG'},
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "default",
+        },
+    },
+    "root": {"handlers": ["console"], "level": "DEBUG"},
 }
 
 # Secret key y debug desde entorno
@@ -60,6 +67,11 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+AUTHENTICATION_BACKENDS = [
+    "core.auth_backend.AuthIdentidadBackend",  # nuestro backend que verifica AuthIdentidad
+    "django.contrib.auth.backends.ModelBackend",  # fallback a backend por defecto
 ]
 
 ROOT_URLCONF = 'ahorraluz.urls'

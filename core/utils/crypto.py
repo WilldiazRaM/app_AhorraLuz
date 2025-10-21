@@ -1,13 +1,17 @@
-import os
+# core/utils/crypto.py
+import logging
 from cryptography.fernet import Fernet
 from django.conf import settings
 
-# Clave única en settings.SECRET_KEY (o .env)
+logger = logging.getLogger(__name__)
+
 def get_cipher():
-  key = getattr(settings, "FERNET_KEY", None)
-  if not key:
-      raise RuntimeError("FERNET_KEY no configurada")
-  return Fernet(key)
+    key = getattr(settings, "FERNET_KEY", None)
+    if not key:
+        # no mostramos datos sensibles, solo log
+        logger.error("FERNET_KEY no configurada en settings")
+        raise RuntimeError("FERNET_KEY no configurada")
+    return Fernet(key.encode() if isinstance(key, str) else key)
 
 def encrypt_field(value: str) -> str:
     if not value:
