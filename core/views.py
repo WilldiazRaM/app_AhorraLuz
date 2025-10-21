@@ -19,15 +19,11 @@ import secrets, hashlib, datetime
 import bcrypt
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-
-
-from django.conf import settings
-
-
-
 from .forms import PasswordResetRequestForm, SetNewPasswordForm
 from .models import AuthIdentidad, PasswordResetToken
 from django.conf import settings
+import secrets, hashlib, datetime, os
+
 
 
 logger = logging.getLogger(__name__)
@@ -198,40 +194,26 @@ def admin_user_reset_password(request, usuario_id):
 
 
 # --- Solicitud de reset (pide email y envía link) ---
-@require_http_methods(["GET", "POST"])
 def password_reset_request_view(request):
-    subject = "Restablecer tu contraseña – AhorraLuz"
-    context = {
-        "minutes": settings.PASSWORD_RESET_MINUTES,
-        "reset_link": reset_link,
-        "now": timezone.now(),
-    }
-    html = render_to_string("emails/password_reset.html", context)
-    text = strip_tags(html)
-
-    send_mail(
-        subject,
-        text,  # fallback texto
-        settings.DEFAULT_FROM_EMAIL,
-        [email],
-        fail_silently=False,
-        html_message=html,  # HTML principal
-    )
-
-
     form = PasswordResetRequestForm(request.POST or None)
-    if request.method == "POST" and form.is_valid():
-        email = form.cleaned_data["email"].strip().lower()
-        # Siempre mostrarmos "enviado" para evitar enumeración de correos
-        msg_ok = "Si el correo existe, te enviaremos un enlace para restablecer la contraseña."
 
+    # GET: solo mostrar el formulario
+    if request.method == "GET":
+        return render(request, "registration/password_reset_request.html", {"form": form})
+
+    # POST: procesar
+    if form.is_valid():
+        email = form.cleaned_data["email"].strip().lower()
+
+        # Mensaje siempre igual para no filtrar existencia
+        msg_ok = "Si el correo existe, te enviaremos un enlace para restablecer la contraseña."
         try:
             identidad = AuthIdentidad.objects.get(email__iexact=email)
         except AuthIdentidad.DoesNotExist:
             messages.info(request, msg_ok)
             return redirect("core:password_reset_request")
 
-        # Generar token aleatorio y guardar solo el hash
+        # Generar token y guardar hash
         raw_token = secrets.token_urlsafe(32)
         token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
         expira = timezone.now() + datetime.timedelta(minutes=settings.PASSWORD_RESET_MINUTES)
@@ -244,23 +226,36 @@ def password_reset_request_view(request):
             user_agent=request.META.get("HTTP_USER_AGENT", "")[:500],
         )
 
+        # Construir reset_link y correo HTML + texto
         reset_link = f"{settings.SITE_URL}{reverse('core:password_reset_confirm')}?token={raw_token}"
         subject = "Restablecer tu contraseña – AhorraLuz"
-        body = (
-            f"Hola,\n\n"
-            f"Solicitaste restablecer tu contraseña. Usa este enlace (válido por {settings.PASSWORD_RESET_MINUTES} minutos):\n\n"
-            f"{reset_link}\n\n"
-            f"Si no fuiste tú, ignora este mensaje.\n"
-        )
+        ctx = {
+            "minutes": settings.PASSWORD_RESET_MINUTES,
+            "reset_link": reset_link,
+            "now": timezone.now(),
+        }
+        html = render_to_string("emails/password_reset.html", ctx)
+        text = strip_tags(html)
+
         try:
-            send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [email], fail_silently=False)
+            send_mail(
+                subject,
+                text,  # fallback texto
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False,
+                html_message=html,
+            )
         except Exception as e:
-            # No revelamos info sensible al usuario; log y mensaje genérico
+            # No revelar detalles al usuario
+            import logging
+            logger = logging.getLogger("core.views")
             logger.exception("[RESET] Error enviando correo: %s", e)
 
         messages.info(request, msg_ok)
         return redirect("core:password_reset_request")
 
+    # POST con errores de validación → re-render del form
     return render(request, "registration/password_reset_request.html", {"form": form})
 
 
