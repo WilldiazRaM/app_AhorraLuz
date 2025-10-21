@@ -10,6 +10,17 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.utils import timezone
 import logging
+from django.core.mail import send_mail
+from django.http import Http404
+from django.views.decorators.http import require_http_methods
+from django.db import transaction
+import secrets, hashlib, datetime
+import bcrypt
+
+from .forms import PasswordResetRequestForm, SetNewPasswordForm
+from .models import AuthIdentidad, PasswordResetToken
+from django.conf import settings
+
 
 logger = logging.getLogger(__name__)
 
@@ -176,3 +187,93 @@ def admin_user_reset_password(request, usuario_id):
             return redirect("core:admin_users_list")
         messages.error(request, "⚠️ Las contraseñas no coinciden.")
     return render(request, "mantenedor/admin/update_users.html", {"reset_mode": True, "usuario": usuario})
+
+
+# --- Solicitud de reset (pide email y envía link) ---
+@require_http_methods(["GET", "POST"])
+def password_reset_request_view(request):
+    form = PasswordResetRequestForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        email = form.cleaned_data["email"].strip().lower()
+        # Siempre mostrarmos "enviado" para evitar enumeración de correos
+        msg_ok = "Si el correo existe, te enviaremos un enlace para restablecer la contraseña."
+
+        try:
+            identidad = AuthIdentidad.objects.get(email__iexact=email)
+        except AuthIdentidad.DoesNotExist:
+            messages.info(request, msg_ok)
+            return redirect("core:password_reset_request")
+
+        # Generar token aleatorio y guardar solo el hash
+        raw_token = secrets.token_urlsafe(32)
+        token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
+        expira = timezone.now() + datetime.timedelta(minutes=settings.PASSWORD_RESET_MINUTES)
+
+        PasswordResetToken.objects.create(
+            identidad=identidad,
+            token_hash=token_hash,
+            expira_en=expira,
+            ip=request.META.get("REMOTE_ADDR"),
+            user_agent=request.META.get("HTTP_USER_AGENT", "")[:500],
+        )
+
+        reset_link = f"{settings.SITE_URL}{reverse('core:password_reset_confirm')}?token={raw_token}"
+        subject = "Restablecer tu contraseña – AhorraLuz"
+        body = (
+            f"Hola,\n\n"
+            f"Solicitaste restablecer tu contraseña. Usa este enlace (válido por {settings.PASSWORD_RESET_MINUTES} minutos):\n\n"
+            f"{reset_link}\n\n"
+            f"Si no fuiste tú, ignora este mensaje.\n"
+        )
+        try:
+            send_mail(subject, body, settings.DEFAULT_FROM_EMAIL, [email], fail_silently=False)
+        except Exception as e:
+            # No revelamos info sensible al usuario; log y mensaje genérico
+            logger.exception("[RESET] Error enviando correo: %s", e)
+
+        messages.info(request, msg_ok)
+        return redirect("core:password_reset_request")
+
+    return render(request, "registration/password_reset_request.html", {"form": form})
+
+
+# --- Confirmación de reset (valida token y setea nueva clave) ---
+@require_http_methods(["GET", "POST"])
+@transaction.atomic
+def password_reset_confirm_view(request):
+    raw_token = request.GET.get("token") or request.POST.get("token")
+    if not raw_token:
+        raise Http404("Token faltante")
+
+    token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
+    try:
+        prt = PasswordResetToken.objects.select_related("identidad").get(token_hash=token_hash)
+    except PasswordResetToken.DoesNotExist:
+        raise Http404("Token inválido")
+
+    # válido: no usado y no expirado
+    now = timezone.now()
+    if prt.usado_en or prt.expira_en < now:
+        messages.error(request, "El enlace ya fue usado o expiró. Solicita uno nuevo.")
+        return redirect("core:password_reset_request")
+
+    form = SetNewPasswordForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        new_pw = form.cleaned_data["password1"]
+        # Actualiza hash bcrypt en AuthIdentidad
+        identidad = prt.identidad
+        identidad.contrasena_hash = bcrypt.hashpw(new_pw.encode(), bcrypt.gensalt()).decode()
+        identidad.actualizado_en = now
+        identidad.save()
+
+        # Marca usado, e invalida otros tokens activos de este usuario
+        prt.usado_en = now
+        prt.save(update_fields=["usado_en"])
+        PasswordResetToken.objects.filter(
+            identidad=identidad, usado_en__isnull=True, expira_en__gte=now
+        ).exclude(pk=prt.pk).update(usado_en=now)
+
+        messages.success(request, "Tu contraseña fue actualizada. Ya puedes iniciar sesión.")
+        return redirect("core:login")
+
+    return render(request, "registration/password_reset_confirm.html", {"form": form, "token": raw_token})

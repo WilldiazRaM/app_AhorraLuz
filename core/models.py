@@ -278,3 +278,19 @@ class UsuarioRol(models.Model):
     def __str__(self):
         return f"{self.usuario} -> {self.rol}"
 
+class PasswordResetToken(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    identidad = models.ForeignKey('AuthIdentidad', on_delete=models.CASCADE, related_name='reset_tokens')
+    token_hash = models.CharField(max_length=64, unique=True)  # sha256 hex
+    creado_en = models.DateTimeField(auto_now_add=True)
+    expira_en = models.DateTimeField()
+    usado_en = models.DateTimeField(blank=True, null=True)
+    ip = models.GenericIPAddressField(blank=True, null=True)
+    user_agent = models.TextField(blank=True, null=True)
+
+    class Meta:
+        db_table = "password_reset_tokens"
+        indexes = [models.Index(fields=["token_hash"])]
+
+    def __str__(self):
+        return f"reset:{self.identidad.email} ({self.id})"

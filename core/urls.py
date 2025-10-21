@@ -76,4 +76,6 @@ urlpatterns = [
     path("mantenedor/usuarios/<uuid:usuario_id>/desactivar/", debug_view(views.admin_user_deactivate), name="admin_user_deactivate"),
     path("mantenedor/usuarios/<uuid:usuario_id>/eliminar/", debug_view(views.admin_user_delete), name="admin_user_delete"),
     path("mantenedor/usuarios/<uuid:usuario_id>/reset-password/", debug_view(views.admin_user_reset_password), name="admin_user_reset_password"),
+    path("password/reset/", views.password_reset_request_view, name="password_reset_request"),
+    path("password/reset/confirm/", views.password_reset_confirm_view, name="password_reset_confirm"),
 ]

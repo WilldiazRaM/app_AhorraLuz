@@ -218,3 +218,18 @@ class AdminUpdateUserForm(forms.Form):
         perfil.actualizado_en = timezone.now()
         perfil.save()
         return self.usuario
+
+
+class PasswordResetRequestForm(forms.Form):
+    email = forms.EmailField(label="Correo electrónico")
+
+class SetNewPasswordForm(forms.Form):
+    password1 = forms.CharField(label="Nueva contraseña", widget=forms.PasswordInput)
+    password2 = forms.CharField(label="Confirmar contraseña", widget=forms.PasswordInput)
+
+    def clean(self):
+        cleaned = super().clean()
+        p1, p2 = cleaned.get("password1"), cleaned.get("password2")
+        if not p1 or not p2 or p1 != p2:
+            self.add_error("password2", "Las contraseñas no coinciden.")
+        return cleaned
