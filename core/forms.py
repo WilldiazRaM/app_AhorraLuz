@@ -233,3 +233,28 @@ class SetNewPasswordForm(forms.Form):
         if not p1 or not p2 or p1 != p2:
             self.add_error("password2", "Las contraseñas no coinciden.")
         return cleaned
+    
+
+class ContactPublicForm(forms.Form):
+    nombre = forms.CharField(label="Nombre", max_length=120)
+    email = forms.EmailField(label="Correo")
+    tipo = forms.ChoiceField(
+        label="Motivo",
+        choices=[
+            ("sugerencia", "Sugerencia"),
+            ("reclamo", "Reclamo"),
+            ("donacion", "Donación"),
+            ("consulta", "Consulta general"),
+        ],
+    )
+    asunto = forms.CharField(label="Asunto", max_length=160)
+    mensaje = forms.CharField(label="Mensaje", widget=forms.Textarea(attrs={"rows": 5}))
+
+    # anti-spam honeypot (campo oculto)
+    hp = forms.CharField(required=False, widget=forms.HiddenInput)
+    
+    def clean_hp(self):
+        v = self.cleaned_data.get("hp", "")
+        if v:
+            raise forms.ValidationError("Spam detectado.")
+        return v

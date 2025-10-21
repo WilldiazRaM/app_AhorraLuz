@@ -4,7 +4,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import user_passes_test, login_required
 from django.urls import reverse
-from .forms import PerfilForm, RegistroConsumoForm, AdminRegisterUserForm, AdminUpdateUserForm, UserProfileForm
+from .forms import PerfilForm, RegistroConsumoForm, AdminRegisterUserForm, AdminUpdateUserForm, UserProfileForm, ContactPublicForm
 from .models import *
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -16,6 +16,13 @@ from django.views.decorators.http import require_http_methods
 from django.db import transaction
 import secrets, hashlib, datetime
 import bcrypt
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+import os
+
+from django.conf import settings
+
+
 
 from .forms import PasswordResetRequestForm, SetNewPasswordForm
 from .models import AuthIdentidad, PasswordResetToken
@@ -192,6 +199,25 @@ def admin_user_reset_password(request, usuario_id):
 # --- Solicitud de reset (pide email y envía link) ---
 @require_http_methods(["GET", "POST"])
 def password_reset_request_view(request):
+    subject = "Restablecer tu contraseña – AhorraLuz"
+    context = {
+        "minutes": settings.PASSWORD_RESET_MINUTES,
+        "reset_link": reset_link,
+        "now": timezone.now(),
+    }
+    html = render_to_string("emails/password_reset.html", context)
+    text = strip_tags(html)
+
+    send_mail(
+        subject,
+        text,  # fallback texto
+        settings.DEFAULT_FROM_EMAIL,
+        [email],
+        fail_silently=False,
+        html_message=html,  # HTML principal
+    )
+
+
     form = PasswordResetRequestForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         email = form.cleaned_data["email"].strip().lower()
@@ -277,3 +303,48 @@ def password_reset_confirm_view(request):
         return redirect("core:login")
 
     return render(request, "registration/password_reset_confirm.html", {"form": form, "token": raw_token})
+
+
+
+def contact_public_view(request):
+    """
+    Formulario de contacto público (empresas/personas).
+    Envía correo a CONTACT_RECIPIENT o DEFAULT_FROM_EMAIL.
+    """
+    if request.method == "POST":
+        form = ContactPublicForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            to_addr = os.environ.get("CONTACT_RECIPIENT") or settings.DEFAULT_FROM_EMAIL
+            subject = f"[Contacto AhorraLuz] {data['tipo'].capitalize()} – {data['asunto']}"
+
+            html = render_to_string("emails/contact_public.html", {
+                "nombre": data["nombre"],
+                "email": data["email"],
+                "tipo": data["tipo"],
+                "asunto": data["asunto"],
+                "mensaje": data["mensaje"],
+                "now": timezone.now(),
+                "site_url": settings.SITE_URL,
+            })
+            text = strip_tags(html)
+
+            # puedes agregar BCC opcional vía env
+            bcc = []
+            if os.environ.get("CONTACT_NOTIFY_BCC"):
+                bcc = [addr.strip() for addr in os.environ["CONTACT_NOTIFY_BCC"].split(",") if addr.strip()]
+
+            send_mail(
+                subject,
+                text,
+                settings.DEFAULT_FROM_EMAIL,  # From verificado (SendGrid)
+                [to_addr],
+                fail_silently=False,
+                html_message=html,
+            )
+            messages.success(request, "Gracias por escribirnos. Te contactaremos pronto.")
+            return redirect("core:contacto")
+    else:
+        form = ContactPublicForm()
+
+    return render(request, "contacto.html", {"form": form})

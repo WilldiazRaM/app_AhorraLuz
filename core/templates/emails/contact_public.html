@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+  <head><meta charset="utf-8"></head>
+  <body style="background:#f6f7fb;padding:24px 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+      <tr><td align="center">
+        <table role="presentation" width="640" style="max-width:640px;background:#fff;border-radius:12px;padding:20px;font-family:Inter,Arial,sans-serif;">
+          <tr>
+            <td>
+              <h2 style="margin:0 0 8px 0;color:#111827;">Nuevo contacto – {{ tipo|title }}</h2>
+              <p style="margin:0 0 12px 0;color:#6b7280;font-size:14px;">{{ now|date:"Y-m-d H:i" }}</p>
+
+              <table role="presentation" cellpadding="6" cellspacing="0" width="100%" style="background:#f9fafb;border-radius:8px;margin-bottom:14px;">
+                <tr><td width="160" style="color:#6b7280;">Nombre</td><td style="color:#111827;">{{ nombre }}</td></tr>
+                <tr><td width="160" style="color:#6b7280;">Correo</td><td style="color:#111827;">{{ email }}</td></tr>
+                <tr><td width="160" style="color:#6b7280;">Asunto</td><td style="color:#111827;">{{ asunto }}</td></tr>
+              </table>
+
+              <p style="white-space:pre-line;color:#111827;">{{ mensaje }}</p>
+
+              <hr style="border:none;border-top:1px solid #eef2f7;margin:16px 0;">
+              <p style="color:#9aa4b2;font-size:12px;margin:0;">Origen: {{ site_url }}</p>
+            </td>
+          </tr>
+        </table>
+      </td></tr>
+    </table>
+  </body>
+</html>

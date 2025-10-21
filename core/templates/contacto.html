@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Contacto — AhorraLuz{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 880px;">
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4">
+          <h1 class="h4 fw-bold mb-2">Contáctanos</h1>
+          <p class="text-secondary mb-4">Empresas y personas: sugerencias, reclamos o donaciones.</p>
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+            {{ form.hp }} <!-- honeypot -->
+            <div class="mb-3">
+              <label class="form-label">Nombre</label>
+              {{ form.nombre|add_class:"form-control" }}
+              {% if form.nombre.errors %}<div class="text-danger small">{{ form.nombre.errors|striptags }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Correo</label>
+              {{ form.email|add_class:"form-control" }}
+              {% if form.email.errors %}<div class="text-danger small">{{ form.email.errors|striptags }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Motivo</label>
+              {{ form.tipo|add_class:"form-select" }}
+              {% if form.tipo.errors %}<div class="text-danger small">{{ form.tipo.errors|striptags }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Asunto</label>
+              {{ form.asunto|add_class:"form-control" }}
+              {% if form.asunto.errors %}<div class="text-danger small">{{ form.asunto.errors|striptags }}</div>{% endif %}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Mensaje</label>
+              {{ form.mensaje|add_class:"form-control" }}
+              {% if form.mensaje.errors %}<div class="text-danger small">{{ form.mensaje.errors|striptags }}</div>{% endif %}
+            </div>
+            <div class="d-grid">
+              <button class="btn btn-brand btn-lg">Enviar</button>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="p-2 p-lg-3">
+        <div class="text-center mb-3">
+          <div class="d-inline-flex justify-content-center align-items-center rounded-circle"
+               style="width:64px;height:64px;background:#eaf8f0;">
+            <i class="fa-solid fa-leaf" style="color:#27ae60; font-size:28px;"></i>
+          </div>
+        </div>
+        <h2 class="h5 fw-bold text-center mb-3">AhorraLuz</h2>
+        <p class="text-secondary">
+          Plataforma para impulsar hogares más eficientes. Escríbenos si quieres colaborar,
+          proponer mejoras, reportar problemas o apoyar con una donación.
+        </p>
+        <ul class="text-secondary">
+          <li>Respuesta habitual: 24–48 h.</li>
+          <li>Si eres empresa, cuéntanos brevemente tu caso de uso.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// helper para añadir class en filtros sin crispy (temporal)
+</script>
+{% endblock %}
