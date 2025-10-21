@@ -1,0 +1,9 @@
+/* profile.css */
+.avatar-lg {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border: 6px solid #fff;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+.card.rounded-4 { border-radius: 1rem; }

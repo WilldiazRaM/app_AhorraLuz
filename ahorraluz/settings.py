@@ -26,7 +26,8 @@ LOGGING = {
     "root": {"handlers": ["console"], "level": "DEBUG"},
 }
 
-LOGIN_REDIRECT_URL = "/home/"
+LOGIN_REDIRECT_URL = "/profile/" 
+LOGOUT_REDIRECT_URL = "/"
 
 # Secret key y debug desde entorno
 SECRET_KEY = os.environ.get('SECRET_KEY')

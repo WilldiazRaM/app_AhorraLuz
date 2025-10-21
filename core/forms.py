@@ -7,7 +7,19 @@ from .models import Usuario, AuthIdentidad, Perfil, RegistroConsumo, AuditoriaEv
 import bcrypt
 from .utils.crypto import encrypt_field
 from uuid import uuid4
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'aria-label': 'Nombre'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'aria-label': 'Apellido'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'aria-label': 'Correo electrónico'}),
+        }
 
 def _normaliza_rut(rut: str) -> str:
     if not rut:

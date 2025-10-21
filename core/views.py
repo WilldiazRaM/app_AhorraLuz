@@ -4,12 +4,14 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import user_passes_test, login_required
 from django.urls import reverse
-from .forms import PerfilForm, RegistroConsumoForm, AdminRegisterUserForm, AdminUpdateUserForm
+from .forms import PerfilForm, RegistroConsumoForm, AdminRegisterUserForm, AdminUpdateUserForm, UserProfileForm
 from .models import *
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.utils import timezone
+import logging
 
+logger = logging.getLogger(__name__)
 
 
 def index(request):
@@ -38,22 +40,28 @@ def dashboard(request):
 
 @login_required
 def profile_view(request):
-    try:
-        perfil = request.user.perfil
-    except Exception:
-        perfil = None
-
+    """
+    Mostrar y editar datos básicos del usuario autenticado.
+    Usa UserProfileForm que edita first_name, last_name, email.
+    """
+    user = request.user
     if request.method == "POST":
-        form = PerfilForm(request.POST, instance=perfil)
+        form = UserProfileForm(request.POST, instance=user)
         if form.is_valid():
-            perfil = form.save(commit=False)
-            perfil.usuario_id = request.user.id  # si tu PK es UUID
-            perfil.save()
+            form.save()
+            messages.success(request, "Perfil actualizado correctamente.")
+            logger.info("[PROFILE] Usuario %s actualizó su perfil", user.username)
             return redirect('core:profile')
+        else:
+            messages.error(request, "Por favor corrige los errores en el formulario.")
+            logger.debug("[PROFILE] Errores en formulario: %s", form.errors.as_json())
     else:
-        form = PerfilForm(instance=perfil)
+        form = UserProfileForm(instance=user)
 
-    return render(request, "core/profile.html", {"form": form})
+    return render(request, "core/profile.html", {
+        "form": form,
+        "user": user,
+    })
 
 @login_required
 def consumo_new(request):
