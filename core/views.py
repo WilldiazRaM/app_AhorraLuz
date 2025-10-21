@@ -1,3 +1,4 @@
+import os
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import login, logout, authenticate
@@ -18,7 +19,7 @@ import secrets, hashlib, datetime
 import bcrypt
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-import os
+
 
 from django.conf import settings
 

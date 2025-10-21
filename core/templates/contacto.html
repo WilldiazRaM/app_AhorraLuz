@@ -13,31 +13,37 @@
           <form method="post" novalidate>
             {% csrf_token %}
             {{ form.hp }} <!-- honeypot -->
+
             <div class="mb-3">
-              <label class="form-label">Nombre</label>
-              {{ form.nombre|add_class:"form-control" }}
+              <label class="form-label" for="{{ form.nombre.id_for_label }}">Nombre</label>
+              {{ form.nombre }}
               {% if form.nombre.errors %}<div class="text-danger small">{{ form.nombre.errors|striptags }}</div>{% endif %}
             </div>
+
             <div class="mb-3">
-              <label class="form-label">Correo</label>
-              {{ form.email|add_class:"form-control" }}
+              <label class="form-label" for="{{ form.email.id_for_label }}">Correo</label>
+              {{ form.email }}
               {% if form.email.errors %}<div class="text-danger small">{{ form.email.errors|striptags }}</div>{% endif %}
             </div>
+
             <div class="mb-3">
-              <label class="form-label">Motivo</label>
-              {{ form.tipo|add_class:"form-select" }}
+              <label class="form-label" for="{{ form.tipo.id_for_label }}">Motivo</label>
+              {{ form.tipo }}
               {% if form.tipo.errors %}<div class="text-danger small">{{ form.tipo.errors|striptags }}</div>{% endif %}
             </div>
+
             <div class="mb-3">
-              <label class="form-label">Asunto</label>
-              {{ form.asunto|add_class:"form-control" }}
+              <label class="form-label" for="{{ form.asunto.id_for_label }}">Asunto</label>
+              {{ form.asunto }}
               {% if form.asunto.errors %}<div class="text-danger small">{{ form.asunto.errors|striptags }}</div>{% endif %}
             </div>
+
             <div class="mb-3">
-              <label class="form-label">Mensaje</label>
-              {{ form.mensaje|add_class:"form-control" }}
+              <label class="form-label" for="{{ form.mensaje.id_for_label }}">Mensaje</label>
+              {{ form.mensaje }}
               {% if form.mensaje.errors %}<div class="text-danger small">{{ form.mensaje.errors|striptags }}</div>{% endif %}
             </div>
+
             <div class="d-grid">
               <button class="btn btn-brand btn-lg">Enviar</button>
             </div>
@@ -68,10 +74,4 @@
     </div>
   </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-// helper para añadir class en filtros sin crispy (temporal)
-</script>
 {% endblock %}

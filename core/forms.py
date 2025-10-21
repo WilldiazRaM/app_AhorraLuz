@@ -236,8 +236,14 @@ class SetNewPasswordForm(forms.Form):
     
 
 class ContactPublicForm(forms.Form):
-    nombre = forms.CharField(label="Nombre", max_length=120)
-    email = forms.EmailField(label="Correo")
+    nombre = forms.CharField(
+        label="Nombre", max_length=120,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Tu nombre"})
+    )
+    email = forms.EmailField(
+        label="Correo",
+        widget=forms.EmailInput(attrs={"class": "form-control", "placeholder": "tucorreo@dominio.cl"})
+    )
     tipo = forms.ChoiceField(
         label="Motivo",
         choices=[
@@ -246,13 +252,20 @@ class ContactPublicForm(forms.Form):
             ("donacion", "Donación"),
             ("consulta", "Consulta general"),
         ],
+        widget=forms.Select(attrs={"class": "form-select"})
     )
-    asunto = forms.CharField(label="Asunto", max_length=160)
-    mensaje = forms.CharField(label="Mensaje", widget=forms.Textarea(attrs={"rows": 5}))
+    asunto = forms.CharField(
+        label="Asunto", max_length=160,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Breve asunto"})
+    )
+    mensaje = forms.CharField(
+        label="Mensaje",
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 5, "placeholder": "Cuéntanos en detalle"})
+    )
 
     # anti-spam honeypot (campo oculto)
     hp = forms.CharField(required=False, widget=forms.HiddenInput)
-    
+
     def clean_hp(self):
         v = self.cleaned_data.get("hp", "")
         if v:
