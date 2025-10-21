@@ -190,7 +190,10 @@ FERNET_KEY = os.getenv("FERNET_KEY", None)
 
 
 # Email (SMTP Gmail)
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_BACKEND = os.environ.get(
+    "EMAIL_BACKEND",
+    "django.core.mail.backends.smtp.EmailBackend"  # por defecto SMTP (útil local)
+)
 EMAIL_HOST = os.environ.get("EMAIL_HOST")
 EMAIL_PORT = int(os.environ.get("EMAIL_PORT"))
 EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "true").lower() == "true"
@@ -200,3 +203,20 @@ DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 
 SITE_URL = os.environ.get("SITE_URL", "http://localhost:8000")
 PASSWORD_RESET_MINUTES = int(os.environ.get("PASSWORD_RESET_MINUTES", "30"))
+
+if EMAIL_BACKEND.startswith("anymail."):
+    # API vía Anymail (recomendado para Render)
+    INSTALLED_APPS += ["anymail"]
+    ANYMAIL = {}
+    # SendGrid
+    if EMAIL_BACKEND == "anymail.backends.sendgrid.EmailBackend":
+        ANYMAIL["SENDGRID_API_KEY"] = os.environ.get("SENDGRID_API_KEY")
+else:
+    # SMTP (útil en desarrollo local con Gmail App Password)
+    EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
+    EMAIL_PORT = int(os.environ.get("EMAIL_PORT", "587"))
+    EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "true").lower() == "true"
+    EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+    if not DEFAULT_FROM_EMAIL:
+        DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
