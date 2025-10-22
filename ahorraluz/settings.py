@@ -10,6 +10,9 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+TIME_ZONE = "America/Santiago"
+USE_TZ = True  # mantenla True para almacenar en UTC y convertir a local
+
 # Logging to console
 LOGGING = {
     "version": 1,

@@ -24,6 +24,13 @@ from .models import AuthIdentidad, PasswordResetToken
 from django.conf import settings
 import secrets, hashlib, datetime, os
 
+from django.http import JsonResponse
+from django.utils import timezone
+from datetime import timedelta
+import pytz, numpy as np
+
+from .utils.ml_nowcast import build_row, predict_one
+
 
 
 logger = logging.getLogger(__name__)
@@ -344,3 +351,54 @@ def contact_public_view(request):
         form = ContactPublicForm()
 
     return render(request, "contacto.html", {"form": form})
+
+
+
+
+def _default_signals():
+    return {
+        "Global_reactive_power": 0.3,
+        "Voltage": 230.0,
+        "Global_intensity": 12.0,
+        "Sub_metering_1": 0.1,
+        "Sub_metering_2": 0.1,
+        "Sub_metering_3": 0.3,
+        "other_kwh_h": 0.2
+    }
+
+# === Calendario: SOLO las columnas que están en features.json
+def _calendar_feats(dt_local):
+    dow = dt_local.weekday()
+    return {
+        "Month": dt_local.month,
+        "DayOfWeek": dow,
+        "Hour": dt_local.hour,
+        "Is_Weekday": int(dow < 5),
+        # OJO: tu modelo actual NO usa Is_Holiday ni Is_DST (no están en features.json)
+    }
+
+# === Clima placeholder (más adelante reemplazamos por DMC/Meteostat/CR2)
+def _climate_stub(_dt_local):
+    return {"Temp_C": 14.0}
+
+@login_required
+def api_predict_next_24h(request):
+    """
+    Devuelve 24 horas de predicción horaria en kWh, timestamp local (America/Santiago).
+    """
+    tz = pytz.timezone("America/Santiago")
+    now_utc = timezone.now()
+    out = []
+    for h in range(1, 25):
+        ts_local = (now_utc + timedelta(hours=h)).astimezone(tz)
+        row = build_row(
+            signals=_default_signals(),
+            calendar=_calendar_feats(ts_local),
+            climate=_climate_stub(ts_local)
+        )
+        kwh = predict_one(row)
+        out.append({
+            "timestamp_local": ts_local.isoformat(),
+            "kwh": round(kwh, 3)
+        })
+    return JsonResponse({"predicciones": out})

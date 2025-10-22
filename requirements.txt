@@ -16,3 +16,8 @@ python-dotenv
 bcrypt==4.1.2
 cryptography>=42.0.0
 django-anymail>=10.0
+joblib
+workalendar
+pytz
+numpy
+pandas

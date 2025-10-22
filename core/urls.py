@@ -4,6 +4,7 @@ from functools import wraps
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
+from .views import api_predict_next_24h
 
 app_name = "core"
 
@@ -79,4 +80,5 @@ urlpatterns = [
     path("password/reset/", views.password_reset_request_view, name="password_reset_request"),
     path("password/reset/confirm/", views.password_reset_confirm_view, name="password_reset_confirm"),
     path("contacto/", debug_view(views.contact_public_view), name="contacto"),
+    path("api/predict/next-24h/", debug_view(api_predict_next_24h), name="api_predict_next_24h"),
 ]
