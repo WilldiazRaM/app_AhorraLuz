@@ -3,7 +3,7 @@ from django.utils import timezone
 from django import forms
 from django.db import transaction
 from django.contrib.auth.hashers import make_password
-from .models import Usuario, AuthIdentidad, Perfil, RegistroConsumo, AuditoriaEvento
+from .models import *
 import bcrypt
 from .utils.crypto import encrypt_field
 from uuid import uuid4
@@ -271,3 +271,79 @@ class ContactPublicForm(forms.Form):
         if v:
             raise forms.ValidationError("Spam detectado.")
         return v
+    
+
+
+
+# ---- Catálogos ----
+class ComunaForm(forms.ModelForm):
+    class Meta:
+        model = Comuna  # tiene "nombre" unique en BD. :contentReference[oaicite:3]{index=3}
+        fields = ["nombre"]
+
+class TipoDispositivoForm(forms.ModelForm):
+    class Meta:
+        model = TipoDispositivo  # campo "nombre". :contentReference[oaicite:4]{index=4}
+        fields = ["nombre"]
+
+class TipoViviendaForm(forms.ModelForm):
+    class Meta:
+        model = TipoVivienda
+        fields = ["nombre"]      # :contentReference[oaicite:5]{index=5}
+
+class TipoNotificacionForm(forms.ModelForm):
+    class Meta:
+        model = TipoNotificacion
+        fields = ["codigo", "descripcion"]  # :contentReference[oaicite:6]{index=6}
+
+class NivelAlertaForm(forms.ModelForm):
+    class Meta:
+        model = NivelAlerta
+        fields = ["codigo", "descripcion"]  # :contentReference[oaicite:7]{index=7}
+
+class PermisoForm(forms.ModelForm):
+    class Meta:
+        model = Permiso
+        fields = ["codigo", "descripcion"]  # :contentReference[oaicite:8]{index=8}
+
+class RolForm(forms.ModelForm):
+    class Meta:
+        model = Rol
+        fields = ["nombre", "descripcion"]  # :contentReference[oaicite:9]{index=9}
+
+# ---- Operativo ----
+class DispositivoForm(forms.ModelForm):
+    class Meta:
+        model = Dispositivo
+        fields = ["usuario", "nombre", "tipo_dispositivo", "potencia_promedio_w", "horas_uso_diario", "activo"]
+        # campos según modelo. :contentReference[oaicite:10]{index=10}
+
+class DireccionForm(forms.ModelForm):
+    class Meta:
+        model = Direccion
+        fields = ["usuario", "calle", "numero", "depto", "comuna"]  # :contentReference[oaicite:11]{index=11}
+
+class RegistroConsumoAdminForm(forms.ModelForm):
+    class Meta:
+        model = RegistroConsumo
+        fields = ["usuario", "fecha", "consumo_kwh", "costo_clp", "dispositivo", "fuente"]
+        # Nota: como admin, aquí sí mostramos usuario (tu form normal usa el user autenticado). :contentReference[oaicite:12]{index=12}
+
+class NotificacionForm(forms.ModelForm):
+    class Meta:
+        model = Notificacion
+        fields = ["usuario", "tipo", "titulo", "mensaje", "leida"]  # :contentReference[oaicite:13]{index=13}
+
+class PrediccionConsumoForm(forms.ModelForm):
+    class Meta:
+        model = PrediccionConsumo
+        fields = ["usuario", "fecha_prediccion", "periodo_inicio", "periodo_fin", "consumo_predicho_kwh", "nivel_alerta"]
+        # :contentReference[oaicite:14]{index=14}
+
+# ---- Perfiles (por si quieres editar desde admin) ----
+class PerfilAdminForm(forms.ModelForm):
+    class Meta:
+        model = Perfil
+        fields = ["usuario", "nombres", "apellidos", "tipo_vivienda"] 
+
+## END CATALOGOS MANTENEDOR TEST       

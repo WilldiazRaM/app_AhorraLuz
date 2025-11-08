@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h4>Eliminar comuna</h4>
+  <p>¿Seguro que deseas eliminar <strong>{{ object.nombre }}</strong>?</p>
+  <form method="post">{% csrf_token %}
+    <button class="btn btn-danger">Sí, eliminar</button>
+    <a class="btn btn-secondary" href="{% url 'core:mant_comuna_list' %}">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

@@ -5,7 +5,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.decorators import user_passes_test, login_required
 from django.urls import reverse
-from .forms import PerfilForm, RegistroConsumoForm, AdminRegisterUserForm, AdminUpdateUserForm, UserProfileForm, ContactPublicForm
+from .forms import *
 from .models import *
 from django.core.paginator import Paginator
 from django.db.models import Q
@@ -19,17 +19,112 @@ import secrets, hashlib, datetime
 import bcrypt
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-from .forms import PasswordResetRequestForm, SetNewPasswordForm
-from .models import AuthIdentidad, PasswordResetToken
 from django.conf import settings
 import secrets, hashlib, datetime, os
-
 from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
 import pytz, numpy as np
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.urls import reverse_lazy
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 
 from .utils.ml_nowcast import build_row, predict_one
+
+
+class SoloSuperuserMixin(UserPassesTestMixin):
+    def test_func(self):
+        return self.request.user.is_superuser
+    
+class ComunaListView(LoginRequiredMixin, SoloSuperuserMixin, ListView):
+    model = Comuna
+    template_name = "mantenedor/catalogos/comunas/comuna_list.html"    
+    paginate_by = 20
+    ordering = ["nombre"]
+
+class ComunaCreateView(LoginRequiredMixin, SoloSuperuserMixin, CreateView):
+    model = Comuna
+    form_class = ComunaForm
+    template_name = "mantenedor/catalogos/comunas/comuna_form.html"
+    success_url = reverse_lazy("core:mant_comuna_list")
+
+class ComunaUpdateView(LoginRequiredMixin, SoloSuperuserMixin, UpdateView):
+    model = Comuna
+    form_class = ComunaForm
+    template_name = "mantenedor/catalogos/comunas/comuna_form.html"
+    success_url = reverse_lazy("core:mant_comuna_list")
+
+class ComunaDeleteView(LoginRequiredMixin, SoloSuperuserMixin, DeleteView):
+    model = Comuna
+    template_name = "mantenedor/catalogos/comunas/comuna_confirm_delete.html"
+    success_url = reverse_lazy("core:mant_comuna_list")
+
+
+# ---------- Catálogo: TipoDispositivo ----------
+class TipoDispositivoListView(LoginRequiredMixin, SoloSuperuserMixin, ListView):
+    model = TipoDispositivo
+    template_name = "mantenedor/catalogos/tipos_dispositivo/tipo_dispositivo_list.html"
+    paginate_by = 20
+    ordering = ["nombre"]
+
+class TipoDispositivoCreateView(LoginRequiredMixin, SoloSuperuserMixin, CreateView):
+    model = TipoDispositivo
+    form_class = TipoDispositivoForm
+    template_name = "mantenedor/catalogos/tipos_dispositivo/tipo_dispositivo_form.html"
+    success_url = reverse_lazy("core:mant_tipodispositivo_list")
+
+class TipoDispositivoUpdateView(LoginRequiredMixin, SoloSuperuserMixin, UpdateView):
+    model = TipoDispositivo
+    form_class = TipoDispositivoForm
+    template_name = "mantenedor/catalogos/tipos_dispositivo/tipo_dispositivo_form.html"
+    success_url = reverse_lazy("core:mant_tipodispositivo_list")
+
+class TipoDispositivoDeleteView(LoginRequiredMixin, SoloSuperuserMixin, DeleteView):
+    model = TipoDispositivo
+    template_name = "mantenedor/catalogos/tipos_dispositivo/tipo_dispositivo_confirm_delete.html"
+    success_url = reverse_lazy("core:mant_tipodispositivo_list")
+
+
+# ---------- Operativo: Dispositivo ----------
+class DispositivoListView(LoginRequiredMixin, SoloSuperuserMixin, ListView):
+    model = Dispositivo
+    template_name = "mantenedor/operativo/dispositivos/dispositivo_list.html"
+    paginate_by = 20
+    ordering = ["-id"]
+
+class DispositivoCreateView(LoginRequiredMixin, SoloSuperuserMixin, CreateView):
+    model = Dispositivo
+    form_class = DispositivoForm
+    template_name = "mantenedor/operativo/dispositivos/dispositivo_form.html"
+    success_url = reverse_lazy("core:mant_dispositivo_list")
+
+class DispositivoUpdateView(LoginRequiredMixin, SoloSuperuserMixin, UpdateView):
+    model = Dispositivo
+    form_class = DispositivoForm
+    template_name = "mantenedor/operativo/dispositivos/dispositivo_form.html"
+    success_url = reverse_lazy("core:mant_dispositivo_list")
+
+class DispositivoDeleteView(LoginRequiredMixin, SoloSuperuserMixin, DeleteView):
+    model = Dispositivo
+    template_name = "mantenedor/operativo/dispositivos/dispositivo_confirm_delete.html"
+    success_url = reverse_lazy("core:mant_dispositivo_list")
+
+
+
+
+# ---------- Solo lectura: Auditoría ----------
+class AuditoriaEventoListView(LoginRequiredMixin, SoloSuperuserMixin, ListView):
+    model = AuditoriaEvento
+    template_name = "mantenedor/solo_lectura/auditoriaevento_list.html"
+    paginate_by = 30
+    ordering = ["-ocurrido_en"]
+
+class AuditoriaEventoDetailView(LoginRequiredMixin, SoloSuperuserMixin, DetailView):
+    model = AuditoriaEvento
+    template_name = "mantenedor/solo_lectura/auditoriaevento_detail.html"
+
+
+
 
 
 

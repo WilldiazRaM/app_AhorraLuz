@@ -4,7 +4,11 @@ from functools import wraps
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
-from .views import api_predict_next_24h
+from .views import ( api_predict_next_24h, ComunaListView, ComunaCreateView, ComunaUpdateView, ComunaDeleteView,
+    TipoDispositivoListView, TipoDispositivoCreateView, TipoDispositivoUpdateView, TipoDispositivoDeleteView,
+    DispositivoListView, DispositivoCreateView, DispositivoUpdateView, DispositivoDeleteView,
+    AuditoriaEventoListView, AuditoriaEventoDetailView, )
+
 
 app_name = "core"
 
@@ -81,4 +85,25 @@ urlpatterns = [
     path("password/reset/confirm/", views.password_reset_confirm_view, name="password_reset_confirm"),
     path("contacto/", debug_view(views.contact_public_view), name="contacto"),
     path("api/predict/next-24h/", debug_view(api_predict_next_24h), name="api_predict_next_24h"),
+    # Comuna
+    path("mantenedor/comunas/", debug_view(ComunaListView.as_view()), name="mant_comuna_list"),
+    path("mantenedor/comunas/nuevo/", debug_view(ComunaCreateView.as_view()), name="mant_comuna_new"),
+    path("mantenedor/comunas/<int:pk>/editar/", debug_view(ComunaUpdateView.as_view()), name="mant_comuna_edit"),
+    path("mantenedor/comunas/<int:pk>/eliminar/", debug_view(ComunaDeleteView.as_view()), name="mant_comuna_delete"),
+
+    # TipoDispositivo
+    path("mantenedor/tipos-dispositivo/", debug_view(TipoDispositivoListView.as_view()), name="mant_tipodispositivo_list"),
+    path("mantenedor/tipos-dispositivo/nuevo/", debug_view(TipoDispositivoCreateView.as_view()), name="mant_tipodispositivo_new"),
+    path("mantenedor/tipos-dispositivo/<int:pk>/editar/", debug_view(TipoDispositivoUpdateView.as_view()), name="mant_tipodispositivo_edit"),
+    path("mantenedor/tipos-dispositivo/<int:pk>/eliminar/", debug_view(TipoDispositivoDeleteView.as_view()), name="mant_tipodispositivo_delete"),
+
+    # Dispositivo (operativo)
+    path("mantenedor/dispositivos/", debug_view(DispositivoListView.as_view()), name="mant_dispositivo_list"),
+    path("mantenedor/dispositivos/nuevo/", debug_view(DispositivoCreateView.as_view()), name="mant_dispositivo_new"),
+    path("mantenedor/dispositivos/<int:pk>/editar/", debug_view(DispositivoUpdateView.as_view()), name="mant_dispositivo_edit"),
+    path("mantenedor/dispositivos/<int:pk>/eliminar/", debug_view(DispositivoDeleteView.as_view()), name="mant_dispositivo_delete"),
+
+    # Auditoría (solo lectura)
+    path("mantenedor/auditoria/", debug_view(AuditoriaEventoListView.as_view()), name="mant_auditoria_list"),
+    path("mantenedor/auditoria/<int:pk>/", debug_view(AuditoriaEventoDetailView.as_view()), name="mant_auditoria_detail"),
 ]

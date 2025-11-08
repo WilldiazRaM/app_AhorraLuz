@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h3>{{ object|default_if_none:"Nueva comuna" }}</h3>
+  <hr>
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn-primary">Guardar</button>
+    <a class="btn btn-secondary" href="{% url 'core:mant_comuna_list' %}">Cancelar</a>
+  </form>
+</div>
+{% endblock %}
