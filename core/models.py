@@ -133,7 +133,7 @@ class Dispositivo(models.Model):
     potencia_promedio_w = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     horas_uso_diario = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
     activo = models.BooleanField(default=True)
-    fecha_registro = models.DateTimeField()
+    fecha_registro = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "dispositivos"
