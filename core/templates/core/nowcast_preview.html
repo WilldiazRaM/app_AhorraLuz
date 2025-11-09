@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h4 class="card-title mb-2">Resultado de predicción</h4>
+      <p class="mb-1"><strong>Fecha predicción:</strong> {{ pred.fecha_prediccion|date:"Y-m-d H:i" }}</p>
+      <p class="mb-1"><strong>Ventana:</strong> {{ pred.periodo_inicio|date:"Y-m-d H:i" }} → {{ pred.periodo_fin|date:"Y-m-d H:i" }}</p>
+      <p class="mb-1"><strong>Consumo predicho:</strong> {{ pred.consumo_predicho_kwh|floatformat:2 }} kWh</p>
+      <p class="mb-0"><strong>Nivel de alerta:</strong>
+        {% if pred.nivel_alerta.codigo == "ROJO" %}
+          <span class="badge text-bg-danger">ROJO</span>
+        {% elif pred.nivel_alerta.codigo == "NARANJA" %}
+          <span class="badge text-bg-warning">NARANJA</span>
+        {% elif pred.nivel_alerta.codigo == "AMARILLO" %}
+          <span class="badge text-bg-warning">AMARILLO</span>
+        {% else %}
+          <span class="badge text-bg-success">VERDE</span>
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  <div class="mt-3">
+    <a class="btn btn-outline-primary" href="{% url 'core:consumo_new_and_predict' %}">
+      <i class="fa-solid fa-plus"></i> Nueva predicción
+    </a>
+    <a class="btn btn-secondary" href="{% url 'core:index' %}">Volver al inicio</a>
+  </div>
+</div>
+{% endblock %}

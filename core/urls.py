@@ -7,7 +7,7 @@ from . import views
 from .views import ( api_predict_next_24h, ComunaListView, ComunaCreateView, ComunaUpdateView, ComunaDeleteView,
     TipoDispositivoListView, TipoDispositivoCreateView, TipoDispositivoUpdateView, TipoDispositivoDeleteView,
     DispositivoListView, DispositivoCreateView, DispositivoUpdateView, DispositivoDeleteView,
-    AuditoriaEventoListView, AuditoriaEventoDetailView, )
+    AuditoriaEventoListView, AuditoriaEventoDetailView, consumo_new_and_predict, nowcast_preview)
 
 
 app_name = "core"
@@ -190,4 +190,8 @@ urlpatterns = [
     path("mantenedor/predicciones/eliminar/", debug_view(lambda r: None), name="mant_prediccion_delete_base"),
     path("mantenedor/predicciones/<int:pk>/editar/", debug_view(views.PrediccionConsumoUpdate.as_view()), name="mant_prediccion_edit"),
     path("mantenedor/predicciones/<int:pk>/eliminar/", debug_view(views.PrediccionConsumoDelete.as_view()), name="mant_prediccion_delete"),
+
+    ##NOW CAST TEST
+    path("consumos/nuevo-y-predecir/", debug_view(consumo_new_and_predict), name="consumo_new_and_predict"),
+    path("consumos/nowcast/<int:pk>/", debug_view(nowcast_preview), name="nowcast_preview"),
 ]

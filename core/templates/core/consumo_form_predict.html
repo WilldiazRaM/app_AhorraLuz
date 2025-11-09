@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<div class="container mt-4">
+  <h3 class="mb-3">Registrar consumo y predecir</h3>
+  <form method="post" class="card p-3 shadow-sm">
+    {% csrf_token %}
+    <div class="row g-3">
+      <div class="col-md-4">{{ form.fecha.label_tag }} {{ form.fecha }}</div>
+      <div class="col-md-4">{{ form.consumo_kwh.label_tag }} {{ form.consumo_kwh }}</div>
+      <div class="col-md-4">{{ form.costo_clp.label_tag }} {{ form.costo_clp }}</div>
+      <div class="col-md-6">{{ form.dispositivo.label_tag }} {{ form.dispositivo }}</div>
+      <div class="col-md-6">{{ form.fuente.label_tag }} {{ form.fuente }}</div>
+    </div>
+
+    <hr class="my-4">
+    <details>
+      <summary class="mb-2"><strong>Avanzado</strong> — Señales del modelo y calendario (opcional)</summary>
+      <div class="row g-3 mt-1">
+        <div class="col-md-3">{{ form.Global_reactive_power.label_tag }} {{ form.Global_reactive_power }}</div>
+        <div class="col-md-3">{{ form.Voltage.label_tag }} {{ form.Voltage }}</div>
+        <div class="col-md-3">{{ form.Global_intensity.label_tag }} {{ form.Global_intensity }}</div>
+        <div class="col-md-3">{{ form.Temp_C.label_tag }} {{ form.Temp_C }}</div>
+
+        <div class="col-md-3">{{ form.Sub_metering_1.label_tag }} {{ form.Sub_metering_1 }}</div>
+        <div class="col-md-3">{{ form.Sub_metering_2.label_tag }} {{ form.Sub_metering_2 }}</div>
+        <div class="col-md-3">{{ form.Sub_metering_3.label_tag }} {{ form.Sub_metering_3 }}</div>
+        <div class="col-md-3">{{ form.other_kwh_h.label_tag }} {{ form.other_kwh_h }}</div>
+
+        <div class="col-md-3">{{ form.Month.label_tag }} {{ form.Month }}</div>
+        <div class="col-md-3">{{ form.DayOfWeek.label_tag }} {{ form.DayOfWeek }}</div>
+        <div class="col-md-3">{{ form.Hour.label_tag }} {{ form.Hour }}</div>
+        <div class="col-md-3">{{ form.Is_Weekday.label_tag }} {{ form.Is_Weekday }}</div>
+      </div>
+    </details>
+
+    <div class="mt-4 d-flex gap-2">
+      <button class="btn btn-primary"><i class="fa-solid fa-bolt me-1"></i> Guardar y predecir</button>
+      <a class="btn btn-secondary" href="{% url 'core:index' %}">Cancelar</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

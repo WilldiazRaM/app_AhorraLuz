@@ -403,3 +403,51 @@ class PerfilAdminForm(forms.ModelForm):
         fields = ["usuario", "nombres", "apellidos", "tipo_vivienda"] 
 
 ## END CATALOGOS MANTENEDOR TEST       
+
+
+
+##PREDICT TEST1:
+class NowcastInputForm(forms.Form):
+    # Datos de consumo que ya tienes en tu flujo
+    fecha = forms.DateTimeField(
+        label="Fecha (consumo registrado)",
+        input_formats=["%Y-%m-%d %H:%M", "%Y-%m-%d"],
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "YYYY-MM-DD HH:MM"})
+    )
+    consumo_kwh = forms.FloatField(label="Consumo (kWh)", min_value=0, widget=forms.NumberInput(attrs={"class": "form-control"}))
+    costo_clp = forms.IntegerField(label="Costo (CLP)", min_value=0, required=False, widget=forms.NumberInput(attrs={"class": "form-control"}))
+    dispositivo = forms.ModelChoiceField(
+        queryset=Dispositivo.objects.all(),
+        required=False,
+        label="Dispositivo (opcional)",
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
+    fuente = forms.ChoiceField(
+        label="Fuente",
+        choices=[("manual","Manual"), ("medidor","Medidor"), ("api","API")],
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
+
+    # --- Señales del modelo (todas opcionales; se rellenan con defaults si no las das) ---
+    Global_reactive_power = forms.FloatField(required=False, widget=forms.NumberInput(attrs={"class": "form-control"}))
+    Voltage = forms.FloatField(required=False, widget=forms.NumberInput(attrs={"class": "form-control"}))
+    Global_intensity = forms.FloatField(required=False, widget=forms.NumberInput(attrs={"class": "form-control"}))
+    Sub_metering_1 = forms.FloatField(required=False, widget=forms.NumberInput(attrs={"class": "form-control"}))
+    Sub_metering_2 = forms.FloatField(required=False, widget=forms.NumberInput(attrs={"class": "form-control"}))
+    Sub_metering_3 = forms.FloatField(required=False, widget=forms.NumberInput(attrs={"class": "form-control"}))
+    other_kwh_h = forms.FloatField(required=False, widget=forms.NumberInput(attrs={"class": "form-control"}))
+    Temp_C = forms.FloatField(required=False, label="Temperatura ambiente °C", widget=forms.NumberInput(attrs={"class": "form-control"}))
+
+    # Calendario (si no los pasas, se infieren desde 'fecha')
+    Month = forms.IntegerField(required=False, min_value=1, max_value=12, widget=forms.NumberInput(attrs={"class": "form-control"}))
+    DayOfWeek = forms.IntegerField(required=False, min_value=0, max_value=6, widget=forms.NumberInput(attrs={"class": "form-control"}))
+    Hour = forms.IntegerField(required=False, min_value=0, max_value=23, widget=forms.NumberInput(attrs={"class": "form-control"}))
+    Is_Weekday = forms.IntegerField(required=False, min_value=0, max_value=1, widget=forms.NumberInput(attrs={"class": "form-control"}))
+
+    def clean_fecha(self):
+        # Si el usuario sólo escribe YYYY-MM-DD, pon 12:00 por defecto
+        v = self.cleaned_data["fecha"]
+        if v and v.tzinfo is None:
+            # Django la tratará como naive; la view puede forzar timezone.localtime si quieres
+            pass
+        return v

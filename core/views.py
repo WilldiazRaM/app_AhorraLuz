@@ -847,3 +847,145 @@ def api_predict_next_24h(request):
             "kwh": round(kwh, 3)
         })
     return JsonResponse({"predicciones": out})
+
+
+
+# === NOWCAST: helpers === PREDICTS TEST 1
+from django.db.models import Avg
+from django.utils import timezone
+from datetime import timedelta
+from django.contrib.auth.decorators import login_required
+from .utils.ml_nowcast import build_row, predict_one
+from .forms import NowcastInputForm
+from .models import RegistroConsumo, PrediccionConsumo, Notificacion, NivelAlerta, TipoNotificacion
+
+def _get_or_create_nivel_alerta(codigo: str, descripcion: str) -> NivelAlerta:
+    obj, _ = NivelAlerta.objects.get_or_create(codigo=codigo, defaults={"descripcion": descripcion})
+    return obj
+
+def _get_or_create_tipo_notificacion(codigo: str, descripcion: str) -> TipoNotificacion:
+    obj, _ = TipoNotificacion.objects.get_or_create(codigo=codigo, defaults={"descripcion": descripcion})
+    return obj
+
+def _user_baseline_kwh(usuario, ref_dt):
+    """Media de los últimos 7 días; si no hay datos, usa media de últimos 5 registros; si no, 1.0 kWh."""
+    q = RegistroConsumo.objects.filter(usuario=usuario, fecha__gte=ref_dt - timedelta(days=7), fecha__lte=ref_dt)
+    avg = q.aggregate(x=Avg("consumo_kwh"))["x"]
+    if avg is None:
+        q2 = RegistroConsumo.objects.filter(usuario=usuario).order_by("-fecha")[:5]
+        avg = q2.aggregate(x=Avg("consumo_kwh"))["x"]
+    return float(avg or 1.0)
+
+def _classify_alert(yhat: float, baseline: float):
+    """Devuelve (nivel, texto) con 4 niveles: VERDE/AMARILLO/NARANJA/ROJO comparando con baseline."""
+    ratio = yhat / baseline if baseline > 0 else 1.0
+    if ratio < 0.90:
+        nivel = _get_or_create_nivel_alerta("VERDE", "Consumo bajo lo esperado")
+        texto = f"Predicción {yhat:.2f} kWh (−{(1-ratio)*100:.0f}% vs tu promedio). ¡Buen desempeño!"
+    elif ratio < 1.10:
+        nivel = _get_or_create_nivel_alerta("AMARILLO", "Consumo dentro de lo esperado")
+        texto = f"Predicción {yhat:.2f} kWh (≈{(ratio-1)*100:.0f}% vs promedio). Mantén hábitos actuales."
+    elif ratio < 1.30:
+        nivel = _get_or_create_nivel_alerta("NARANJA", "Consumo sobre lo esperado")
+        texto = f"Predicción {yhat:.2f} kWh (+{(ratio-1)*100:.0f}% vs promedio). Revisa horarios y uso de equipos."
+    else:
+        nivel = _get_or_create_nivel_alerta("ROJO", "Riesgo de alto consumo")
+        texto = f"Predicción {yhat:.2f} kWh (+{(ratio-1)*100:.0f}% vs promedio). Considera reducir cargas pico."
+    return nivel, texto, ratio
+
+def _build_feature_row_from_form(form):
+    """Arma signals/calendar/climate con defaults si el usuario no los ingresó."""
+    dt = form.cleaned_data["fecha"]
+    # calendario
+    cal = {
+        "Month": form.cleaned_data.get("Month") or dt.month,
+        "DayOfWeek": form.cleaned_data.get("DayOfWeek") or dt.weekday(),
+        "Hour": form.cleaned_data.get("Hour") or dt.hour,
+        "Is_Weekday": form.cleaned_data.get("Is_Weekday")
+            if form.cleaned_data.get("Is_Weekday") is not None else (1 if dt.weekday() < 5 else 0),
+    }
+    # señales (defaults seguros)
+    sig = {
+        "Global_reactive_power": form.cleaned_data.get("Global_reactive_power") or 0.0,
+        "Voltage": form.cleaned_data.get("Voltage") or 220.0,
+        "Global_intensity": form.cleaned_data.get("Global_intensity") or 5.0,
+        "Sub_metering_1": form.cleaned_data.get("Sub_metering_1") or 0.0,
+        "Sub_metering_2": form.cleaned_data.get("Sub_metering_2") or 0.0,
+        "Sub_metering_3": form.cleaned_data.get("Sub_metering_3") or 0.0,
+        "other_kwh_h": form.cleaned_data.get("other_kwh_h") or 0.0,
+    }
+    clima = {
+        "Temp_C": form.cleaned_data.get("Temp_C") or 18.0
+    }
+    return build_row(sig, cal, clima)
+
+@login_required
+def consumo_new_and_predict(request):
+    """Registra un consumo y, en el mismo submit, ejecuta el modelo y levanta alerta."""
+    user = request.user
+    if request.method == "POST":
+        form = NowcastInputForm(request.POST)
+        if form.is_valid():
+            # 1) registrar consumo
+            reg = RegistroConsumo.objects.create(
+                usuario=user,
+                fecha=form.cleaned_data["fecha"],
+                consumo_kwh=form.cleaned_data["consumo_kwh"],
+                costo_clp=form.cleaned_data.get("costo_clp") or 0,
+                dispositivo=form.cleaned_data.get("dispositivo"),
+                fuente=form.cleaned_data["fuente"]
+            )
+
+            # 2) features & predicción
+            row = _build_feature_row_from_form(form)
+            yhat = predict_one(row)
+
+            # 3) baseline y alerta
+            baseline = _user_baseline_kwh(user, reg.fecha)
+            nivel, texto_alerta, ratio = _classify_alert(yhat, baseline)
+
+            # 4) registrar predicción
+            pred = PrediccionConsumo.objects.create(
+                usuario=user,
+                fecha_prediccion=timezone.now(),
+                periodo_inicio=reg.fecha,              # puedes ajustar ventana a próxima hora/día
+                periodo_fin=reg.fecha + timedelta(hours=1),
+                consumo_predicho_kwh=yhat,
+                nivel_alerta=nivel
+            )
+
+            # 5) crear notificación
+            t = _get_or_create_tipo_notificacion("ALERTA_CONSUMO", "Alerta por predicción de consumo")
+            Notificacion.objects.create(
+                usuario=user,
+                tipo=t,
+                titulo=f"Nivel {nivel.codigo}: predicción {yhat:.2f} kWh",
+                mensaje=texto_alerta,
+                leida=False
+            )
+
+            messages.success(
+                request,
+                f"Consumo registrado. Predicción={yhat:.2f} kWh (baseline={baseline:.2f}). Nivel: {nivel.codigo}."
+            )
+            return redirect("core:nowcast_preview", pk=pred.pk)
+        else:
+            messages.error(request, "Por favor corrige los errores.")
+    else:
+        # valores por defecto para acelerar la carga
+        init_dt = timezone.localtime().replace(minute=0, second=0, microsecond=0)
+        form = NowcastInputForm(initial={
+            "fecha": init_dt.strftime("%Y-%m-%d %H:%M"),
+            "fuente": "manual",
+            "Voltage": 220.0,
+            "Global_intensity": 5.0,
+            "Temp_C": 18.0,
+        })
+
+    return render(request, "core/consumo_form_predict.html", {"form": form})
+
+@login_required
+def nowcast_preview(request, pk: int):
+    """Vista simple para mostrar el resultado y nivel de alerta ya guardado."""
+    pred = get_object_or_404(PrediccionConsumo, pk=pk, usuario=request.user)
+    return render(request, "core/nowcast_preview.html", {"pred": pred})
