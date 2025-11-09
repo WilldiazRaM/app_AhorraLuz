@@ -106,4 +106,94 @@ urlpatterns = [
     # Auditoría (solo lectura)
     path("mantenedor/auditoria/", debug_view(AuditoriaEventoListView.as_view()), name="mant_auditoria_list"),
     path("mantenedor/auditoria/<int:pk>/", debug_view(AuditoriaEventoDetailView.as_view()), name="mant_auditoria_detail"),
+
+    # ---------- CATÁLOGOS ----------
+    # TipoDispositivo
+    path("mantenedor/tipos-dispositivo/", debug_view(views.TipoDispositivoList.as_view()), name="mant_tipodispositivo_list"),
+    path("mantenedor/tipos-dispositivo/nuevo/", debug_view(views.TipoDispositivoCreate.as_view()), name="mant_tipodispositivo_new"),
+    path("mantenedor/tipos-dispositivo/editar/", debug_view(lambda r: None), name="mant_tipodispositivo_edit_base"),  # solo para construir edit_base
+    path("mantenedor/tipos-dispositivo/eliminar/", debug_view(lambda r: None), name="mant_tipodispositivo_delete_base"),
+    path("mantenedor/tipos-dispositivo/<int:pk>/editar/", debug_view(views.TipoDispositivoUpdate.as_view()), name="mant_tipodispositivo_edit"),
+    path("mantenedor/tipos-dispositivo/<int:pk>/eliminar/", debug_view(views.TipoDispositivoDelete.as_view()), name="mant_tipodispositivo_delete"),
+
+    # TipoVivienda
+    path("mantenedor/tipos-vivienda/", debug_view(views.TipoViviendaList.as_view()), name="mant_tipovivienda_list"),
+    path("mantenedor/tipos-vivienda/nuevo/", debug_view(views.TipoViviendaCreate.as_view()), name="mant_tipovivienda_new"),
+    path("mantenedor/tipos-vivienda/editar/", debug_view(lambda r: None), name="mant_tipovivienda_edit_base"),
+    path("mantenedor/tipos-vivienda/eliminar/", debug_view(lambda r: None), name="mant_tipovivienda_delete_base"),
+    path("mantenedor/tipos-vivienda/<int:pk>/editar/", debug_view(views.TipoViviendaUpdate.as_view()), name="mant_tipovivienda_edit"),
+    path("mantenedor/tipos-vivienda/<int:pk>/eliminar/", debug_view(views.TipoViviendaDelete.as_view()), name="mant_tipovivienda_delete"),
+
+    # TipoNotificacion
+    path("mantenedor/tipos-notificacion/", debug_view(views.TipoNotificacionList.as_view()), name="mant_tiponotif_list"),
+    path("mantenedor/tipos-notificacion/nuevo/", debug_view(views.TipoNotificacionCreate.as_view()), name="mant_tiponotif_new"),
+    path("mantenedor/tipos-notificacion/editar/", debug_view(lambda r: None), name="mant_tiponotif_edit_base"),
+    path("mantenedor/tipos-notificacion/eliminar/", debug_view(lambda r: None), name="mant_tiponotif_delete_base"),
+    path("mantenedor/tipos-notificacion/<int:pk>/editar/", debug_view(views.TipoNotificacionUpdate.as_view()), name="mant_tiponotif_edit"),
+    path("mantenedor/tipos-notificacion/<int:pk>/eliminar/", debug_view(views.TipoNotificacionDelete.as_view()), name="mant_tiponotif_delete"),
+
+    # NivelAlerta
+    path("mantenedor/niveles-alerta/", debug_view(views.NivelAlertaList.as_view()), name="mant_nivelalerta_list"),
+    path("mantenedor/niveles-alerta/nuevo/", debug_view(views.NivelAlertaCreate.as_view()), name="mant_nivelalerta_new"),
+    path("mantenedor/niveles-alerta/editar/", debug_view(lambda r: None), name="mant_nivelalerta_edit_base"),
+    path("mantenedor/niveles-alerta/eliminar/", debug_view(lambda r: None), name="mant_nivelalerta_delete_base"),
+    path("mantenedor/niveles-alerta/<int:pk>/editar/", debug_view(views.NivelAlertaUpdate.as_view()), name="mant_nivelalerta_edit"),
+    path("mantenedor/niveles-alerta/<int:pk>/eliminar/", debug_view(views.NivelAlertaDelete.as_view()), name="mant_nivelalerta_delete"),
+
+    # Permisos
+    path("mantenedor/permisos/", debug_view(views.PermisoList.as_view()), name="mant_permiso_list"),
+    path("mantenedor/permisos/nuevo/", debug_view(views.PermisoCreate.as_view()), name="mant_permiso_new"),
+    path("mantenedor/permisos/editar/", debug_view(lambda r: None), name="mant_permiso_edit_base"),
+    path("mantenedor/permisos/eliminar/", debug_view(lambda r: None), name="mant_permiso_delete_base"),
+    path("mantenedor/permisos/<int:pk>/editar/", debug_view(views.PermisoUpdate.as_view()), name="mant_permiso_edit"),
+    path("mantenedor/permisos/<int:pk>/eliminar/", debug_view(views.PermisoDelete.as_view()), name="mant_permiso_delete"),
+
+    # Roles
+    path("mantenedor/roles/", debug_view(views.RolList.as_view()), name="mant_rol_list"),
+    path("mantenedor/roles/nuevo/", debug_view(views.RolCreate.as_view()), name="mant_rol_new"),
+    path("mantenedor/roles/editar/", debug_view(lambda r: None), name="mant_rol_edit_base"),
+    path("mantenedor/roles/eliminar/", debug_view(lambda r: None), name="mant_rol_delete_base"),
+    path("mantenedor/roles/<int:pk>/editar/", debug_view(views.RolUpdate.as_view()), name="mant_rol_edit"),
+    path("mantenedor/roles/<int:pk>/eliminar/", debug_view(views.RolDelete.as_view()), name="mant_rol_delete"),
+
+    # ---------- OPERATIVO ----------
+    # Dispositivos
+    path("mantenedor/dispositivos/", debug_view(views.DispositivoList.as_view()), name="mant_dispositivo_list"),
+    path("mantenedor/dispositivos/nuevo/", debug_view(views.DispositivoCreate.as_view()), name="mant_dispositivo_new"),
+    path("mantenedor/dispositivos/editar/", debug_view(lambda r: None), name="mant_dispositivo_edit_base"),
+    path("mantenedor/dispositivos/eliminar/", debug_view(lambda r: None), name="mant_dispositivo_delete_base"),
+    path("mantenedor/dispositivos/<int:pk>/editar/", debug_view(views.DispositivoUpdate.as_view()), name="mant_dispositivo_edit"),
+    path("mantenedor/dispositivos/<int:pk>/eliminar/", debug_view(views.DispositivoDelete.as_view()), name="mant_dispositivo_delete"),
+
+    # Direcciones
+    path("mantenedor/direcciones/", debug_view(views.DireccionList.as_view()), name="mant_direccion_list"),
+    path("mantenedor/direcciones/nuevo/", debug_view(views.DireccionCreate.as_view()), name="mant_direccion_new"),
+    path("mantenedor/direcciones/editar/", debug_view(lambda r: None), name="mant_direccion_edit_base"),
+    path("mantenedor/direcciones/eliminar/", debug_view(lambda r: None), name="mant_direccion_delete_base"),
+    path("mantenedor/direcciones/<int:pk>/editar/", debug_view(views.DireccionUpdate.as_view()), name="mant_direccion_edit"),
+    path("mantenedor/direcciones/<int:pk>/eliminar/", debug_view(views.DireccionDelete.as_view()), name="mant_direccion_delete"),
+
+    # Registros de consumo
+    path("mantenedor/registros-consumo/", debug_view(views.RegistroConsumoList.as_view()), name="mant_registroconsumo_list"),
+    path("mantenedor/registros-consumo/nuevo/", debug_view(views.RegistroConsumoCreate.as_view()), name="mant_registroconsumo_new"),
+    path("mantenedor/registros-consumo/editar/", debug_view(lambda r: None), name="mant_registroconsumo_edit_base"),
+    path("mantenedor/registros-consumo/eliminar/", debug_view(lambda r: None), name="mant_registroconsumo_delete_base"),
+    path("mantenedor/registros-consumo/<int:pk>/editar/", debug_view(views.RegistroConsumoUpdate.as_view()), name="mant_registroconsumo_edit"),
+    path("mantenedor/registros-consumo/<int:pk>/eliminar/", debug_view(views.RegistroConsumoDelete.as_view()), name="mant_registroconsumo_delete"),
+
+    # Notificaciones
+    path("mantenedor/notificaciones/", debug_view(views.NotificacionList.as_view()), name="mant_notificacion_list"),
+    path("mantenedor/notificaciones/nuevo/", debug_view(views.NotificacionCreate.as_view()), name="mant_notificacion_new"),
+    path("mantenedor/notificaciones/editar/", debug_view(lambda r: None), name="mant_notificacion_edit_base"),
+    path("mantenedor/notificaciones/eliminar/", debug_view(lambda r: None), name="mant_notificacion_delete_base"),
+    path("mantenedor/notificaciones/<int:pk>/editar/", debug_view(views.NotificacionUpdate.as_view()), name="mant_notificacion_edit"),
+    path("mantenedor/notificaciones/<int:pk>/eliminar/", debug_view(views.NotificacionDelete.as_view()), name="mant_notificacion_delete"),
+
+    # Predicciones
+    path("mantenedor/predicciones/", debug_view(views.PrediccionConsumoList.as_view()), name="mant_prediccion_list"),
+    path("mantenedor/predicciones/nuevo/", debug_view(views.PrediccionConsumoCreate.as_view()), name="mant_prediccion_new"),
+    path("mantenedor/predicciones/editar/", debug_view(lambda r: None), name="mant_prediccion_edit_base"),
+    path("mantenedor/predicciones/eliminar/", debug_view(lambda r: None), name="mant_prediccion_delete_base"),
+    path("mantenedor/predicciones/<int:pk>/editar/", debug_view(views.PrediccionConsumoUpdate.as_view()), name="mant_prediccion_edit"),
+    path("mantenedor/predicciones/<int:pk>/eliminar/", debug_view(views.PrediccionConsumoDelete.as_view()), name="mant_prediccion_delete"),
 ]

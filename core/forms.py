@@ -276,6 +276,62 @@ class ContactPublicForm(forms.Form):
 
 
 # ---- Catálogos ----
+class TipoDispositivoForm(forms.ModelForm):
+    class Meta:
+        model = TipoDispositivo  # id, nombre (unique) :contentReference[oaicite:4]{index=4}
+        fields = ["nombre"]
+
+class TipoViviendaForm(forms.ModelForm):
+    class Meta:
+        model = TipoVivienda    # id, nombre (unique) :contentReference[oaicite:5]{index=5}
+        fields = ["nombre"]
+
+class TipoNotificacionForm(forms.ModelForm):
+    class Meta:
+        model = TipoNotificacion  # codigo(unique), descripcion :contentReference[oaicite:6]{index=6}
+        fields = ["codigo", "descripcion"]
+
+class NivelAlertaForm(forms.ModelForm):
+    class Meta:
+        model = NivelAlerta     # codigo(unique), descripcion :contentReference[oaicite:7]{index=7}
+        fields = ["codigo", "descripcion"]
+
+class PermisoForm(forms.ModelForm):
+    class Meta:
+        model = Permiso         # codigo(unique), descripcion :contentReference[oaicite:8]{index=8}
+        fields = ["codigo", "descripcion"]
+
+class RolForm(forms.ModelForm):
+    class Meta:
+        model = Rol             # nombre(unique), descripcion :contentReference[oaicite:9]{index=9}
+        fields = ["nombre", "descripcion"]
+
+# Operativo
+class DireccionForm(forms.ModelForm):
+    class Meta:
+        model = Direccion  # usuario, calle, numero, depto, comuna :contentReference[oaicite:10]{index=10}
+        fields = ["usuario", "calle", "numero", "depto", "comuna"]
+
+class DispositivoForm(forms.ModelForm):
+    class Meta:
+        model = Dispositivo  # usuario, nombre, tipo_dispositivo, potencia..., horas..., activo, fecha_registro :contentReference[oaicite:11]{index=11}
+        fields = ["usuario", "nombre", "tipo_dispositivo", "potencia_promedio_w", "horas_uso_diario", "activo", "fecha_registro"]
+
+class RegistroConsumoAdminForm(forms.ModelForm):
+    class Meta:
+        model = RegistroConsumo  # usuario, fecha, consumo_kwh, costo_clp, dispositivo, fuente :contentReference[oaicite:12]{index=12}
+        fields = ["usuario", "fecha", "consumo_kwh", "costo_clp", "dispositivo", "fuente"]
+
+class NotificacionForm(forms.ModelForm):
+    class Meta:
+        model = Notificacion  # usuario, tipo, titulo, mensaje, leida, creada_en :contentReference[oaicite:13]{index=13}
+        fields = ["usuario", "tipo", "titulo", "mensaje", "leida", "creada_en"]
+
+class PrediccionConsumoForm(forms.ModelForm):
+    class Meta:
+        model = PrediccionConsumo  # usuario, fecha_prediccion, periodo_inicio/fin, consumo_predicho_kwh, nivel_alerta, creado_en :contentReference[oaicite:14]{index=14}
+        fields = ["usuario", "fecha_prediccion", "periodo_inicio", "periodo_fin", "consumo_predicho_kwh", "nivel_alerta", "creado_en"]
+
 class ComunaForm(forms.ModelForm):
     class Meta:
         model = Comuna  # tiene "nombre" unique en BD. :contentReference[oaicite:3]{index=3}

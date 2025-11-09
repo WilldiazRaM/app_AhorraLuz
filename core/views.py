@@ -36,6 +36,49 @@ class SoloSuperuserMixin(UserPassesTestMixin):
     def test_func(self):
         return self.request.user.is_superuser
     
+# Helpers para context genérico
+class GenericList(LoginRequiredMixin, SoloSuperuserMixin, ListView):
+    template_name = "mantenedor/includes/crud_list_generic.html"
+    paginate_by = 20
+    ordering = ["-pk"]
+    title = ""
+    new_url = ""
+    edit_base = ""
+    delete_base = ""
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.update({"title": self.title, "new_url": self.new_url, "edit_base": self.edit_base, "delete_base": self.delete_base})
+        return ctx
+
+class GenericCreate(LoginRequiredMixin, SoloSuperuserMixin, CreateView):
+    template_name = "mantenedor/includes/crud_form_generic.html"
+    title = ""
+    list_url = ""
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.update({"title": self.title, "list_url": self.list_url})
+        return ctx
+
+class GenericUpdate(LoginRequiredMixin, SoloSuperuserMixin, UpdateView):
+    template_name = "mantenedor/includes/crud_form_generic.html"
+    title = ""
+    list_url = ""
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.update({"title": self.title, "list_url": self.list_url})
+        return ctx
+
+class GenericDelete(LoginRequiredMixin, SoloSuperuserMixin, DeleteView):
+    template_name = "mantenedor/includes/crud_confirm_delete_generic.html"
+    title = ""
+    list_url = ""
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.update({"title": self.title, "list_url": self.list_url})
+        return ctx
+
+
+
 class ComunaListView(LoginRequiredMixin, SoloSuperuserMixin, ListView):
     model = Comuna
     template_name = "mantenedor/catalogos/comunas/comuna_list.html"    
@@ -61,6 +104,173 @@ class ComunaDeleteView(LoginRequiredMixin, SoloSuperuserMixin, DeleteView):
 
 
 # ---------- Catálogo: TipoDispositivo ----------
+class TipoDispositivoList(GenericList):
+    model = TipoDispositivo
+    title = "Tipos de dispositivo"
+    new_url = reverse_lazy("core:mant_tipodispositivo_new")
+    edit_base = reverse_lazy("core:mant_tipodispositivo_edit_base")
+    delete_base = reverse_lazy("core:mant_tipodispositivo_delete_base")
+
+class TipoDispositivoCreate(GenericCreate):
+    model = TipoDispositivo
+    form_class = TipoDispositivoForm
+    title = "Nuevo tipo de dispositivo"
+    success_url = reverse_lazy("core:mant_tipodispositivo_list")
+    list_url = success_url
+
+class TipoDispositivoUpdate(GenericUpdate):
+    model = TipoDispositivo
+    form_class = TipoDispositivoForm
+    title = "Editar tipo de dispositivo"
+    success_url = reverse_lazy("core:mant_tipodispositivo_list")
+    list_url = success_url
+
+class TipoDispositivoDelete(GenericDelete):
+    model = TipoDispositivo
+    title = "Eliminar tipo de dispositivo"
+    success_url = reverse_lazy("core:mant_tipodispositivo_list")
+    list_url = success_url
+
+# TipoVivienda :contentReference[oaicite:16]{index=16}
+class TipoViviendaList(GenericList):
+    model = TipoVivienda
+    title = "Tipos de vivienda"
+    new_url = reverse_lazy("core:mant_tipovivienda_new")
+    edit_base = reverse_lazy("core:mant_tipovivienda_edit_base")
+    delete_base = reverse_lazy("core:mant_tipovivienda_delete_base")
+
+class TipoViviendaCreate(GenericCreate):
+    model = TipoVivienda
+    form_class = TipoViviendaForm
+    title = "Nuevo tipo de vivienda"
+    success_url = reverse_lazy("core:mant_tipovivienda_list")
+    list_url = success_url
+
+class TipoViviendaUpdate(GenericUpdate):
+    model = TipoVivienda
+    form_class = TipoViviendaForm
+    title = "Editar tipo de vivienda"
+    success_url = reverse_lazy("core:mant_tipovivienda_list")
+    list_url = success_url
+
+class TipoViviendaDelete(GenericDelete):
+    model = TipoVivienda
+    title = "Eliminar tipo de vivienda"
+    success_url = reverse_lazy("core:mant_tipovivienda_list")
+    list_url = success_url
+
+# TipoNotificacion :contentReference[oaicite:17]{index=17}
+class TipoNotificacionList(GenericList):
+    model = TipoNotificacion
+    title = "Tipos de notificación"
+    new_url = reverse_lazy("core:mant_tiponotif_new")
+    edit_base = reverse_lazy("core:mant_tiponotif_edit_base")
+    delete_base = reverse_lazy("core:mant_tiponotif_delete_base")
+
+class TipoNotificacionCreate(GenericCreate):
+    model = TipoNotificacion
+    form_class = TipoNotificacionForm
+    title = "Nuevo tipo de notificación"
+    success_url = reverse_lazy("core:mant_tiponotif_list")
+    list_url = success_url
+
+class TipoNotificacionUpdate(GenericUpdate):
+    model = TipoNotificacion
+    form_class = TipoNotificacionForm
+    title = "Editar tipo de notificación"
+    success_url = reverse_lazy("core:mant_tiponotif_list")
+    list_url = success_url
+
+class TipoNotificacionDelete(GenericDelete):
+    model = TipoNotificacion
+    title = "Eliminar tipo de notificación"
+    success_url = reverse_lazy("core:mant_tiponotif_list")
+    list_url = success_url
+
+# NivelAlerta :contentReference[oaicite:18]{index=18}
+class NivelAlertaList(GenericList):
+    model = NivelAlerta
+    title = "Niveles de alerta"
+    new_url = reverse_lazy("core:mant_nivelalerta_new")
+    edit_base = reverse_lazy("core:mant_nivelalerta_edit_base")
+    delete_base = reverse_lazy("core:mant_nivelalerta_delete_base")
+
+class NivelAlertaCreate(GenericCreate):
+    model = NivelAlerta
+    form_class = NivelAlertaForm
+    title = "Nuevo nivel de alerta"
+    success_url = reverse_lazy("core:mant_nivelalerta_list")
+    list_url = success_url
+
+class NivelAlertaUpdate(GenericUpdate):
+    model = NivelAlerta
+    form_class = NivelAlertaForm
+    title = "Editar nivel de alerta"
+    success_url = reverse_lazy("core:mant_nivelalerta_list")
+    list_url = success_url
+
+class NivelAlertaDelete(GenericDelete):
+    model = NivelAlerta
+    title = "Eliminar nivel de alerta"
+    success_url = reverse_lazy("core:mant_nivelalerta_list")
+    list_url = success_url
+
+# Permiso :contentReference[oaicite:19]{index=19}
+class PermisoList(GenericList):
+    model = Permiso
+    title = "Permisos"
+    new_url = reverse_lazy("core:mant_permiso_new")
+    edit_base = reverse_lazy("core:mant_permiso_edit_base")
+    delete_base = reverse_lazy("core:mant_permiso_delete_base")
+
+class PermisoCreate(GenericCreate):
+    model = Permiso
+    form_class = PermisoForm
+    title = "Nuevo permiso"
+    success_url = reverse_lazy("core:mant_permiso_list")
+    list_url = success_url
+
+class PermisoUpdate(GenericUpdate):
+    model = Permiso
+    form_class = PermisoForm
+    title = "Editar permiso"
+    success_url = reverse_lazy("core:mant_permiso_list")
+    list_url = success_url
+
+class PermisoDelete(GenericDelete):
+    model = Permiso
+    title = "Eliminar permiso"
+    success_url = reverse_lazy("core:mant_permiso_list")
+    list_url = success_url
+
+# Rol :contentReference[oaicite:20]{index=20}
+class RolList(GenericList):
+    model = Rol
+    title = "Roles"
+    new_url = reverse_lazy("core:mant_rol_new")
+    edit_base = reverse_lazy("core:mant_rol_edit_base")
+    delete_base = reverse_lazy("core:mant_rol_delete_base")
+
+class RolCreate(GenericCreate):
+    model = Rol
+    form_class = RolForm
+    title = "Nuevo rol"
+    success_url = reverse_lazy("core:mant_rol_list")
+    list_url = success_url
+
+class RolUpdate(GenericUpdate):
+    model = Rol
+    form_class = RolForm
+    title = "Editar rol"
+    success_url = reverse_lazy("core:mant_rol_list")
+    list_url = success_url
+
+class RolDelete(GenericDelete):
+    model = Rol
+    title = "Eliminar rol"
+    success_url = reverse_lazy("core:mant_rol_list")
+    list_url = success_url
+
 class TipoDispositivoListView(LoginRequiredMixin, SoloSuperuserMixin, ListView):
     model = TipoDispositivo
     template_name = "mantenedor/catalogos/tipos_dispositivo/tipo_dispositivo_list.html"
@@ -86,6 +296,146 @@ class TipoDispositivoDeleteView(LoginRequiredMixin, SoloSuperuserMixin, DeleteVi
 
 
 # ---------- Operativo: Dispositivo ----------
+class DispositivoList(GenericList):
+    model = Dispositivo
+    title = "Dispositivos"
+    new_url = reverse_lazy("core:mant_dispositivo_new")
+    edit_base = reverse_lazy("core:mant_dispositivo_edit_base")
+    delete_base = reverse_lazy("core:mant_dispositivo_delete_base")
+
+class DispositivoCreate(GenericCreate):
+    model = Dispositivo
+    form_class = DispositivoForm
+    title = "Nuevo dispositivo"
+    success_url = reverse_lazy("core:mant_dispositivo_list")
+    list_url = success_url
+
+class DispositivoUpdate(GenericUpdate):
+    model = Dispositivo
+    form_class = DispositivoForm
+    title = "Editar dispositivo"
+    success_url = reverse_lazy("core:mant_dispositivo_list")
+    list_url = success_url
+
+class DispositivoDelete(GenericDelete):
+    model = Dispositivo
+    title = "Eliminar dispositivo"
+    success_url = reverse_lazy("core:mant_dispositivo_list")
+    list_url = success_url
+
+# Direccion :contentReference[oaicite:22]{index=22}
+class DireccionList(GenericList):
+    model = Direccion
+    title = "Direcciones"
+    new_url = reverse_lazy("core:mant_direccion_new")
+    edit_base = reverse_lazy("core:mant_direccion_edit_base")
+    delete_base = reverse_lazy("core:mant_direccion_delete_base")
+
+class DireccionCreate(GenericCreate):
+    model = Direccion
+    form_class = DireccionForm
+    title = "Nueva dirección"
+    success_url = reverse_lazy("core:mant_direccion_list")
+    list_url = success_url
+
+class DireccionUpdate(GenericUpdate):
+    model = Direccion
+    form_class = DireccionForm
+    title = "Editar dirección"
+    success_url = reverse_lazy("core:mant_direccion_list")
+    list_url = success_url
+
+class DireccionDelete(GenericDelete):
+    model = Direccion
+    title = "Eliminar dirección"
+    success_url = reverse_lazy("core:mant_direccion_list")
+    list_url = success_url
+
+# RegistroConsumo (modo admin) :contentReference[oaicite:23]{index=23}
+class RegistroConsumoList(GenericList):
+    model = RegistroConsumo
+    title = "Registros de consumo"
+    new_url = reverse_lazy("core:mant_registroconsumo_new")
+    edit_base = reverse_lazy("core:mant_registroconsumo_edit_base")
+    delete_base = reverse_lazy("core:mant_registroconsumo_delete_base")
+
+class RegistroConsumoCreate(GenericCreate):
+    model = RegistroConsumo
+    form_class = RegistroConsumoAdminForm
+    title = "Nuevo registro de consumo"
+    success_url = reverse_lazy("core:mant_registroconsumo_list")
+    list_url = success_url
+
+class RegistroConsumoUpdate(GenericUpdate):
+    model = RegistroConsumo
+    form_class = RegistroConsumoAdminForm
+    title = "Editar registro de consumo"
+    success_url = reverse_lazy("core:mant_registroconsumo_list")
+    list_url = success_url
+
+class RegistroConsumoDelete(GenericDelete):
+    model = RegistroConsumo
+    title = "Eliminar registro de consumo"
+    success_url = reverse_lazy("core:mant_registroconsumo_list")
+    list_url = success_url
+
+# Notificacion :contentReference[oaicite:24]{index=24}
+class NotificacionList(GenericList):
+    model = Notificacion
+    title = "Notificaciones"
+    new_url = reverse_lazy("core:mant_notificacion_new")
+    edit_base = reverse_lazy("core:mant_notificacion_edit_base")
+    delete_base = reverse_lazy("core:mant_notificacion_delete_base")
+
+class NotificacionCreate(GenericCreate):
+    model = Notificacion
+    form_class = NotificacionForm
+    title = "Nueva notificación"
+    success_url = reverse_lazy("core:mant_notificacion_list")
+    list_url = success_url
+
+class NotificacionUpdate(GenericUpdate):
+    model = Notificacion
+    form_class = NotificacionForm
+    title = "Editar notificación"
+    success_url = reverse_lazy("core:mant_notificacion_list")
+    list_url = success_url
+
+class NotificacionDelete(GenericDelete):
+    model = Notificacion
+    title = "Eliminar notificación"
+    success_url = reverse_lazy("core:mant_notificacion_list")
+    list_url = success_url
+
+# PrediccionConsumo :contentReference[oaicite:25]{index=25}
+class PrediccionConsumoList(GenericList):
+    model = PrediccionConsumo
+    title = "Predicciones de consumo"
+    new_url = reverse_lazy("core:mant_prediccion_new")
+    edit_base = reverse_lazy("core:mant_prediccion_edit_base")
+    delete_base = reverse_lazy("core:mant_prediccion_delete_base")
+
+class PrediccionConsumoCreate(GenericCreate):
+    model = PrediccionConsumo
+    form_class = PrediccionConsumoForm
+    title = "Nueva predicción de consumo"
+    success_url = reverse_lazy("core:mant_prediccion_list")
+    list_url = success_url
+
+class PrediccionConsumoUpdate(GenericUpdate):
+    model = PrediccionConsumo
+    form_class = PrediccionConsumoForm
+    title = "Editar predicción de consumo"
+    success_url = reverse_lazy("core:mant_prediccion_list")
+    list_url = success_url
+
+class PrediccionConsumoDelete(GenericDelete):
+    model = PrediccionConsumo
+    title = "Eliminar predicción de consumo"
+    success_url = reverse_lazy("core:mant_prediccion_list")
+    list_url = success_url
+
+
 class DispositivoListView(LoginRequiredMixin, SoloSuperuserMixin, ListView):
     model = Dispositivo
     template_name = "mantenedor/operativo/dispositivos/dispositivo_list.html"
