@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h3>{{ object|default_if_none:"Nuevo Tipo de Dispositivo" }}</h3>
+  <hr>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <button class="btn btn-primary">Guardar</button>
+    <a class="btn btn-secondary" href="{% url 'core:mant_tipodispositivo_list' %}">Cancelar</a>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h4>Eliminar Tipo de Dispositivo</h4>
+  <p>¿Seguro que deseas eliminar <strong>{{ object.nombre }}</strong>?</p>
+
+  <form method="post">{% csrf_token %}
+    <button class="btn btn-danger">Eliminar</button>
+    <a class="btn btn-secondary" href="{% url 'core:mant_tipodispositivo_list' %}">Cancelar</a>
+  </form>
+</div>
+{% endblock %}
