@@ -194,4 +194,5 @@ urlpatterns = [
     ##NOW CAST TEST
     path("consumos/nuevo-y-predecir/", debug_view(consumo_new_and_predict), name="consumo_new_and_predict"),
     path("consumos/nowcast/<int:pk>/", debug_view(nowcast_preview), name="nowcast_preview"),
+    path("consumos/nuevo-y-predecir/", views.consumo_new_and_predict, name="consumo_new_and_predict"),
 ]

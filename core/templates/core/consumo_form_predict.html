@@ -1,43 +1,38 @@
 {% extends "base.html" %}
-{% load static %}
+{% block title %}Nuevo consumo + Predicción{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-  <h3 class="mb-3">Registrar consumo y predecir</h3>
-  <form method="post" class="card p-3 shadow-sm">
-    {% csrf_token %}
-    <div class="row g-3">
-      <div class="col-md-4">{{ form.fecha.label_tag }} {{ form.fecha }}</div>
-      <div class="col-md-4">{{ form.consumo_kwh.label_tag }} {{ form.consumo_kwh }}</div>
-      <div class="col-md-4">{{ form.costo_clp.label_tag }} {{ form.costo_clp }}</div>
-      <div class="col-md-6">{{ form.dispositivo.label_tag }} {{ form.dispositivo }}</div>
-      <div class="col-md-6">{{ form.fuente.label_tag }} {{ form.fuente }}</div>
-    </div>
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h5 class="card-title mb-3"><i class="fa-solid fa-bolt me-2"></i>Nuevo consumo y predicción</h5>
 
-    <hr class="my-4">
-    <details>
-      <summary class="mb-2"><strong>Avanzado</strong> — Señales del modelo y calendario (opcional)</summary>
-      <div class="row g-3 mt-1">
-        <div class="col-md-3">{{ form.Global_reactive_power.label_tag }} {{ form.Global_reactive_power }}</div>
-        <div class="col-md-3">{{ form.Voltage.label_tag }} {{ form.Voltage }}</div>
-        <div class="col-md-3">{{ form.Global_intensity.label_tag }} {{ form.Global_intensity }}</div>
-        <div class="col-md-3">{{ form.Temp_C.label_tag }} {{ form.Temp_C }}</div>
+    <form method="post" class="row g-3 mb-3">
+      {% csrf_token %}
+      {{ form.as_p }}
 
-        <div class="col-md-3">{{ form.Sub_metering_1.label_tag }} {{ form.Sub_metering_1 }}</div>
-        <div class="col-md-3">{{ form.Sub_metering_2.label_tag }} {{ form.Sub_metering_2 }}</div>
-        <div class="col-md-3">{{ form.Sub_metering_3.label_tag }} {{ form.Sub_metering_3 }}</div>
-        <div class="col-md-3">{{ form.other_kwh_h.label_tag }} {{ form.other_kwh_h }}</div>
-
-        <div class="col-md-3">{{ form.Month.label_tag }} {{ form.Month }}</div>
-        <div class="col-md-3">{{ form.DayOfWeek.label_tag }} {{ form.DayOfWeek }}</div>
-        <div class="col-md-3">{{ form.Hour.label_tag }} {{ form.Hour }}</div>
-        <div class="col-md-3">{{ form.Is_Weekday.label_tag }} {{ form.Is_Weekday }}</div>
+      <!-- Campos extra para features (si no vienen en el form) -->
+      <div class="col-md-4">
+        <label class="form-label">Temp (°C)</label>
+        <input type="number" step="0.1" name="temp_c" class="form-control" placeholder="Ej: 18.5">
       </div>
-    </details>
+      <div class="col-12">
+        <button class="btn btn-brand" type="submit">
+          <i class="fa-solid fa-chart-line me-1"></i> Guardar y predecir
+        </button>
+        <a class="btn btn-outline-secondary ms-2" href="{% url 'core:home' %}">
+          Volver al inicio
+        </a>
+      </div>
+    </form>
 
-    <div class="mt-4 d-flex gap-2">
-      <button class="btn btn-primary"><i class="fa-solid fa-bolt me-1"></i> Guardar y predecir</button>
-      <a class="btn btn-secondary" href="{% url 'core:index' %}">Cancelar</a>
+    {% if yhat is not None %}
+    <div class="alert {% if nivel == 'ALTA' %}alert-danger{% elif nivel == 'MEDIA' %}alert-warning{% elif nivel == 'BAJA' %}alert-info{% else %}alert-success{% endif %}">
+      <div class="fw-semibold">
+        Predicción estimada (próxima hora): {{ yhat|floatformat:2 }} kWh
+      </div>
+      <div>{{ alerta }}</div>
     </div>
-  </form>
+    {% endif %}
+  </div>
 </div>
 {% endblock %}
