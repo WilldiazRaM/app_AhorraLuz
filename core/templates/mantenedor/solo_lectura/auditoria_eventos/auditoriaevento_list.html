@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center">
+    <h3 class="mb-0">
+      <i class="fa-solid fa-magnifying-glass-chart me-2"></i> Auditoría de eventos
+    </h3>
+  </div>
+  <hr class="my-3">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle">
+      <thead class="table-light">
+        <tr>
+          <th>ID</th>
+          <th>Entidad</th>
+          <th>Acción</th>
+          <th>Usuario</th>
+          <th>Detalle</th>
+          <th>Fecha</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for obj in object_list %}
+        <tr>
+          <td>{{ obj.id }}</td>
+          <td>{{ obj.entidad }}</td>
+          <td><span class="badge bg-secondary">{{ obj.accion }}</span></td>
+          <td>{{ obj.usuario_id }}</td>
+          <td class="text-truncate" style="max-width:420px">{{ obj.detalle }}</td>
+          <td>{{ obj.ocurrido_en|date:"Y-m-d H:i:s" }}</td>
+          <td class="text-end">
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'core:mant_auditoria_detail' obj.pk %}">
+              Ver
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="7" class="text-center py-4">
+            <i class="fa-regular fa-circle-check me-2"></i> No hay eventos registrados.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated %}
+  <nav aria-label="Paginación">
+    <ul class="pagination">
+      {% if page_obj.has_previous %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">«</a></li>
+      {% endif %}
+      <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+      {% if page_obj.has_next %}
+      <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">»</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>
+{% endblock %}

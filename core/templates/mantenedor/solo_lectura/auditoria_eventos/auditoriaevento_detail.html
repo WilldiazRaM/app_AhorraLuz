@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <a href="{% url 'core:mant_auditoria_list' %}" class="btn btn-link p-0 mb-3">
+    ← Volver a auditoría
+  </a>
+  <div class="card shadow-sm">
+    <div class="card-header">
+      <strong>Evento #{{ object.id }}</strong>
+    </div>
+    <div class="card-body">
+      <dl class="row">
+        <dt class="col-sm-3">Entidad</dt><dd class="col-sm-9">{{ object.entidad }}</dd>
+        <dt class="col-sm-3">Acción</dt><dd class="col-sm-9"><span class="badge bg-secondary">{{ object.accion }}</span></dd>
+        <dt class="col-sm-3">Usuario</dt><dd class="col-sm-9">{{ object.usuario_id }}</dd>
+        <dt class="col-sm-3">Detalle</dt><dd class="col-sm-9"><pre class="mb-0">{{ object.detalle }}</pre></dd>
+        <dt class="col-sm-3">Fecha</dt><dd class="col-sm-9">{{ object.ocurrido_en|date:"Y-m-d H:i:s" }}</dd>
+      </dl>
+    </div>
+  </div>
+</div>
+{% endblock %}
