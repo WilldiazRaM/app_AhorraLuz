@@ -9,6 +9,7 @@ from .forms import *
 from .models import *
 from django.core.paginator import Paginator
 from django.db.models import Q
+from django.db.models import Avg
 from django.utils import timezone
 import logging
 from django.core.mail import send_mail
@@ -20,16 +21,19 @@ import bcrypt
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
-import secrets, hashlib, datetime, os
 from django.http import JsonResponse
-from django.utils import timezone
 from datetime import timedelta
 import pytz, numpy as np
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
-
 from .utils.ml_nowcast import build_row, predict_one
+
+
+
+
+
+
 
 
 class SoloSuperuserMixin(UserPassesTestMixin):
@@ -851,13 +855,7 @@ def api_predict_next_24h(request):
 
 
 # === NOWCAST: helpers === PREDICTS TEST 1
-from django.db.models import Avg
-from django.utils import timezone
-from datetime import timedelta
-from django.contrib.auth.decorators import login_required
-from .utils.ml_nowcast import build_row, predict_one
-from .forms import NowcastInputForm
-from .models import RegistroConsumo, PrediccionConsumo, Notificacion, NivelAlerta, TipoNotificacion
+
 
 def _get_or_create_nivel_alerta(codigo: str, descripcion: str) -> NivelAlerta:
     obj, _ = NivelAlerta.objects.get_or_create(codigo=codigo, defaults={"descripcion": descripcion})

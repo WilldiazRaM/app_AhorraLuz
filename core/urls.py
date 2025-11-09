@@ -1,13 +1,13 @@
-# core/urls.py
 import logging
 from functools import wraps
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
-from .views import ( api_predict_next_24h, ComunaListView, ComunaCreateView, ComunaUpdateView, ComunaDeleteView,
+from .views import (  ComunaListView, ComunaCreateView, ComunaUpdateView, ComunaDeleteView,
     TipoDispositivoListView, TipoDispositivoCreateView, TipoDispositivoUpdateView, TipoDispositivoDeleteView,
     DispositivoListView, DispositivoCreateView, DispositivoUpdateView, DispositivoDeleteView,
-    AuditoriaEventoListView, AuditoriaEventoDetailView, consumo_new_and_predict, nowcast_preview)
+    AuditoriaEventoListView, AuditoriaEventoDetailView) 
+from .views import api_predict_next_24h, consumo_new_and_predict, nowcast_preview
 
 
 app_name = "core"
