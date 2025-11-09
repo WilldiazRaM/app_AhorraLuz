@@ -4,35 +4,139 @@
 {% block content %}
 <div class="card shadow-sm">
   <div class="card-body">
-    <h5 class="card-title mb-3"><i class="fa-solid fa-bolt me-2"></i>Nuevo consumo y predicción</h5>
+    <h5 class="card-title mb-3">
+      <i class="fa-solid fa-bolt me-2"></i>
+      Nuevo consumo y predicción
+    </h5>
 
-    <form method="post" class="row g-3 mb-3">
-      {% csrf_token %}
-      {{ form.as_p }}
+    {# Mensajes del framework de mensajes (éxito/errores globales) #}
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} mb-3" role="alert">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
 
-      <!-- Campos extra para features (si no vienen en el form) -->
-      <div class="col-md-4">
-        <label class="form-label">Temp (°C)</label>
-        <input type="number" step="0.1" name="temp_c" class="form-control" placeholder="Ej: 18.5">
+    {# Errores no asociados a campos #}
+    {% if form.non_field_errors %}
+      <div class="alert alert-danger" role="alert">
+        {% for e in form.non_field_errors %}{{ e }}<br>{% endfor %}
       </div>
-      <div class="col-12">
-        <button class="btn btn-brand" type="submit">
-          <i class="fa-solid fa-chart-line me-1"></i> Guardar y predecir
+    {% endif %}
+
+    <form method="post" class="row g-3 mb-3" id="consumo-form" novalidate>
+      {% csrf_token %}
+
+      <div class="col-sm-6 col-md-4">
+        <label class="form-label" for="{{ form.fecha.id_for_label }}">Fecha</label>
+        {{ form.fecha }}
+        {% if form.fecha.errors %}
+          <div class="invalid-feedback d-block">
+            {% for e in form.fecha.errors %}{{ e }}{% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="col-sm-6 col-md-4">
+        <label class="form-label" for="{{ form.consumo_kwh.id_for_label }}">Consumo kWh</label>
+        {{ form.consumo_kwh }}
+        <div class="form-text">Ingresa el consumo del periodo seleccionado.</div>
+        {% if form.consumo_kwh.errors %}
+          <div class="invalid-feedback d-block">
+            {% for e in form.consumo_kwh.errors %}{{ e }}{% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="col-sm-6 col-md-4">
+        <label class="form-label" for="{{ form.costo_clp.id_for_label }}">Costo CLP</label>
+        {{ form.costo_clp }}
+        <div class="form-text">Costo asociado a ese consumo (opcional si no lo usas).</div>
+        {% if form.costo_clp.errors %}
+          <div class="invalid-feedback d-block">
+            {% for e in form.costo_clp.errors %}{{ e }}{% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="col-sm-6 col-md-4">
+        <label class="form-label" for="{{ form.dispositivo.id_for_label }}">Dispositivo</label>
+        {{ form.dispositivo }}
+        {% if form.dispositivo.errors %}
+          <div class="invalid-feedback d-block">
+            {% for e in form.dispositivo.errors %}{{ e }}{% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="col-sm-6 col-md-4">
+        <label class="form-label" for="{{ form.fuente.id_for_label }}">Fuente</label>
+        {{ form.fuente }}
+        <div class="form-text">Debe ser “Manual” o “Automática”.</div>
+        {% if form.fuente.errors %}
+          <div class="invalid-feedback d-block">
+            {% for e in form.fuente.errors %}{{ e }}{% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="col-sm-6 col-md-4">
+        <label class="form-label" for="{{ form.temp_c.id_for_label }}">Temperatura (°C)</label>
+        {{ form.temp_c }}
+        <div class="form-text">Si no la conoces, puedes dejarla vacía.</div>
+        {% if form.temp_c.errors %}
+          <div class="invalid-feedback d-block">
+            {% for e in form.temp_c.errors %}{{ e }}{% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="col-12 d-flex align-items-center gap-2">
+        <button class="btn btn-brand" type="submit" id="submit-btn">
+          <span class="spinner-border spinner-border-sm me-2 d-none" id="btn-spinner" role="status" aria-hidden="true"></span>
+          <i class="fa-solid fa-chart-line me-1"></i>
+          Guardar y predecir
         </button>
-        <a class="btn btn-outline-secondary ms-2" href="{% url 'core:home' %}">
+        <a class="btn btn-outline-secondary" href="{% url 'core:home' %}">
           Volver al inicio
         </a>
       </div>
     </form>
 
     {% if yhat is not None %}
-    <div class="alert {% if nivel == 'ALTA' %}alert-danger{% elif nivel == 'MEDIA' %}alert-warning{% elif nivel == 'BAJA' %}alert-info{% else %}alert-success{% endif %}">
-      <div class="fw-semibold">
-        Predicción estimada (próxima hora): {{ yhat|floatformat:2 }} kWh
+      {# Normalizamos el código de nivel para estilos (acepta ALTA/MEDIA/BAJA o HIGH/MEDIUM/LOW) #}
+      {% with lvl=nivel|default_if_none:'' %}
+        {% if lvl in 'ALTA,ALTO,HIGH' %}
+          {% setclass 'alert-danger' %}
+        {% elif lvl in 'MEDIA,MEDIUM' %}
+          {% setclass 'alert-warning' %}
+        {% elif lvl in 'BAJA,LOW' %}
+          {% setclass 'alert-info' %}
+        {% else %}
+          {% setclass 'alert-success' %}
+        {% endif %}
+      {% endwith %}
+      <div class="alert {% firstof setclass 'alert-success' %}">
+        <div class="fw-semibold">
+          Predicción estimada (próximo periodo): {{ yhat|floatformat:2 }} kWh
+        </div>
+        <div>{{ alerta }}</div>
       </div>
-      <div>{{ alerta }}</div>
-    </div>
     {% endif %}
   </div>
 </div>
+
+{# Prevención de doble envío: deshabilita botón y muestra spinner #}
+<script>
+  (function() {
+    const form = document.getElementById('consumo-form');
+    const btn  = document.getElementById('submit-btn');
+    const spn  = document.getElementById('btn-spinner');
+    if (form && btn && spn) {
+      form.addEventListener('submit', function() {
+        btn.setAttribute('disabled', 'disabled');
+        spn.classList.remove('d-none');
+      });
+    }
+  })();
+</script>
 {% endblock %}
