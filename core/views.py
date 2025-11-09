@@ -28,7 +28,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from .utils.ml_nowcast import build_row, predict_one
-
+from core.utils.auth_links import ensure_usuario_for_request
 
 
 
@@ -917,14 +917,14 @@ def _build_feature_row_from_form(form):
     }
     return build_row(sig, cal, clima)
 
-@login_required
+
 @login_required
 def consumo_new_and_predict(request):
     """
-    1) Crea un RegistroConsumo del usuario
-    2) Construye fila de features y predice el consumo próximo inmediato
-    3) Genera alerta (Notificacion) según umbrales y guarda PrediccionConsumo
-    4) Muestra resultado en la misma vista
+    1) Valida form y asegura el Usuario (UUID interno) vinculado al login
+    2) Guarda RegistroConsumo
+    3) Genera predicción y Notificación
+    4) Devuelve misma vista con feedback
     """
     form = RegistroConsumoForm(request.POST or None)
 
@@ -932,15 +932,40 @@ def consumo_new_and_predict(request):
     alerta = None
     nivel = None
 
-    if request.method == "POST" and form.is_valid():
-        rc = form.save(commit=False)
-        rc.usuario_id = request.user.id
-        rc.creado_en = timezone.now()
-        rc.actualizado_en = timezone.now()
-        rc.save()
+    if request.method == "POST":
+        if not form.is_valid():
+            # Devolvemos errores de validación de form, sin 500s
+            return render(request, "core/consumo_form_predict.html", {"form": form})
 
-        # ---- Construcción de features (signals + calendar + climate) ----
-        # signals desde el form (usa nombres de tu modelo/feature set)
+        # Asegura el Usuario (UUID) de tu dominio, no el auth user
+        usuario = ensure_usuario_for_request(request)
+        if not usuario:
+            form.add_error(None, "No fue posible asociar tu cuenta a un perfil de usuario interno.")
+            return render(request, "core/consumo_form_predict.html", {"form": form})
+
+        # Construye el registro sin grabar aún
+        rc = form.save(commit=False)
+        rc.usuario_id = usuario.id               # <- UUID correcto (tabla usuarios)
+        rc.creado_en = timezone.now()
+
+        # (opcional) Valida pertenencia del dispositivo
+        if rc.dispositivo_id:
+            pertenece = Dispositivo.objects.filter(
+                id=rc.dispositivo_id, usuario_id=usuario.id
+            ).exists()
+            if not pertenece:
+                form.add_error("dispositivo", "El dispositivo no pertenece a tu cuenta.")
+                return render(request, "core/consumo_form_predict.html", {"form": form})
+
+        # Guarda registro
+        try:
+            rc.save()
+        except Exception as e:
+            form.add_error(None, "No se pudo guardar el registro (revisa datos o duplicidad).")
+            return render(request, "core/consumo_form_predict.html", {"form": form})
+
+        # -------- Features para el modelo --------
+        # Ajusta nombres a tu set real de features
         signals = {
             "Global_reactive_power": float(request.POST.get("global_reactive_power", 0) or 0),
             "Voltage": float(request.POST.get("voltage", 0) or 0),
@@ -950,68 +975,64 @@ def consumo_new_and_predict(request):
             "Sub_metering_3": float(request.POST.get("sub_metering_3", 0) or 0),
             "other_kwh_h": float(request.POST.get("other_kwh_h", 0) or 0),
         }
-
         now = timezone.localtime()
         calendar = {
             "Month": now.month,
-            "DayOfWeek": now.weekday(),       # 0=Lunes
+            "DayOfWeek": now.weekday(),  # 0=Lunes
             "Hour": now.hour,
             "Is_Weekday": 1 if now.weekday() < 5 else 0,
         }
-
-        # Puedes leer temperatura real de otra fuente; por ahora, del form (o 0)
         climate = {
             "Temp_C": float(request.POST.get("temp_c", 0) or 0),
         }
 
-        row = build_row(signals, calendar, climate)  # reindex a tus features
-        yhat = predict_one(row)                      # float >= 0
+        row = build_row(signals, calendar, climate)
+        yhat = float(predict_one(row))
 
-        # ---- Reglas de alerta (ejemplo) ----
-        # Ajusta umbrales a tu dataset real (kWh/h estimado)
+        # -------- Reglas de alerta --------
         if yhat >= 3.5:
-            nivel_code = "ALTA"
-            alerta = "⚠️ Alto consumo estimado para la próxima hora."
+            nivel_code = "HIGH"
+            alerta = "⚠️ Alto consumo estimado para el periodo."
         elif yhat >= 2.5:
-            nivel_code = "MEDIA"
-            alerta = "Consumo medio-alto: considera posponer uso de electrodomésticos intensivos."
+            nivel_code = "MEDIUM"
+            alerta = "Consumo medio-alto: considera posponer uso intensivo."
         elif yhat >= 1.5:
-            nivel_code = "BAJA"
-            alerta = "Consumo moderado: podrías optimizar calefacción/iluminación."
+            nivel_code = "LOW"
+            alerta = "Consumo moderado: optimiza calefacción/iluminación."
         else:
-            nivel_code = "INFO"
+            nivel_code = None
             alerta = "Consumo proyectado bajo. ¡Buen momento para tareas eléctricas!"
 
-        # Busca/crea el nivel (catálogo)
-        nivel = NivelAlerta.objects.filter(codigo=nivel_code).first()
-        if not nivel:
-            nivel = NivelAlerta.objects.create(codigo=nivel_code, descripcion=f"Nivel {nivel_code}")
+        nivel = None
+        if nivel_code:
+            nivel = NivelAlerta.objects.filter(codigo=nivel_code).first()
 
-        # Guarda predicción
+        # -------- Guarda predicción (con los nombres REALES del modelo) --------
+        hoy = timezone.localdate()
         PrediccionConsumo.objects.create(
-            usuario=rc.usuario,
-            registro_consumo=rc,
-            estimado_kwh=yhat,
+            usuario=usuario,
+            fecha_prediccion=hoy,
+            periodo_inicio=rc.fecha,                 # ajusta si tu periodo es horario/diario
+            periodo_fin=rc.fecha,                    # o hoy + timedelta(days=1) si corresponde
+            consumo_predicho_kwh=yhat,
+            nivel_alerta=nivel,
             creado_en=timezone.now(),
-            actualizado_en=timezone.now(),
         )
 
-        # Notificación (opcional)
+        # -------- Notificación opcional --------
         tipo = TipoNotificacion.objects.filter(codigo="ALERTA_CONSUMO").first()
         if not tipo:
-            tipo = TipoNotificacion.objects.create(codigo="ALERTA_CONSUMO", descripcion="Alerta por predicción de alto consumo")
-
+            tipo = TipoNotificacion.objects.create(codigo="ALERTA_CONSUMO", descripcion="Alerta por predicción de consumo")
         Notificacion.objects.create(
-            usuario=rc.usuario,
+            usuario=usuario,
             tipo=tipo,
-            nivel=nivel,
             titulo="Predicción de consumo",
             mensaje=alerta,
-            creado_en=timezone.now(),
-            actualizado_en=timezone.now(),
+            leida=False,
+            creada_en=timezone.now(),
         )
 
-        messages.success(request, "Registro guardado y predicción generada.")
+        messages.success(request, "✅ Registro guardado y predicción generada.")
 
     return render(request, "core/consumo_form_predict.html", {
         "form": form,

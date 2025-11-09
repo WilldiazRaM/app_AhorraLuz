@@ -46,23 +46,28 @@ class PerfilForm(forms.ModelForm):
             'apellidos': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
+# forms.py
 class RegistroConsumoForm(forms.ModelForm):
+    FUENTE_CHOICES = [("manual","Manual"), ("automatica","Automática")]
+    fuente = forms.ChoiceField(choices=FUENTE_CHOICES, widget=forms.Select(attrs={"class": "form-select"}))
+
     class Meta:
         model = RegistroConsumo
-        fields = ['fecha', 'consumo_kwh', 'costo_clp', 'dispositivo', 'fuente']
+        fields = ["fecha", "consumo_kwh", "costo_clp", "dispositivo", "fuente", "temp_c"]
         widgets = {
-            'fecha': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'consumo_kwh': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '0.001'}),
-            'costo_clp': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '1'}),
-            'dispositivo': forms.Select(attrs={'class': 'form-select'}),
-            'fuente': forms.TextInput(attrs={'class': 'form-control'}),
+            "fecha": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+            "consumo_kwh": forms.NumberInput(attrs={"class": "form-control", "min": "0", "step": "0.001"}),
+            "costo_clp": forms.NumberInput(attrs={"class": "form-control", "min": "0", "step": "1"}),
+            "dispositivo": forms.Select(attrs={"class": "form-select"}),
         }
 
-    def clean_fecha(self):
-        f = self.cleaned_data.get("fecha")
-        if f and f > timezone.localdate():
-            raise forms.ValidationError("La fecha no puede ser futura.")
-        return f
+    def clean_fuente(self):
+        v = (self.cleaned_data.get("fuente") or "").strip().lower()
+        # tolera entradas antiguas:
+        if v in {"manual", "m", "1"}: return "manual"
+        if v in {"automatica", "automática", "a", "2", "auto"}: return "automatica"
+        return v
+
 
 class AdminRegisterUserForm(forms.Form):
     email = forms.EmailField(label="Correo electrónico", required=True)
