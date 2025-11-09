@@ -181,31 +181,25 @@
       </div>
 
       <div class="offcanvas-body p-0">
-        <!-- Atajos rápidos -->
+        <!-- Atajos -->
         <div class="admin-quick grid-2">
-          <a class="admin-quick__item" href="{% url 'core:register_user_admin' %}" data-bs-toggle="tooltip"
-            title="Crear una cuenta de usuario">
+          <a class="admin-quick__item" href="{% url 'core:register_user_admin' %}" title="Crear una cuenta de usuario">
             <i class="fa-solid fa-user-plus"></i><span>Registrar</span>
           </a>
-          <a class="admin-quick__item" href="{% url 'core:admin_users_list' %}" data-bs-toggle="tooltip"
-            title="Gestionar usuarios">
+          <a class="admin-quick__item" href="{% url 'core:admin_users_list' %}" title="Gestionar usuarios">
             <i class="fa-solid fa-users-gear"></i><span>Usuarios</span>
           </a>
-          <a class="admin-quick__item" href="{% url 'core:mant_auditoria_list' %}" data-bs-toggle="tooltip"
-            title="Eventos y trazas del sistema">
+          <a class="admin-quick__item" href="{% url 'core:mant_auditoria_list' %}" title="Eventos y trazas del sistema">
             <i class="fa-solid fa-clipboard-list"></i><span>Auditoría</span>
           </a>
-          <a class="admin-quick__item" href="{% url 'core:mant_dispositivo_list' %}" data-bs-toggle="tooltip"
-            title="Dispositivos monitoreados">
+          <a class="admin-quick__item" href="{% url 'core:mant_dispositivo_list' %}" title="Dispositivos monitoreados">
             <i class="fa-solid fa-plug-circle-bolt"></i><span>Dispositivos</span>
           </a>
         </div>
 
-        <!-- Secciones -->
+        <!-- Usuarios -->
         <div class="admin-section">
-          <div class="admin-section__title">
-            <i class="fa-solid fa-id-card-clip me-2"></i>Usuarios
-          </div>
+          <div class="admin-section__title"><i class="fa-solid fa-id-card-clip me-2"></i>Usuarios</div>
           <div class="list-group list-group-flush">
             <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
               href="{% url 'core:register_user_admin' %}">
@@ -218,10 +212,9 @@
           </div>
         </div>
 
+        <!-- Catálogos -->
         <div class="admin-section">
-          <div class="admin-section__title">
-            <i class="fa-solid fa-database me-2"></i>Catálogos
-          </div>
+          <div class="admin-section__title"><i class="fa-solid fa-database me-2"></i>Catálogos</div>
           <div class="list-group list-group-flush">
             <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
               href="{% url 'core:mant_comuna_list' %}">
@@ -235,8 +228,9 @@
               href="{% url 'core:mant_tipovivienda_list' %}">
               <i class="fa-solid fa-house"></i> Tipos de vivienda
             </a>
+           
             <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-              href="{% url 'core:mant_tiponotificacion_list' %}">
+              href="{% url 'core:mant_tiponotif_list' %}">
               <i class="fa-regular fa-bell"></i> Tipos de notificación
             </a>
             <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
@@ -254,10 +248,9 @@
           </div>
         </div>
 
+        <!-- Operativo -->
         <div class="admin-section">
-          <div class="admin-section__title">
-            <i class="fa-solid fa-sitemap me-2"></i>Operativo
-          </div>
+          <div class="admin-section__title"><i class="fa-solid fa-sitemap me-2"></i>Operativo</div>
           <div class="list-group list-group-flush">
             <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
               href="{% url 'core:mant_dispositivo_list' %}">
@@ -282,10 +275,9 @@
           </div>
         </div>
 
+        <!-- Monitoreo -->
         <div class="admin-section mb-3">
-          <div class="admin-section__title">
-            <i class="fa-solid fa-heart-pulse me-2"></i>Monitoreo
-          </div>
+          <div class="admin-section__title"><i class="fa-solid fa-heart-pulse me-2"></i>Monitoreo</div>
           <div class="list-group list-group-flush">
             <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
               href="{% url 'core:mant_auditoria_list' %}">
@@ -343,11 +335,11 @@
   <!-- JS propio -->
   <script src="{% static 'core/js/main.js' %}"></script>
   <script>
-  // Tooltips
-  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el=>{
-    new bootstrap.Tooltip(el);
-  });
-</script>
+    // Tooltips
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+      new bootstrap.Tooltip(el);
+    });
+  </script>
 
   {% block extra_js %}{% endblock %}
 </body>
