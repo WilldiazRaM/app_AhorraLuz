@@ -105,6 +105,16 @@ class Usuario(models.Model):
         db_table = "usuarios"
 
     def __str__(self):
+        """
+        Muestra el email (si existe AuthIdentidad) en vez del UUID.
+        Fallback al UUID si no hay identidad asociada.
+        """
+        try:
+            ident = self.authidentidad_set.only("email").first()
+            if ident and ident.email:
+                return ident.email
+        except Exception:
+            pass
         return str(self.id)
 
 
