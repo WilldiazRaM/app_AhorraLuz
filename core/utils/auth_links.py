@@ -1,5 +1,5 @@
 from django.db import transaction
-from core.models import Usuario, AuthIdentidad  # ajusta nombres reales
+from core.models import *
 
 @transaction.atomic
 def ensure_usuario_for_request(request):
