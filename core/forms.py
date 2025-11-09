@@ -48,12 +48,17 @@ class PerfilForm(forms.ModelForm):
 
 # forms.py
 class RegistroConsumoForm(forms.ModelForm):
+    temp_c = forms.FloatField(
+        required=False,
+        label="Temperatura (°C)",
+        widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.1"})
+    )
     FUENTE_CHOICES = [("manual","Manual"), ("automatica","Automática")]
     fuente = forms.ChoiceField(choices=FUENTE_CHOICES, widget=forms.Select(attrs={"class": "form-select"}))
 
     class Meta:
         model = RegistroConsumo
-        fields = ["fecha", "consumo_kwh", "costo_clp", "dispositivo", "fuente", "temp_c"]
+        fields = ["fecha", "consumo_kwh", "costo_clp", "dispositivo", "fuente"]
         widgets = {
             "fecha": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
             "consumo_kwh": forms.NumberInput(attrs={"class": "form-control", "min": "0", "step": "0.001"}),
