@@ -8,6 +8,7 @@ import bcrypt
 from .utils.crypto import encrypt_field
 from uuid import uuid4
 from django.contrib.auth import get_user_model
+from decimal import Decimal
 
 User = get_user_model()
 
@@ -51,11 +52,17 @@ class RegistroConsumoForm(forms.ModelForm):
         fields = ['fecha', 'consumo_kwh', 'costo_clp', 'dispositivo', 'fuente']
         widgets = {
             'fecha': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'consumo_kwh': forms.NumberInput(attrs={'class': 'form-control'}),
-            'costo_clp': forms.NumberInput(attrs={'class': 'form-control'}),
-            'dispositivo': forms.Select(attrs={'class': 'form-control'}),
+            'consumo_kwh': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '0.001'}),
+            'costo_clp': forms.NumberInput(attrs={'class': 'form-control', 'min': '0', 'step': '1'}),
+            'dispositivo': forms.Select(attrs={'class': 'form-select'}),
             'fuente': forms.TextInput(attrs={'class': 'form-control'}),
         }
+
+    def clean_fecha(self):
+        f = self.cleaned_data.get("fecha")
+        if f and f > timezone.localdate():
+            raise forms.ValidationError("La fecha no puede ser futura.")
+        return f
 
 class AdminRegisterUserForm(forms.Form):
     email = forms.EmailField(label="Correo electrónico", required=True)
@@ -314,8 +321,39 @@ class DireccionForm(forms.ModelForm):
 
 class DispositivoForm(forms.ModelForm):
     class Meta:
-        model = Dispositivo  # usuario, nombre, tipo_dispositivo, potencia..., horas..., activo, fecha_registro :contentReference[oaicite:11]{index=11}
-        fields = ["usuario", "nombre", "tipo_dispositivo", "potencia_promedio_w", "horas_uso_diario", "activo", "fecha_registro"]
+        model = Dispositivo
+        fields = ["usuario", "nombre", "tipo_dispositivo",
+                  "potencia_promedio_w", "horas_uso_diario", "activo"]
+        widgets = {
+            "usuario": forms.Select(attrs={"class": "form-select"}),
+            "nombre": forms.TextInput(attrs={"class": "form-control", "maxlength": 100, "placeholder": "Ej: Refrigerador"}),
+            "tipo_dispositivo": forms.Select(attrs={"class": "form-select"}),
+            "potencia_promedio_w": forms.NumberInput(attrs={"class": "form-control", "min": "0", "step": "0.01"}),
+            "horas_uso_diario": forms.NumberInput(attrs={"class": "form-control", "min": "0", "max": "24", "step": "0.25"}),
+            "activo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+
+    def clean_nombre(self):
+        nombre = (self.cleaned_data.get("nombre") or "").strip()
+        if not nombre:
+            raise forms.ValidationError("El nombre no puede ir vacío.")
+        return nombre
+
+    def clean_potencia_promedio_w(self):
+        p = self.cleaned_data.get("potencia_promedio_w")
+        if p is None:
+            return Decimal("0")
+        if p < 0:
+            raise forms.ValidationError("La potencia debe ser ≥ 0 W.")
+        return p
+
+    def clean_horas_uso_diario(self):
+        h = self.cleaned_data.get("horas_uso_diario")
+        if h is None:
+            return Decimal("0")
+        if h < 0 or h > 24:
+            raise forms.ValidationError("Las horas de uso deben estar entre 0 y 24.")
+        return h
 
 class RegistroConsumoAdminForm(forms.ModelForm):
     class Meta:
