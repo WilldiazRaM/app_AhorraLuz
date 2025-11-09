@@ -465,13 +465,13 @@ class DispositivoDeleteView(LoginRequiredMixin, SoloSuperuserMixin, DeleteView):
 # ---------- Solo lectura: Auditoría ----------
 class AuditoriaEventoListView(LoginRequiredMixin, SoloSuperuserMixin, ListView):
     model = AuditoriaEvento
-    template_name = "mantenedor/solo_lectura/auditoriaevento_list.html"
+    template_name = "mantenedor/solo_lectura/auditoria_eventos/auditoriaevento_list.html"
     paginate_by = 30
     ordering = ["-ocurrido_en"]
 
 class AuditoriaEventoDetailView(LoginRequiredMixin, SoloSuperuserMixin, DetailView):
     model = AuditoriaEvento
-    template_name = "mantenedor/solo_lectura/auditoriaevento_detail.html"
+    template_name = "mantenedor/solo_lectura/auditoria_eventos/auditoriaevento_detail.html"
 
 
 

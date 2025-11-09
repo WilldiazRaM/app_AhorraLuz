@@ -167,35 +167,15 @@
       </div>
     </nav>
     {% if user.is_superuser %}
-    <div class="offcanvas offcanvas-end admin-offcanvas" tabindex="-1" id="adminPanel"
-      aria-labelledby="adminPanelLabel">
-      <div class="offcanvas-header admin-offcanvas__header">
-        <div class="d-flex align-items-center gap-2">
-          <span class="admin-chip">Admin</span>
-          <h5 id="adminPanelLabel" class="m-0">
-            <i class="fa-solid fa-screwdriver-wrench me-2"></i>Panel Administrativo
-          </h5>
-        </div>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
-          aria-label="Cerrar"></button>
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="adminPanel" aria-labelledby="adminPanelLabel">
+      <div class="offcanvas-header">
+        <h5 id="adminPanelLabel" class="fw-semibold">
+          <i class="fa-solid fa-screwdriver-wrench me-2"></i> Panel Administrativo
+        </h5>
+        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
       </div>
 
-      <div class="offcanvas-body p-0">
-        <!-- Atajos -->
-        <div class="admin-quick grid-2">
-          <a class="admin-quick__item" href="{% url 'core:register_user_admin' %}" title="Crear una cuenta de usuario">
-            <i class="fa-solid fa-user-plus"></i><span>Registrar</span>
-          </a>
-          <a class="admin-quick__item" href="{% url 'core:admin_users_list' %}" title="Gestionar usuarios">
-            <i class="fa-solid fa-users-gear"></i><span>Usuarios</span>
-          </a>
-          <a class="admin-quick__item" href="{% url 'core:mant_auditoria_list' %}" title="Eventos y trazas del sistema">
-            <i class="fa-solid fa-clipboard-list"></i><span>Auditoría</span>
-          </a>
-          <a class="admin-quick__item" href="{% url 'core:mant_dispositivo_list' %}" title="Dispositivos monitoreados">
-            <i class="fa-solid fa-plug-circle-bolt"></i><span>Dispositivos</span>
-          </a>
-        </div>
+      <div class="offcanvas-body">
 
         <!-- Usuarios -->
         <div class="admin-section">
@@ -228,7 +208,6 @@
               href="{% url 'core:mant_tipovivienda_list' %}">
               <i class="fa-solid fa-house"></i> Tipos de vivienda
             </a>
-           
             <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
               href="{% url 'core:mant_tiponotif_list' %}">
               <i class="fa-regular fa-bell"></i> Tipos de notificación
@@ -266,7 +245,7 @@
             </a>
             <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
               href="{% url 'core:mant_notificacion_list' %}">
-              <i class="fa-regular fa-bell"></i> Notificaciones
+              <i class="fa-solid fa-envelope-circle-check"></i> Notificaciones
             </a>
             <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
               href="{% url 'core:mant_prediccion_list' %}">
@@ -276,8 +255,8 @@
         </div>
 
         <!-- Monitoreo -->
-        <div class="admin-section mb-3">
-          <div class="admin-section__title"><i class="fa-solid fa-heart-pulse me-2"></i>Monitoreo</div>
+        <div class="admin-section">
+          <div class="admin-section__title"><i class="fa-solid fa-magnifying-glass-chart me-2"></i>Monitoreo</div>
           <div class="list-group list-group-flush">
             <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
               href="{% url 'core:mant_auditoria_list' %}">
@@ -286,12 +265,10 @@
           </div>
         </div>
 
-        <div class="text-center small text-muted py-3">
-          AhorraLuz • Panel administrativo
-        </div>
       </div>
     </div>
     {% endif %}
+
 
 
 
