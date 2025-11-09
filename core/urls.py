@@ -96,13 +96,7 @@ urlpatterns = [
     path("mantenedor/tipos-dispositivo/nuevo/", debug_view(TipoDispositivoCreateView.as_view()), name="mant_tipodispositivo_new"),
     path("mantenedor/tipos-dispositivo/<int:pk>/editar/", debug_view(TipoDispositivoUpdateView.as_view()), name="mant_tipodispositivo_edit"),
     path("mantenedor/tipos-dispositivo/<int:pk>/eliminar/", debug_view(TipoDispositivoDeleteView.as_view()), name="mant_tipodispositivo_delete"),
-
-    # Dispositivo (operativo)
-    path("mantenedor/dispositivos/", debug_view(DispositivoListView.as_view()), name="mant_dispositivo_list"),
-    path("mantenedor/dispositivos/nuevo/", debug_view(DispositivoCreateView.as_view()), name="mant_dispositivo_new"),
-    path("mantenedor/dispositivos/<int:pk>/editar/", debug_view(DispositivoUpdateView.as_view()), name="mant_dispositivo_edit"),
-    path("mantenedor/dispositivos/<int:pk>/eliminar/", debug_view(DispositivoDeleteView.as_view()), name="mant_dispositivo_delete"),
-
+    
     # Auditoría (solo lectura)
     path("mantenedor/auditoria/", debug_view(AuditoriaEventoListView.as_view()), name="mant_auditoria_list"),
     path("mantenedor/auditoria/<int:pk>/", debug_view(AuditoriaEventoDetailView.as_view()), name="mant_auditoria_detail"),
