@@ -1,197 +1,106 @@
 {% load static %}
 <!doctype html>
 <html lang="es" data-bs-theme="light">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-  <title>{% block title %}AppWeb AhorraLuz{% endblock %}</title>
+  <title>{% block title %}AhorraLuz{% endblock %}</title>
 
   <!-- Bootstrap 5 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
 
-
-  <link rel="stylesheet" href="{% static 'mantenedor/css/admin-panel.css' %}">
-
-  <!-- Font Awesome (tu kit) -->
+  <!-- Font Awesome -->
   <script src="https://kit.fontawesome.com/ddcff51474.js" crossorigin="anonymous"></script>
 
-  <!-- Estilos propios -->
+  <!-- Tus estilos -->
+  <link rel="stylesheet" href="{% static 'mantenedor/css/admin-panel.css' %}">
   <link rel="stylesheet" href="{% static 'core/css/main.css' %}">
 
   {% block extra_css %}{% endblock %}
 
   <style>
-    :root {
-      --brand: #2ecc71;
-      /* verde principal */
-      --brand-600: #27ae60;
-      /* hover */
-      --brand-50: #eafaf1;
-      /* fondo suave */
-      --ink: #212529;
+    :root{
+      --brand:#2ecc71;         /* verde principal */
+      --brand-600:#27ae60;     /* hover */
+      --brand-50:#eafaf1;      /* fondo suave */
+      --ink:#212529;
     }
+    body{ padding-top:4.25rem; }
+    .navbar{ background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.06); }
+    .navbar .nav-link:hover{ color:var(--brand-600)!important; }
 
-    body {
-      padding-top: 4.25rem;
-    }
+    .btn-brand{ background:var(--brand); border-color:var(--brand); color:#fff; }
+    .btn-brand:hover{ background:var(--brand-600); border-color:var(--brand-600); }
 
-    /* compensa navbar fixed-top */
+    .page{ min-height:100svh; display:flex; flex-direction:column; }
+    main.page-body{ flex:1 1 auto; }
+    .center-wrap{ max-width:1100px; }
 
-    .navbar {
-      background: #fff;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, .06);
-    }
-
-    .navbar .nav-link:hover,
-    .navbar .nav-link:focus {
-      color: var(--brand-600) !important;
-    }
-
-    .btn-brand {
-      background: var(--brand);
-      border-color: var(--brand);
-      color: #fff;
-    }
-
-    .btn-brand:hover {
-      background: var(--brand-600);
-      border-color: var(--brand-600);
-    }
-
-    /* Layout sticky footer */
-    .page {
-      min-height: 100svh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    main.page-body {
-      flex: 1 1 auto;
-    }
-
-    /* Contenido centrado cómodo */
-    .center-wrap {
-      max-width: 1100px;
-    }
+    /* badges del menú rápido */
+    .quick-link{ display:flex; align-items:center; gap:.5rem; }
+    .quick-link i{ width:1.25rem; text-align:center; }
   </style>
 
   {% block extra_head %}{% endblock %}
 </head>
-
 <body>
-  <div class="page">
+<div class="page">
 
-    <!-- NAVBAR (fijo) -->
-    <nav class="navbar navbar-expand-lg fixed-top">
-      <div class="container">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'core:home' %}">
-          <span class="d-inline-flex justify-content-center align-items-center rounded-circle"
-            style="width:36px;height:36px;background:var(--brand-50);">
-            <i class="fa-solid fa-leaf" style="color:var(--brand)"></i>
-          </span>
-          AhorraLuz
-        </a>
-
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topbar"
-          aria-controls="topbar" aria-expanded="false" aria-label="Mostrar navegación">
-          <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="topbar">
-          <!-- Izquierda -->
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            <li class="nav-item"><a class="nav-link" href="{% url 'core:home' %}"><i class="fa-solid fa-house"></i>
-                Inicio</a></li>
-
-            {% if user.is_authenticated %}
-            <li class="nav-item"><a class="nav-link" href="{% url 'core:dashboard' %}"><i
-                  class="fa-solid fa-gauge-high"></i> Dashboard</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'core:profile' %}"><i class="fa-solid fa-id-card"></i>
-                Perfil</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'core:consumo_new' %}"><i
-                  class="fa-solid fa-plus-circle"></i> Consumo nuevo</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'core:consumo_history' %}"><i
-                  class="fa-solid fa-chart-line"></i> Historial</a></li>
-
-                  <div class="offcanvas offcanvas-end" tabindex="-1" id="userCanvas" aria-labelledby="userCanvasLabel">
-  <div class="offcanvas-header">
-    <h5 class="offcanvas-title" id="userCanvasLabel">
-      <i class="fa-solid fa-bolt me-2"></i> AhorraLuz — Mi panel
-    </h5>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
-  </div>
-  <div class="offcanvas-body d-flex flex-column gap-3">
-
-    <!-- Perfil resumido -->
-    <div class="p-3 rounded-3 border bg-light">
-      <div class="d-flex align-items-center gap-3">
-        <div class="rounded-circle bg-white border p-2">
-          <i class="fa-solid fa-user text-muted"></i>
-        </div>
-        <div>
-          <div class="fw-semibold">{{ request.user.get_username }}</div>
-          <div class="text-muted small">Sesión activa</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Acciones principales -->
-    <div class="list-group shadow-sm">
-      <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-         href="{% url 'core:dashboard' %}">
-        <i class="fa-solid fa-chart-line"></i> Dashboard
+  <!-- NAVBAR -->
+  <nav class="navbar navbar-expand-lg fixed-top" role="navigation" aria-label="Barra superior">
+    <div class="container">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'core:home' %}">
+        <span class="d-inline-flex justify-content-center align-items-center rounded-circle"
+              style="width:36px;height:36px;background:var(--brand-50);">
+          <i class="fa-solid fa-leaf" style="color:var(--brand)"></i>
+        </span>
+        AhorraLuz
       </a>
 
-      <!-- Formulario combinado Nuevo consumo + Predicción -->
-      <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-         href="{% url 'core:consumo_new' %}">
-        <i class="fa-solid fa-plus-circle"></i> Consumo nuevo + Predicción
-      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topbar"
+              aria-controls="topbar" aria-expanded="false" aria-label="Mostrar navegación">
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-      <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-         href="{% url 'core:consumo_history' %}">
-        <i class="fa-solid fa-clock-rotate-left"></i> Historial de consumos
-      </a>
-    </div>
+      <div class="collapse navbar-collapse" id="topbar">
+        <!-- Izquierda -->
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="{% url 'core:home' %}"><i class="fa-solid fa-house"></i> <span class="d-none d-sm-inline">Inicio</span></a></li>
 
-    <!-- Predicción rápida (API 24h) -->
-    <div class="p-3 rounded-3 border">
-      <div class="d-flex justify-content-between align-items-center">
-        <div class="fw-semibold"><i class="fa-solid fa-wave-square me-1"></i> Predicción 24 h</div>
-        <button id="btn-nowcast" class="btn btn-sm btn-outline-primary">
-          <i class="fa-solid fa-play"></i> Ejecutar
-        </button>
-      </div>
-      <pre id="nowcast-output" class="mt-2 small bg-light p-2 rounded" style="max-height:180px; overflow:auto;"></pre>
-      <div class="text-muted small">Este preview usa el endpoint público y no guarda nada.</div>
-    </div>
-    
-            {% endif %}
+          {% if user.is_authenticated %}
+            <li class="nav-item"><a class="nav-link" href="{% url 'core:dashboard' %}"><i class="fa-solid fa-gauge-high"></i> <span class="d-none d-sm-inline">Dashboard</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'core:profile' %}"><i class="fa-solid fa-id-card"></i> <span class="d-none d-sm-inline">Perfil</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'core:consumo_new' %}"><i class="fa-solid fa-plus-circle"></i> <span class="d-none d-sm-inline">Consumo nuevo</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'core:consumo_history' %}"><i class="fa-solid fa-chart-line"></i> <span class="d-none d-sm-inline">Historial</span></a></li>
+          {% endif %}
 
-            <!-- Páginas públicas aún sin URL: href vacío -->
-            <li class="nav-item"><a class="nav-link" href=""><i class="fa-regular fa-comments"></i> Reseñas</a></li>
-            <li class="nav-item"><a class="nav-link" href=""><i class="fa-solid fa-circle-info"></i> Acerca de</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'core:contacto' %}"><i
-                  class="fa-solid fa-envelope"></i> Contacto</a></li>
-          </ul>
+          <li class="nav-item"><a class="nav-link" href=""><i class="fa-regular fa-comments"></i> <span class="d-none d-sm-inline">Reseñas</span></a></li>
+          <li class="nav-item"><a class="nav-link" href=""><i class="fa-solid fa-circle-info"></i> <span class="d-none d-sm-inline">Acerca de</span></a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'core:contacto' %}"><i class="fa-solid fa-envelope"></i> <span class="d-none d-sm-inline">Contacto</span></a></li>
+        </ul>
 
-          <!-- Derecha -->
-          <ul class="navbar-nav mb-2 mb-lg-0">
-            {% if user.is_authenticated %}
+        <!-- Derecha -->
+        <ul class="navbar-nav mb-2 mb-lg-0 align-items-lg-center">
+          {% if user.is_authenticated %}
+            <!-- Botón Mi Panel (usuarios) -->
+            <li class="nav-item me-2">
+              <button class="btn btn-outline-secondary" type="button" data-bs-toggle="offcanvas"
+                      data-bs-target="#userCanvas" aria-controls="userCanvas">
+                <i class="fa-solid fa-bars"></i> <span class="d-none d-sm-inline">Mi panel</span>
+              </button>
+            </li>
+
+            <!-- Menú usuario -->
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" role="button"
-                data-bs-toggle="dropdown" aria-expanded="false">
+                 data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="fa-solid fa-circle-user"></i>
                 <span class="d-none d-sm-inline">{{ user.get_full_name|default:user.username }}</span>
               </a>
               <ul class="dropdown-menu dropdown-menu-end">
-                <li class="px-3 py-2 small text-muted">Sesión iniciada</li>
-                <li>
-                  <hr class="dropdown-divider">
-                </li>
+                <li class="px-3 py-2 small text-muted">Sesión activa</li>
+                <li><hr class="dropdown-divider"></li>
                 <li>
                   <form action="{% url 'core:logout' %}" method="post" class="px-3 pb-2">
                     {% csrf_token %}
@@ -202,210 +111,239 @@
                 </li>
               </ul>
             </li>
-            {% else %}
+
+            {% if user.is_superuser %}
+              <li class="nav-item ms-lg-2">
+                <button class="btn btn-outline-success" type="button" data-bs-toggle="offcanvas"
+                        data-bs-target="#adminPanel" aria-controls="adminPanel">
+                  <i class="fa-solid fa-user-gear"></i> <span class="d-none d-sm-inline">Admin</span>
+                </button>
+              </li>
+            {% endif %}
+          {% else %}
             <li class="nav-item">
               <a class="btn btn-brand" href="{% url 'core:login' %}">
                 <i class="fa-solid fa-right-to-bracket"></i> Ingresar
               </a>
             </li>
-            {% endif %}
-          </ul>
-        </div>
-        {% if user.is_superuser %}
-        <button class="btn btn-outline-success ms-3" type="button" data-bs-toggle="offcanvas"
-          data-bs-target="#adminPanel" aria-controls="adminPanel">
-          <i class="fa-solid fa-user-gear"></i> Admin
-        </button>
-        {% endif %}
-
-      </div>
-    </nav>
-    {% if user.is_superuser %}
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="adminPanel" aria-labelledby="adminPanelLabel">
-      <div class="offcanvas-header">
-        <h5 id="adminPanelLabel" class="fw-semibold">
-          <i class="fa-solid fa-screwdriver-wrench me-2"></i> Panel Administrativo
-        </h5>
-        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
-      </div>
-
-      <div class="offcanvas-body">
-
-        <!-- Usuarios -->
-        <div class="admin-section">
-          <div class="admin-section__title"><i class="fa-solid fa-id-card-clip me-2"></i>Usuarios</div>
-          <div class="list-group list-group-flush">
-            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-              href="{% url 'core:register_user_admin' %}">
-              <i class="fa-solid fa-user-plus"></i> Registrar usuario
-            </a>
-            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-              href="{% url 'core:admin_users_list' %}">
-              <i class="fa-solid fa-users"></i> Listar / gestionar usuarios
-            </a>
-          </div>
-        </div>
-
-        <!-- Catálogos -->
-        <div class="admin-section">
-          <div class="admin-section__title"><i class="fa-solid fa-database me-2"></i>Catálogos</div>
-          <div class="list-group list-group-flush">
-            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-              href="{% url 'core:mant_comuna_list' %}">
-              <i class="fa-solid fa-location-dot"></i> Comunas
-            </a>
-            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-              href="{% url 'core:mant_tipodispositivo_list' %}">
-              <i class="fa-solid fa-microchip"></i> Tipos de dispositivo
-            </a>
-            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-              href="{% url 'core:mant_tipovivienda_list' %}">
-              <i class="fa-solid fa-house"></i> Tipos de vivienda
-            </a>
-            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-              href="{% url 'core:mant_tiponotif_list' %}">
-              <i class="fa-regular fa-bell"></i> Tipos de notificación
-            </a>
-            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-              href="{% url 'core:mant_nivelalerta_list' %}">
-              <i class="fa-solid fa-triangle-exclamation"></i> Niveles de alerta
-            </a>
-            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-              href="{% url 'core:mant_permiso_list' %}">
-              <i class="fa-solid fa-user-shield"></i> Permisos
-            </a>
-            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-              href="{% url 'core:mant_rol_list' %}">
-              <i class="fa-solid fa-layer-group"></i> Roles
-            </a>
-          </div>
-        </div>
-
-        <!-- Operativo -->
-        <div class="admin-section">
-          <div class="admin-section__title"><i class="fa-solid fa-sitemap me-2"></i>Operativo</div>
-          <div class="list-group list-group-flush">
-            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-              href="{% url 'core:mant_dispositivo_list' %}">
-              <i class="fa-solid fa-plug-circle-bolt"></i> Dispositivos
-            </a>
-            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-              href="{% url 'core:mant_direccion_list' %}">
-              <i class="fa-solid fa-map-location-dot"></i> Direcciones
-            </a>
-            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-              href="{% url 'core:mant_registroconsumo_list' %}">
-              <i class="fa-solid fa-bolt"></i> Registros de consumo
-            </a>
-            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-              href="{% url 'core:mant_notificacion_list' %}">
-              <i class="fa-solid fa-envelope-circle-check"></i> Notificaciones
-            </a>
-            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-              href="{% url 'core:mant_prediccion_list' %}">
-              <i class="fa-solid fa-chart-line"></i> Predicciones
-            </a>
-            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-              href="{% url 'core:consumo_new_and_predict' %}">
-              <i class="fa-solid fa-bolt"></i> Registrar consumo y predecir
-            </a>
-
-          </div>
-        </div>
-
-        <!-- Monitoreo -->
-        <div class="admin-section">
-          <div class="admin-section__title"><i class="fa-solid fa-magnifying-glass-chart me-2"></i>Monitoreo</div>
-          <div class="list-group list-group-flush">
-            <a class="list-group-item list-group-item-action d-flex align-items-center gap-2"
-              href="{% url 'core:mant_auditoria_list' %}">
-              <i class="fa-solid fa-clipboard-list"></i> Auditoría
-            </a>
-          </div>
-        </div>
-
+          {% endif %}
+        </ul>
       </div>
     </div>
-    {% endif %}
+  </nav>
 
+  {% if user.is_authenticated %}
+  <!-- OFFCANVAS: Mi Panel (usuarios) -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="userCanvas" aria-labelledby="userCanvasLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="userCanvasLabel">
+        <i class="fa-solid fa-bolt me-2"></i> AhorraLuz — Mi panel
+      </h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+    </div>
+    <div class="offcanvas-body d-flex flex-column gap-3">
 
+      <!-- Perfil resumido -->
+      <div class="p-3 rounded-3 border bg-light">
+        <div class="d-flex align-items-center gap-3">
+          <div class="rounded-circle bg-white border p-2"><i class="fa-solid fa-user text-muted"></i></div>
+          <div>
+            <div class="fw-semibold">{{ request.user.get_username }}</div>
+            <div class="text-muted small">Sesión activa</div>
+          </div>
+        </div>
+      </div>
 
+      <!-- Acciones principales -->
+      <div class="list-group shadow-sm">
+        <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:dashboard' %}">
+          <i class="fa-solid fa-gauge-high"></i> Dashboard
+        </a>
+        <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:consumo_new' %}">
+          <i class="fa-solid fa-plus-circle"></i> Consumo nuevo + Predicción
+        </a>
+        <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:mant_dispositivo_list' %}">
+          <i class="fa-solid fa-plug-circle-bolt"></i> Mis dispositivos
+        </a>
+        <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:consumo_history' %}">
+          <i class="fa-solid fa-clock-rotate-left"></i> Historial de consumos
+        </a>
+      </div>
 
-    <!-- MENSAJES (opcional: Django messages) -->
-    {% if messages %}
-    <div class="container center-wrap mt-3">
-      {% for message in messages %}
+      <!-- Predicción rápida (API pública 24h) -->
+      <div class="p-3 rounded-3 border">
+        <div class="d-flex justify-content-between align-items-center">
+          <div class="fw-semibold"><i class="fa-solid fa-wave-square me-1"></i> Predicción 24 h</div>
+          <button id="btn-nowcast" class="btn btn-sm btn-outline-primary">
+            <i class="fa-solid fa-play"></i> Ejecutar
+          </button>
+        </div>
+        <pre id="nowcast-output" class="mt-2 small bg-light p-2 rounded" style="max-height:180px; overflow:auto;"></pre>
+        <div class="text-muted small">Vista rápida. No persiste datos.</div>
+      </div>
+
+    </div>
+  </div>
+  {% endif %}
+
+  {% if user.is_superuser %}
+  <!-- OFFCANVAS: Panel Administrativo -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="adminPanel" aria-labelledby="adminPanelLabel">
+    <div class="offcanvas-header">
+      <h5 id="adminPanelLabel" class="fw-semibold"><i class="fa-solid fa-screwdriver-wrench me-2"></i> Panel Administrativo</h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Cerrar"></button>
+    </div>
+    <div class="offcanvas-body">
+      <!-- Usuarios -->
+      <div class="mb-4">
+        <div class="fw-semibold mb-2"><i class="fa-solid fa-id-card-clip me-2"></i>Usuarios</div>
+        <div class="list-group list-group-flush">
+          <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:register_user_admin' %}">
+            <i class="fa-solid fa-user-plus"></i> Registrar usuario
+          </a>
+          <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:admin_users_list' %}">
+            <i class="fa-solid fa-users"></i> Listar / gestionar usuarios
+          </a>
+        </div>
+      </div>
+      <!-- Catálogos -->
+      <div class="mb-4">
+        <div class="fw-semibold mb-2"><i class="fa-solid fa-database me-2"></i>Catálogos</div>
+        <div class="list-group list-group-flush">
+          <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:mant_comuna_list' %}">
+            <i class="fa-solid fa-location-dot"></i> Comunas
+          </a>
+          <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:mant_tipodispositivo_list' %}">
+            <i class="fa-solid fa-microchip"></i> Tipos de dispositivo
+          </a>
+          <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:mant_tipovivienda_list' %}">
+            <i class="fa-solid fa-house"></i> Tipos de vivienda
+          </a>
+          <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:mant_tiponotif_list' %}">
+            <i class="fa-regular fa-bell"></i> Tipos de notificación
+          </a>
+          <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:mant_nivelalerta_list' %}">
+            <i class="fa-solid fa-triangle-exclamation"></i> Niveles de alerta
+          </a>
+          <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:mant_permiso_list' %}">
+            <i class="fa-solid fa-user-shield"></i> Permisos
+          </a>
+          <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:mant_rol_list' %}">
+            <i class="fa-solid fa-layer-group"></i> Roles
+          </a>
+        </div>
+      </div>
+      <!-- Operativo -->
+      <div class="mb-4">
+        <div class="fw-semibold mb-2"><i class="fa-solid fa-sitemap me-2"></i>Operativo</div>
+        <div class="list-group list-group-flush">
+          <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:mant_dispositivo_list' %}">
+            <i class="fa-solid fa-plug-circle-bolt"></i> Dispositivos
+          </a>
+          <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:mant_direccion_list' %}">
+            <i class="fa-solid fa-map-location-dot"></i> Direcciones
+          </a>
+          <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:mant_registroconsumo_list' %}">
+            <i class="fa-solid fa-bolt"></i> Registros de consumo
+          </a>
+          <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:mant_notificacion_list' %}">
+            <i class="fa-solid fa-envelope-circle-check"></i> Notificaciones
+          </a>
+          <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:mant_prediccion_list' %}">
+            <i class="fa-solid fa-chart-line"></i> Predicciones
+          </a>
+          <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:consumo_new_and_predict' %}">
+            <i class="fa-solid fa-bolt"></i> Registrar consumo y predecir
+          </a>
+        </div>
+      </div>
+      <!-- Monitoreo -->
+      <div>
+        <div class="fw-semibold mb-2"><i class="fa-solid fa-magnifying-glass-chart me-2"></i>Monitoreo</div>
+        <div class="list-group list-group-flush">
+          <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:mant_auditoria_list' %}">
+            <i class="fa-solid fa-clipboard-list"></i> Auditoría
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- MENSAJES -->
+  {% if messages %}
+  <div class="container center-wrap mt-3">
+    {% for message in messages %}
       <div class="alert alert-{{ message.tags|default:'primary' }} alert-dismissible fade show" role="alert">
         {{ message }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
       </div>
-      {% endfor %}
-    </div>
-    {% endif %}
-
-    <!-- CONTENIDO -->
-    <main class="page-body">
-      <div class="container center-wrap py-4">
-        {% block content %}{% endblock %}
-      </div>
-    </main>
-
-    <!-- FOOTER -->
-    <footer class="border-top bg-white py-3">
-      <div class="container d-flex flex-column flex-md-row align-items-center justify-content-between gap-2">
-        <span class="small text-secondary">© {{ now|date:"Y" }} AhorraLuz — Hogares más eficientes</span>
-        <ul class="nav small">
-          <li class="nav-item"><a href="" class="nav-link text-secondary">Privacidad</a></li>
-          <li class="nav-item"><a href="" class="nav-link text-secondary">Términos</a></li>
-          <li class="nav-item"><a href="" class="nav-link text-secondary">Soporte</a></li>
-        </ul>
-      </div>
-    </footer>
+    {% endfor %}
   </div>
+  {% endif %}
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-    crossorigin="anonymous"></script>
+  <!-- CONTENIDO -->
+  <main class="page-body">
+    <div class="container center-wrap py-4">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
 
-  <!-- JS propio -->
-  <script src="{% static 'core/js/main.js' %}"></script>
-  <script>
-    // Tooltips
-    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
-      new bootstrap.Tooltip(el);
-    });
-  </script>
-  <script>
-(function () {
-  const btn = document.getElementById('btn-nowcast');
-  const out = document.getElementById('nowcast-output');
-  if (!btn || !out) return;
+  <!-- FOOTER -->
+  <footer class="border-top bg-white py-3">
+    <div class="container d-flex flex-column flex-md-row align-items-center justify-content-between gap-2">
+      <span class="small text-secondary">© {{ now|date:"Y" }} AhorraLuz — Hogares más eficientes</span>
+      <ul class="nav small">
+        <li class="nav-item"><a href="" class="nav-link text-secondary">Privacidad</a></li>
+        <li class="nav-item"><a href="" class="nav-link text-secondary">Términos</a></li>
+        <li class="nav-item"><a href="" class="nav-link text-secondary">Soporte</a></li>
+      </ul>
+    </div>
+  </footer>
 
-  btn.addEventListener('click', async () => {
-    out.textContent = 'Calculando…';
-    try {
-      const resp = await fetch("{% url 'core:api_predict_next_24h' %}", { method: 'GET' });
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      const data = await resp.json();
-      // Muestra un resumen amigable
-      if (Array.isArray(data?.predicciones)) {
-        const preview = data.predicciones.slice(0, 6).map((p, i) =>
-          `${String(i + 1).padStart(2, '0')}h → ${Number(p.kwh || p).toFixed(2)} kWh`
-        ).join('\n');
-        out.textContent = preview + (data.predicciones.length > 6 ? '\n…' : '');
-      } else {
-        out.textContent = JSON.stringify(data, null, 2);
-      }
-    } catch (e) {
-      out.textContent = 'Error al consultar la predicción: ' + e.message;
-    }
-  });
-})();
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+<!-- JS propio -->
+<script src="{% static 'core/js/main.js' %}"></script>
+
+<script>
+  // Tooltips
+  document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => new bootstrap.Tooltip(el));
 </script>
 
+<script>
+  // Predicción rápida en “Mi panel”
+  (function () {
+    const btn = document.getElementById('btn-nowcast');
+    const out = document.getElementById('nowcast-output');
+    if (!btn || !out) return;
 
-  {% block extra_js %}{% endblock %}
+    btn.addEventListener('click', async () => {
+      out.textContent = 'Calculando…';
+      try {
+        const resp = await fetch("{% url 'core:api_predict_next_24h' %}", { method: 'GET' });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+
+        if (Array.isArray(data?.predicciones)) {
+          const preview = data.predicciones.slice(0, 6).map((p, i) =>
+            `${String(i+1).padStart(2,'0')}h → ${Number(p.kwh || p).toFixed(2)} kWh`
+          ).join('\n');
+          out.textContent = preview + (data.predicciones.length > 6 ? '\n…' : '');
+        } else {
+          out.textContent = JSON.stringify(data, null, 2);
+        }
+      } catch (e) {
+        out.textContent = 'Error al consultar la predicción: ' + e.message;
+      }
+    });
+  })();
+</script>
+
+{% block extra_js %}{% endblock %}
 </body>
-
 </html>
