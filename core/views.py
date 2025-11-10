@@ -29,6 +29,49 @@ from django.urls import reverse_lazy
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView
 from .utils.ml_nowcast import build_row, predict_one
 from core.utils.auth_links import ensure_usuario_for_request
+from django.db.models import F, FloatField, ExpressionWrapper
+from django.db.models.functions import Abs, Cast, NullIf
+from django.db.models import F, FloatField, ExpressionWrapper, Avg, Count
+import datetime
+
+def _metricas_precision_queryset(user_id, desde=None, hasta=None):
+    from .models import PrediccionConsumo
+
+    qs = PrediccionConsumo.objects.filter(
+        usuario__id=user_id,
+        consumo_real_kwh__isnull=False,
+    )
+
+    if desde:
+        qs = qs.filter(periodo_inicio__gte=desde)
+    if hasta:
+        qs = qs.filter(periodo_fin__lte=hasta)
+
+    # |error| = |real - predicho|
+    err = Abs(
+        Cast(F("consumo_real_kwh"), FloatField()) -
+        Cast(F("consumo_predicho_kwh"), FloatField())
+    )
+
+    # (|error|)^2 para RMSE
+    err2 = ExpressionWrapper(err * err, output_field=FloatField())
+
+    # MAPE = (|err| / real) * 100 evitando dividir entre 0
+    real_nz = NullIf(Cast(F("consumo_real_kwh"), FloatField()), 0.0)
+    ape = ExpressionWrapper(err / real_nz * 100.0, output_field=FloatField())
+
+    agg = qs.aggregate(
+        n=Count("id"),
+        mae=Avg(err),
+        rmse=Avg(err2),
+        mape=Avg(ape),
+    )
+
+    # Convertimos RMSE = sqrt(mean(err^2))
+    if agg["rmse"] is not None:
+        agg["rmse"] = agg["rmse"] ** 0.5
+
+    return agg
 
 
 
@@ -501,11 +544,18 @@ def register_view(request):
 
 @login_required
 def dashboard(request):
-    # ejemplo: obtener métricas básicas y últimos registros
+    # Últimos registros del usuario (ya lo tenías)
     registros = RegistroConsumo.objects.filter(usuario__id=request.user.id)[:10]
+
+    # Métricas de precisión de los últimos 90 días
+    desde = timezone.now().date() - datetime.timedelta(days=90)
+    met = _metricas_precision_queryset(request.user.id, desde=desde)
+
     context = {
         "title": "Dashboard AhorraLuz",
         "registros": registros,
+        "metrics": met,
+        "metrics_window_days": 90,
     }
     return render(request, "core/dashboard.html", context)
 
@@ -1046,3 +1096,30 @@ def nowcast_preview(request, pk: int):
     """Vista simple para mostrar el resultado y nivel de alerta ya guardado."""
     pred = get_object_or_404(PrediccionConsumo, pk=pk, usuario=request.user)
     return render(request, "core/nowcast_preview.html", {"pred": pred})
+
+
+@login_required
+def confirmar_consumo_real_list(request):
+    """Lista de predicciones del usuario sin consumo_real_kwh (pendientes de confirmación)."""
+    pend = (PrediccionConsumo.objects
+            .filter(usuario__id=request.user.id, consumo_real_kwh__isnull=True)
+            .order_by("-fecha_prediccion"))
+    page = Paginator(pend, 10).get_page(request.GET.get("page"))
+    return render(request, "core/confirmar_real_list.html", {"page_obj": page})
+
+@login_required
+def confirmar_consumo_real_edit(request, pk: int):
+    """Formulario para ingresar el consumo real a una predicción concreta."""
+    pred = get_object_or_404(PrediccionConsumo, pk=pk, usuario__id=request.user.id)
+    if request.method == "POST":
+        form = PrediccionConsumoRealForm(request.POST, instance=pred)
+        if form.is_valid():
+            obj = form.save(commit=False)
+            # (opcional) podrías guardar un timestamp de confirmación usando actualizado_en si lo agregas al modelo
+            obj.save()
+            messages.success(request, "✅ Consumo real confirmado.")
+            return redirect("core:confirmar_real_list")
+        messages.error(request, "⚠️ Revisa el valor ingresado.")
+    else:
+        form = PrediccionConsumoRealForm(instance=pred)
+    return render(request, "core/confirmar_real_edit.html", {"form": form, "pred": pred})

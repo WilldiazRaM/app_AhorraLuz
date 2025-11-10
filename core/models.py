@@ -224,6 +224,7 @@ class PrediccionConsumo(models.Model):
     consumo_predicho_kwh = models.DecimalField(max_digits=12, decimal_places=4)
     nivel_alerta = models.ForeignKey(NivelAlerta, on_delete=models.SET_NULL, blank=True, null=True)
     creado_en = models.DateTimeField()
+    consumo_real_kwh = models.FloatField(null=True, blank=True)
 
     class Meta:
         db_table = "predicciones_consumo"

@@ -499,3 +499,16 @@ class NowcastInputForm(forms.Form):
             # Django la tratará como naive; la view puede forzar timezone.localtime si quieres
             pass
         return v
+    
+
+class PrediccionConsumoRealForm(forms.ModelForm):
+    class Meta:
+        model = PrediccionConsumo
+        fields = ["consumo_real_kwh"]
+        widgets = {
+            "consumo_real_kwh": forms.NumberInput(attrs={
+                "step": "0.01", "min": "0", "class": "form-control",
+                "placeholder": "Ej: 2.75"
+            })
+        }
+        labels = {"consumo_real_kwh": "Consumo real (kWh)"}

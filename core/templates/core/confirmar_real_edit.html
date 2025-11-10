@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Ingresar consumo real{% endblock %}
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <h5 class="card-title mb-3"><i class="fa-solid fa-pen-to-square me-2"></i>Ingresar consumo real</h5>
+
+    <div class="mb-2 small text-muted">
+      Predicción del {{ pred.fecha_prediccion }} ({{ pred.periodo_inicio }} → {{ pred.periodo_fin }}) ·
+      Estimado: <strong>{{ pred.consumo_predicho_kwh|floatformat:2 }} kWh</strong>
+    </div>
+
+    <form method="post" class="row g-3">
+      {% csrf_token %}
+      <div class="col-md-4">
+        {{ form.consumo_real_kwh.label_tag }}
+        {{ form.consumo_real_kwh }}
+        <div class="form-text">Ingresa el consumo real medido.</div>
+      </div>
+      <div class="col-12">
+        <button class="btn btn-brand" type="submit">Guardar</button>
+        <a class="btn btn-outline-secondary ms-2" href="{% url 'core:confirmar_real_list' %}">Volver</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

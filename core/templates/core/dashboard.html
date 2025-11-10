@@ -9,5 +9,47 @@
       <li>No hay registros</li>
     {% endfor %}
   </ul>
+  <!-- Card de precisión del modelo -->
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <h6 class="card-title mb-2">
+      <i class="fa-solid fa-bullseye me-2"></i>Precisión del modelo (últimos {{ metrics_window_days }} días)
+    </h6>
+    {% if metrics.n %}
+      <div class="row g-3 small">
+        <div class="col-6 col-md-3">
+          <div class="fw-semibold">Muestras</div>
+          <div>{{ metrics.n }}</div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="fw-semibold">MAE</div>
+          <div>{{ metrics.mae|floatformat:2 }} kWh</div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="fw-semibold">RMSE</div>
+          <div>{{ metrics.rmse|floatformat:2 }} kWh</div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="fw-semibold">MAPE</div>
+          <div>
+            {% if metrics.mape %}{{ metrics.mape|floatformat:1 }}%{% else %}—{% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="form-text mt-2">
+        MAE: error absoluto medio · RMSE: raíz del error cuadrático medio · MAPE: error porcentual medio absoluto.
+      </div>
+    {% else %}
+      <div class="alert alert-info mb-0">
+        Aún no hay suficientes confirmaciones de consumo real para calcular precisión.
+        Registra consumos reales desde <a href="{% url 'core:confirmar_real_list' %}">Predicciones pendientes</a>.
+      </div>
+    {% endif %}
+  </div>
+</div>
+
   <p><a href="{% url 'core:consumo_new' %}">Agregar lectura</a></p>
 {% endblock %}
+
+
+

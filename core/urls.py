@@ -7,7 +7,7 @@ from .views import (  ComunaListView, ComunaCreateView, ComunaUpdateView, Comuna
     TipoDispositivoListView, TipoDispositivoCreateView, TipoDispositivoUpdateView, TipoDispositivoDeleteView,
     DispositivoListView, DispositivoCreateView, DispositivoUpdateView, DispositivoDeleteView,
     AuditoriaEventoListView, AuditoriaEventoDetailView) 
-from .views import api_predict_next_24h, consumo_new_and_predict, nowcast_preview
+from .views import api_predict_next_24h, consumo_new_and_predict, nowcast_preview, confirmar_consumo_real_list, confirmar_consumo_real_edit
 
 
 app_name = "core"
@@ -195,4 +195,7 @@ urlpatterns = [
     path("consumos/nuevo-y-predecir/", debug_view(consumo_new_and_predict), name="consumo_new_and_predict"),
     path("consumos/nowcast/<int:pk>/", debug_view(nowcast_preview), name="nowcast_preview"),
     path("consumos/nuevo-y-predecir/", views.consumo_new_and_predict, name="consumo_new_and_predict"),
+
+    path("predicciones/pendientes/", debug_view(confirmar_consumo_real_list), name="confirmar_real_list"),
+    path("predicciones/<int:pk>/confirmar/", debug_view(confirmar_consumo_real_edit), name="confirmar_consumo_real")
 ]
