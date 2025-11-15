@@ -1078,7 +1078,67 @@ def _user_baseline_kwh(usuario, ref_dt):
         avg = q2.aggregate(x=Avg("consumo_kwh"))["x"]
     return float(avg or 1.0)
 
-def _classify_alert(yhat: float, baseline: float):
+NATIONAL_DAILY_KWH = 7.0  # kWh/día
+
+def _classify_alert(total_kwh: float, baseline_kwh: float | None):
+    """
+    Devuelve:
+      - nivel ('VERDE', 'AMARILLO', 'ROJO')
+      - mensaje_alerta (string listo para mostrar al usuario)
+    El mensaje viene contextualizado con hogar promedio en Chile.
+    """
+    # baseline del usuario (histórico). Si es muy chico, usamos 1 kWh para no explotar el %.
+    baseline_user = baseline_kwh or 1.0
+    baseline_user = max(baseline_user, 1.0)
+
+    # Comparación contra el propio usuario
+    ratio_user = total_kwh / baseline_user
+
+    # Comparación contra hogar promedio Chile
+    ratio_cl = total_kwh / NATIONAL_DAILY_KWH if NATIONAL_DAILY_KWH > 0 else 1.0
+
+    # Clasificación del nivel por consumo absoluto (puedes ajustar los umbrales)
+    if total_kwh <= 5:
+        nivel = "VERDE"
+    elif total_kwh <= 20:
+        nivel = "AMARILLO"
+    else:
+        nivel = "ROJO"
+
+    # Texto “bonito” para el % vs su propio promedio
+    if ratio_user >= 5:
+        detalle_user = "más de 5× tu promedio reciente"
+    elif ratio_user <= 0.5:
+        detalle_user = "por debajo de tu promedio"
+    else:
+        detalle_user = f"{(ratio_user - 1) * 100:.0f}% sobre tu promedio"
+
+    # Equivalencia en “días de hogar chileno”
+    dias_equivalentes = ratio_cl  # porque total_kwh / 7 kWh/día
+
+    # Mensaje final contextualizado
+    mensaje = (
+        f"Consumo estimado próximas 24 h: {total_kwh:.2f} kWh. "
+        f"Esto es {detalle_user}. "
+        f"En Chile, un hogar promedio consume alrededor de {NATIONAL_DAILY_KWH:.1f} kWh al día, "
+        f"por lo que esta predicción equivale a ≈{dias_equivalentes:.1f} días de consumo de un hogar típico. "
+    )
+
+    if nivel == "ROJO":
+        mensaje += (
+            "Nivel de alerta: ROJO. Revisa el uso de artefactos de alto consumo "
+            "(calefactores eléctricos, horno, equipos encendidos 24/7) y evita concentrar cargas en horas punta."
+        )
+    elif nivel == "AMARILLO":
+        mensaje += (
+            "Nivel de alerta: AMARILLO. Hay margen para optimizar horarios y reducir uso en los equipos más exigentes."
+        )
+    else:
+        mensaje += (
+            "Nivel de alerta: VERDE. Tu consumo está dentro de rangos moderados para un hogar chileno."
+        )
+
+    return nivel, mensaje
     """Devuelve (nivel, texto) con 4 niveles: VERDE/AMARILLO/NARANJA/ROJO comparando con baseline."""
     ratio = yhat / baseline if baseline > 0 else 1.0
     if ratio < 0.90:

@@ -5,13 +5,35 @@
 
 {% block content %}
 <div class="container my-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h4 mb-0">Mis dispositivos</h1>
-    <a href="{% url 'core:mis_dispositivo_new' %}" class="btn btn-primary btn-sm">
-      <i class="bi bi-plus-circle"></i> Agregar dispositivo
-    </a>
+
+  <!-- Encabezado y botones -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+    <div>
+      <span class="badge bg-success-subtle text-success border border-success-subtle mb-1">
+        Ahorro energético en tu hogar
+      </span>
+      <h1 class="h4 mb-0">Mis dispositivos</h1>
+      <p class="text-muted small mb-0">
+        AhorraLuz usa estos artefactos para estimar tu consumo diario y alimentar el modelo
+        de predicción de consumo en Chile.
+      </p>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button class="btn btn-outline-secondary btn-sm"
+              type="button"
+              data-bs-toggle="modal"
+              data-bs-target="#guiaDispositivosModal">
+        <i class="bi bi-info-circle"></i> Guía de potencia y consumo
+      </button>
+
+      <a href="{% url 'core:mis_dispositivo_new' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-circle"></i> Agregar dispositivo
+      </a>
+    </div>
   </div>
 
+  <!-- Mensajes flash -->
   {% if messages %}
     {% for message in messages %}
       <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
@@ -21,51 +43,172 @@
     {% endfor %}
   {% endif %}
 
+  <!-- Nota contextual Chile -->
+  <div class="alert alert-light border rounded-3 py-2 small mb-3">
+    <strong>Nota para hogares chilenos:</strong>
+    un hogar promedio en Chile consume del orden de <strong>300–350 kWh al mes</strong>
+    (≈10–12 kWh diarios). A medida que agregas dispositivos y horas de uso,
+    podrás comparar tu hogar con este rango de referencia.
+  </div>
+
   {% if dispositivos %}
-    <div class="table-responsive">
-      <table class="table table-striped align-middle">
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Tipo</th>
-            <th>Potencia promedio (W)</th>
-            <th>Horas uso diario</th>
-            <th>Activo</th>
-            <th class="text-end">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for d in dispositivos %}
-          <tr>
-            <td>{{ d.nombre }}</td>
-            <td>{{ d.tipo_dispositivo.nombre }}</td>
-            <td>{{ d.potencia_promedio_w }}</td>
-            <td>{{ d.horas_uso_diario }}</td>
-            <td>
-              {% if d.activo %}
-                <span class="badge bg-success">Sí</span>
-              {% else %}
-                <span class="badge bg-secondary">No</span>
-              {% endif %}
-            </td>
-            <td class="text-end">
-              <a href="{% url 'core:mis_dispositivo_edit' d.pk %}" class="btn btn-sm btn-outline-primary">
-                <i class="bi bi-pencil"></i> Editar
-              </a>
-              <a href="{% url 'core:mis_dispositivo_delete' d.pk %}" class="btn btn-sm btn-outline-danger">
-                <i class="bi bi-trash"></i> Eliminar
-              </a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <div class="card shadow-sm border-0">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-striped align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Nombre</th>
+                <th>Tipo</th>
+                <th>Potencia promedio (W)</th>
+                <th>Horas uso diario</th>
+                <th>Activo</th>
+                <th class="text-end">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for d in dispositivos %}
+              <tr>
+                <td>{{ d.nombre }}</td>
+                <td>{{ d.tipo_dispositivo.nombre }}</td>
+                <td>{{ d.potencia_promedio_w }}</td>
+                <td>{{ d.horas_uso_diario }}</td>
+                <td>
+                  {% if d.activo %}
+                    <span class="badge bg-success">Sí</span>
+                  {% else %}
+                    <span class="badge bg-secondary">No</span>
+                  {% endif %}
+                </td>
+                <td class="text-end">
+                  <a href="{% url 'core:mis_dispositivo_edit' d.pk %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-pencil"></i> Editar
+                  </a>
+                  <a href="{% url 'core:mis_dispositivo_delete' d.pk %}" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-trash"></i> Eliminar
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer small text-muted">
+        Recuerda que el consumo real puede variar según la eficiencia del artefacto,
+        su antigüedad y la temperatura ambiente. Estos datos se usan como referencia
+        para tus gráficas y predicciones.
+      </div>
     </div>
   {% else %}
     <div class="alert alert-info">
       Aún no tienes dispositivos registrados. Haz clic en
-      <strong>“Agregar dispositivo”</strong> para comenzar.
+      <strong>“Agregar dispositivo”</strong> para comenzar a modelar el consumo de tu hogar.
     </div>
   {% endif %}
+</div>
+
+<!-- Modal: Guía de potencia y consumo por tipo de dispositivo -->
+<div class="modal fade" id="guiaDispositivosModal" tabindex="-1" aria-labelledby="guiaDispositivosLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="guiaDispositivosLabel">Guía de potencia y consumo típico</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small text-muted">
+          Los rangos siguientes son <strong>referenciales</strong> para hogares en Chile.
+          Úsalos como orientación al registrar tus dispositivos. El consumo diario se calcula como:
+          <code>(potencia en W × horas de uso) / 1000</code>.
+        </p>
+
+        <div class="table-responsive">
+          <table class="table table-sm align-middle">
+            <thead>
+              <tr>
+                <th>Tipo de dispositivo</th>
+                <th>Potencia típica (W)</th>
+                <th>Uso diario sugerido</th>
+                <th>Consumo aprox. (kWh/mes)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Refrigerador</td>
+                <td>150–300 W (trabajando por ciclos)</td>
+                <td>24 h / día</td>
+                <td>30–70 kWh/mes</td>
+              </tr>
+              <tr>
+                <td>Hervidor eléctrico</td>
+                <td>1500–2000 W</td>
+                <td>0,2–0,5 h / día</td>
+                <td>3–10 kWh/mes</td>
+              </tr>
+              <tr>
+                <td>Horno eléctrico / Cocina eléctrica</td>
+                <td>2000–3000 W</td>
+                <td>0,3–1 h / día</td>
+                <td>20–60 kWh/mes</td>
+              </tr>
+              <tr>
+                <td>Computador de escritorio</td>
+                <td>120–250 W</td>
+                <td>4–8 h / día</td>
+                <td>15–40 kWh/mes</td>
+              </tr>
+              <tr>
+                <td>Notebook</td>
+                <td>40–80 W</td>
+                <td>4–8 h / día</td>
+                <td>5–20 kWh/mes</td>
+              </tr>
+              <tr>
+                <td>Televisor LED/LCD</td>
+                <td>70–150 W</td>
+                <td>3–5 h / día</td>
+                <td>6–20 kWh/mes</td>
+              </tr>
+              <tr>
+                <td>Router/Modem</td>
+                <td>10–20 W</td>
+                <td>24 h / día</td>
+                <td>7–15 kWh/mes</td>
+              </tr>
+              <tr>
+                <td>Iluminación LED</td>
+                <td>5–15 W por ampolleta</td>
+                <td>4–6 h / día</td>
+                <td>1–5 kWh/mes por ampolleta</td>
+              </tr>
+              <tr>
+                <td>Calefactor eléctrico / Termoventilador</td>
+                <td>1500–2000 W</td>
+                <td>1–4 h / día (invierno)</td>
+                <td>45–240 kWh/mes</td>
+              </tr>
+              <tr>
+                <td>Aire acondicionado</td>
+                <td>900–2000 W</td>
+                <td>2–6 h / día (temporada)</td>
+                <td>50–200 kWh/mes</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="small mb-0">
+          <strong>Tip:</strong> si tu boleta mensual está muy por encima de 300–350 kWh
+          y en la tabla ves muchos artefactos de alto consumo (horno, secadora, calefacción),
+          el sistema los marcará en un nivel de alerta más alto y te sugerirá reducir horas
+          de uso o concentrarlos fuera de horario punta.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
