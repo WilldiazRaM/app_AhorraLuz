@@ -1202,7 +1202,7 @@ def mis_dispositivo_edit(request, pk):
 
     return render(
         request,
-        "core/mis_dispositivo_form.html",
+        "usuarios/mis_dispositivo_form.html",
         {"form": form, "modo": "editar", "dispositivo": dispositivo},
     )
 
