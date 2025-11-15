@@ -1145,7 +1145,7 @@ def mis_dispositivos_list(request):
     )
     return render(
         request,
-        "core/templates/usuarios/mis_dispositivos_list.html",        
+        "usuarios/mis_dispositivos_list.html",        
         {"dispositivos": dispositivos},
     )
 
@@ -1173,7 +1173,7 @@ def mis_dispositivo_new(request):
 
     return render(
         request,
-        "core/templates/usuarios/mis_dispositivo_form.html",
+        "usuarios/mis_dispositivo_form.html",
         {"form": form, "modo": "crear"},
     )
 
@@ -1226,6 +1226,6 @@ def mis_dispositivo_delete(request, pk):
 
     return render(
         request,
-        "core/templates/usuarios/mis_dispositivo_confirm_delete.html",
+        "usuarios/mis_dispositivo_confirm_delete.html",
         {"dispositivo": dispositivo},
     )
