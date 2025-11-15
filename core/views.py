@@ -33,6 +33,7 @@ from django.db.models import F, FloatField, ExpressionWrapper
 from django.db.models.functions import Abs, Cast, NullIf
 from django.db.models import F, FloatField, ExpressionWrapper, Avg, Count
 import datetime
+from .utils.auth_links import ensure_usuario_for_request
 
 def _metricas_precision_queryset(user_id, desde=None, hasta=None):
     from .models import PrediccionConsumo
