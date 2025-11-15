@@ -1001,11 +1001,11 @@ def _climate_from_api(dt_local):
 @login_required
 def api_predict_next_24h(request):
     """
-    Devuelve la predicción de consumo de las próximas 24h para el usuario:
-    - Basada en sus dispositivos registrados.
-    - Ajustada al calendario (mes, día semana, hora).
-    - Usando clima de Chile (stub o API externa).
-    Además retorna un nivel de alerta y un mensaje corto.
+    Predicción de las próximas 24h:
+    - Usa los dispositivos registrados del usuario para armar las señales.
+    - Usa calendario local Chile (America/Santiago).
+    - Usa clima stub (o API en el futuro).
+    - Devuelve nivel de alerta + mensaje corto.
     """
     tz = pytz.timezone("America/Santiago")
     now_utc = timezone.now()
@@ -1016,15 +1016,14 @@ def api_predict_next_24h(request):
             status=400
         )
 
-    # Baseline: cuánto consume "normalmente" este usuario
+    # Baseline del usuario (kWh/día)
     baseline = _user_baseline_kwh(usuario, ref_dt=now_utc.date())
+
+    # Señales en base a dispositivos activos
+    signals = _signals_from_dispositivos(usuario)
 
     predicciones = []
     total_kwh = 0.0
-
-    # Señales estáticas en base a dispositivos
-    # (si no tiene dispositivos activos, cae en _default_signals)
-    signals = _signals_from_dispositivos(usuario)
 
     for h in range(1, 25):
         ts_local = (now_utc + timedelta(hours=h)).astimezone(tz)
@@ -1032,9 +1031,8 @@ def api_predict_next_24h(request):
         row = build_row(
             signals=signals,
             calendar=_calendar_feats(ts_local),
-            climate=_climate_stub(ts_local)  # o _climate_from_api(ts_local)
+            climate=_climate_stub(ts_local)  # o _climate_from_api(ts_local) si lo activas
         )
-
         kwh = predict_one(row)
         total_kwh += kwh
 
@@ -1043,16 +1041,19 @@ def api_predict_next_24h(request):
             "kwh": round(kwh, 3),
         })
 
-    nivel, mensaje_alerta = _classify_alert(total_kwh, baseline)
+    # 🔧 AQUÍ estaba el bug: _classify_alert devuelve 3 valores
+    nivel, mensaje_alerta, ratio = _classify_alert(total_kwh, baseline)
 
     resp = {
         "kwh_total_24h": round(total_kwh, 3),
         "consumo_promedio_h": round(total_kwh / 24.0, 3),
-        "nivel_alerta": nivel.codigo if hasattr(nivel, "codigo") else str(nivel),
+        "nivel_alerta": getattr(nivel, "codigo", str(nivel)),
         "mensaje_alerta": mensaje_alerta,
+        "ratio_vs_baseline": ratio,
         "predicciones": predicciones,
     }
     return JsonResponse(resp)
+
 
 
 
