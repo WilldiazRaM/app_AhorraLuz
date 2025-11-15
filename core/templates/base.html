@@ -383,25 +383,46 @@
       const out = document.getElementById('nowcast-output');
       if (!btn || !out) return;
 
-      btn.addEventListener('click', async () => {
-        out.textContent = 'Calculando…';
-        try {
-          const resp = await fetch("{% url 'core:api_predict_next_24h' %}", { method: 'GET' });
-          if (!resp.ok) throw new Error('HTTP ' + resp.status);
-          const data = await resp.json();
+      nowcastBtn.addEventListener("click", async () => {
+  try {
+    nowcastBtn.disabled = true;
+    nowcastBtn.textContent = "Calculando...";
 
-          if (Array.isArray(data?.predicciones)) {
-            const preview = data.predicciones.slice(0, 6).map((p, i) =>
-              `${String(i + 1).padStart(2, '0')}h → ${Number(p.kwh || p).toFixed(2)} kWh`
-            ).join('\n');
-            out.textContent = preview + (data.predicciones.length > 6 ? '\n…' : '');
-          } else {
-            out.textContent = JSON.stringify(data, null, 2);
-          }
-        } catch (e) {
-          out.textContent = 'Error al consultar la predicción: ' + e.message;
-        }
-      });
+    const resp = await fetch("{% url 'core:api_predict_next_24h' %}", {
+      method: "GET",
+      headers: {"X-Requested-With": "XMLHttpRequest"}
+    });
+
+    if (!resp.ok) {
+      output.textContent = "No se pudo obtener la predicción.";
+      return;
+    }
+
+    const data = await resp.json();
+
+    if (data.error) {
+      output.textContent = data.error;
+      return;
+    }
+
+    const total = data.kwh_total_24h?.toFixed(2) ?? "N/A";
+    const prom  = data.consumo_promedio_h?.toFixed(2) ?? "N/A";
+    const nivel = data.nivel_alerta ?? "DESCONOCIDO";
+    const msg   = data.mensaje_alerta ?? "";
+
+    output.textContent =
+      `Consumo estimado próximas 24h: ${total} kWh\n` +
+      `Promedio por hora: ${prom} kWh/h\n` +
+      `Nivel de alerta: ${nivel}\n` +
+      `${msg}`;
+  } catch (err) {
+    console.error(err);
+    output.textContent = "Error al obtener la predicción.";
+  } finally {
+    nowcastBtn.disabled = false;
+    nowcastBtn.textContent = "Predicción 24 h";
+  }
+});
     })();
   </script>
 

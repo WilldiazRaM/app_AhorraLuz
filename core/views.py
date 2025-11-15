@@ -37,6 +37,7 @@ from .utils.auth_links import ensure_usuario_for_request
 import json
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
+import requests
 
 
 def _metricas_precision_queryset(user_id, desde=None, hasta=None):
@@ -910,27 +911,149 @@ def _calendar_feats(dt_local):
 def _climate_stub(_dt_local):
     return {"Temp_C": 14.0}
 
+
+
+def _signals_from_dispositivos(usuario):
+    """
+    Calcula señales agregadas a partir de los dispositivos del usuario.
+    Si no hay dispositivos activos, usa el default.
+    """
+    dispositivos = Dispositivo.objects.filter(usuario=usuario, activo=True)
+    if not dispositivos.exists():
+        return _default_signals()
+
+    sub1 = sub2 = sub3 = other = 0.0
+    total_kw_h = 0.0  # kWh por hora (aprox)
+
+    for d in dispositivos:
+        pot_w = float(d.potencia_promedio_w or 0.0)
+        horas = float(d.horas_uso_diario or 0.0)
+
+        # Consumo diario estimado en kWh
+        kwh_dia = pot_w * horas / 1000.0 if horas > 0 else 0.0
+
+        # Consumo "medio" por hora de uso
+        kwh_hora_uso = kwh_dia / max(horas, 1.0) if horas > 0 else 0.0
+
+        tipo = (d.tipo_dispositivo.nombre or "").lower() if d.tipo_dispositivo else ""
+
+        # Mapeo súper simple por categoría
+        if "calef" in tipo or "clima" in tipo or "agua" in tipo:
+            sub1 += kwh_hora_uso       # calefacción / agua caliente
+        elif "cocina" in tipo or "horno" in tipo or "microondas" in tipo:
+            sub2 += kwh_hora_uso       # cocina
+        elif "lavadora" in tipo or "secadora" in tipo or "plancha" in tipo:
+            sub3 += kwh_hora_uso       # lavado / planchado
+        else:
+            other += kwh_hora_uso      # resto de artefactos
+
+        total_kw_h += kwh_hora_uso
+
+    # En Chile asumimos ~230V monofásico
+    voltage = 230.0
+    intensity = (total_kw_h * 1000.0 / voltage) if voltage > 0 else 0.0
+
+    return {
+        "Global_reactive_power": round(total_kw_h * 0.2, 4),  # factor cos φ ~0.8 aprox
+        "Voltage": voltage,
+        "Global_intensity": round(intensity, 4),
+        "Sub_metering_1": round(sub1, 4),
+        "Sub_metering_2": round(sub2, 4),
+        "Sub_metering_3": round(sub3, 4),
+        "other_kwh_h": round(other, 4),
+    }
+
+
+def _climate_from_api(dt_local):
+    """
+    Consulta una API pública (Open-Meteo) para obtener la temperatura en °C.
+    Por simplicidad, usamos coordenadas de Santiago.
+    """
+    try:
+        base_url = "https://api.open-meteo.com/v1/forecast"
+        params = {
+            "latitude": -33.45,
+            "longitude": -70.66,
+            "hourly": "temperature_2m",
+            "timezone": "America/Santiago",
+        }
+        r = requests.get(base_url, params=params, timeout=3)
+        r.raise_for_status()
+        data = r.json()
+        temps = data.get("hourly", {}).get("temperature_2m", [])
+        times = data.get("hourly", {}).get("time", [])
+
+        # Buscar la hora más cercana a dt_local
+        if not temps or not times:
+            return _climate_stub(dt_local)
+
+        target = dt_local.replace(minute=0, second=0, microsecond=0).isoformat()
+        if target in times:
+            idx = times.index(target)
+            return {"Temp_C": float(temps[idx])}
+
+        # Si no existe esa exacta, toma la primera
+        return {"Temp_C": float(temps[0])}
+    except Exception:
+        # Fallback silencioso
+        return _climate_stub(dt_local)
+
 @login_required
 def api_predict_next_24h(request):
     """
-    Devuelve 24 horas de predicción horaria en kWh, timestamp local (America/Santiago).
+    Devuelve la predicción de consumo de las próximas 24h para el usuario:
+    - Basada en sus dispositivos registrados.
+    - Ajustada al calendario (mes, día semana, hora).
+    - Usando clima de Chile (stub o API externa).
+    Además retorna un nivel de alerta y un mensaje corto.
     """
     tz = pytz.timezone("America/Santiago")
     now_utc = timezone.now()
-    out = []
+    usuario = ensure_usuario_for_request(request)
+    if not usuario:
+        return JsonResponse(
+            {"error": "No se encontró tu perfil de usuario energético."},
+            status=400
+        )
+
+    # Baseline: cuánto consume "normalmente" este usuario
+    baseline = _user_baseline_kwh(usuario, ref_dt=now_utc.date())
+
+    predicciones = []
+    total_kwh = 0.0
+
+    # Señales estáticas en base a dispositivos
+    # (si no tiene dispositivos activos, cae en _default_signals)
+    signals = _signals_from_dispositivos(usuario)
+
     for h in range(1, 25):
         ts_local = (now_utc + timedelta(hours=h)).astimezone(tz)
+
         row = build_row(
-            signals=_default_signals(),
+            signals=signals,
             calendar=_calendar_feats(ts_local),
-            climate=_climate_stub(ts_local)
+            climate=_climate_stub(ts_local)  # o _climate_from_api(ts_local)
         )
+
         kwh = predict_one(row)
-        out.append({
+        total_kwh += kwh
+
+        predicciones.append({
             "timestamp_local": ts_local.isoformat(),
-            "kwh": round(kwh, 3)
+            "kwh": round(kwh, 3),
         })
-    return JsonResponse({"predicciones": out})
+
+    nivel, mensaje_alerta = _classify_alert(total_kwh, baseline)
+
+    resp = {
+        "kwh_total_24h": round(total_kwh, 3),
+        "consumo_promedio_h": round(total_kwh / 24.0, 3),
+        "nivel_alerta": nivel.codigo if hasattr(nivel, "codigo") else str(nivel),
+        "mensaje_alerta": mensaje_alerta,
+        "predicciones": predicciones,
+    }
+    return JsonResponse(resp)
+
 
 
 
