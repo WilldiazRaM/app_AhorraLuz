@@ -1086,12 +1086,13 @@ NATIONAL_DAILY_KWH = 7.0  # kWh/día
 def _classify_alert(total_kwh: float, baseline_kwh: float | None):
     """
     Devuelve:
-      - nivel ('VERDE', 'AMARILLO', 'ROJO')
+      - nivel ('VERDE', 'AMARILLO', 'ROJO')  -> string simple o luego mapeable a NivelAlerta
       - mensaje_alerta (string listo para mostrar al usuario)
+      - ratio_user (total_kwh / baseline_user) para mostrar % vs su propio promedio
     El mensaje viene contextualizado con hogar promedio en Chile.
     """
     # baseline del usuario (histórico). Si es muy chico, usamos 1 kWh para no explotar el %.
-    baseline_user = baseline_kwh or 1.0
+    baseline_user = float(baseline_kwh or 1.0)
     baseline_user = max(baseline_user, 1.0)
 
     # Comparación contra el propio usuario
@@ -1100,10 +1101,10 @@ def _classify_alert(total_kwh: float, baseline_kwh: float | None):
     # Comparación contra hogar promedio Chile
     ratio_cl = total_kwh / NATIONAL_DAILY_KWH if NATIONAL_DAILY_KWH > 0 else 1.0
 
-    # Clasificación del nivel por consumo absoluto (puedes ajustar los umbrales)
+    # Clasificación del nivel por consumo absoluto (ajusta umbrales a gusto)
     if total_kwh <= 5:
         nivel = "VERDE"
-    elif total_kwh <= 20:
+    elif total_kwh <= 15:
         nivel = "AMARILLO"
     else:
         nivel = "ROJO"
@@ -1119,44 +1120,33 @@ def _classify_alert(total_kwh: float, baseline_kwh: float | None):
     # Equivalencia en “días de hogar chileno”
     dias_equivalentes = ratio_cl  # porque total_kwh / 7 kWh/día
 
-    # Mensaje final contextualizado
+    # Mensaje final contextualizado a Chile
     mensaje = (
         f"Consumo estimado próximas 24 h: {total_kwh:.2f} kWh. "
         f"Esto es {detalle_user}. "
         f"En Chile, un hogar promedio consume alrededor de {NATIONAL_DAILY_KWH:.1f} kWh al día, "
-        f"por lo que esta predicción equivale a ≈{dias_equivalentes:.1f} días de consumo de un hogar típico. "
+        f"por lo que esta predicción equivale a ≈{dias_equivalentes:.1f} días de consumo "
+        f"de un hogar residencial típico."
     )
 
     if nivel == "ROJO":
         mensaje += (
-            "Nivel de alerta: ROJO. Revisa el uso de artefactos de alto consumo "
-            "(calefactores eléctricos, horno, equipos encendidos 24/7) y evita concentrar cargas en horas punta."
+            " Nivel de alerta: ROJO. Revisa el uso de artefactos de alto consumo "
+            "(calefactores eléctricos, horno, equipos encendidos 24/7) y evita "
+            "concentrar cargas en horas punta."
         )
     elif nivel == "AMARILLO":
         mensaje += (
-            "Nivel de alerta: AMARILLO. Hay margen para optimizar horarios y reducir uso en los equipos más exigentes."
+            " Nivel de alerta: AMARILLO. Hay margen para optimizar horarios y "
+            "reducir el uso de los equipos más exigentes."
         )
     else:
         mensaje += (
-            "Nivel de alerta: VERDE. Tu consumo está dentro de rangos moderados para un hogar chileno."
+            " Nivel de alerta: VERDE. Tu consumo está dentro de rangos moderados "
+            "para un hogar chileno."
         )
 
-    return nivel, mensaje
-    """Devuelve (nivel, texto) con 4 niveles: VERDE/AMARILLO/NARANJA/ROJO comparando con baseline."""
-    ratio = yhat / baseline if baseline > 0 else 1.0
-    if ratio < 0.90:
-        nivel = _get_or_create_nivel_alerta("VERDE", "Consumo bajo lo esperado")
-        texto = f"Predicción {yhat:.2f} kWh (−{(1-ratio)*100:.0f}% vs tu promedio). ¡Buen desempeño!"
-    elif ratio < 1.10:
-        nivel = _get_or_create_nivel_alerta("AMARILLO", "Consumo dentro de lo esperado")
-        texto = f"Predicción {yhat:.2f} kWh (≈{(ratio-1)*100:.0f}% vs promedio). Mantén hábitos actuales."
-    elif ratio < 1.30:
-        nivel = _get_or_create_nivel_alerta("NARANJA", "Consumo sobre lo esperado")
-        texto = f"Predicción {yhat:.2f} kWh (+{(ratio-1)*100:.0f}% vs promedio). Revisa horarios y uso de equipos."
-    else:
-        nivel = _get_or_create_nivel_alerta("ROJO", "Riesgo de alto consumo")
-        texto = f"Predicción {yhat:.2f} kWh (+{(ratio-1)*100:.0f}% vs promedio). Considera reducir cargas pico."
-    return nivel, texto, ratio
+    return nivel, mensaje, ratio_user
 
 def _build_feature_row_from_form(form):
     """Arma signals/calendar/climate con defaults si el usuario no los ingresó."""
