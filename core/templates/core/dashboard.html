@@ -4,12 +4,124 @@
 {% block title %}Mi panel — AhorraLuz{% endblock %}
 
 {% block content %}
+<style>
+/* ===========================
+   DASHBOARD AHORRALUZ (inline)
+   =========================== */
+
+/* Cards más suaves, tipo MideTuConsumo */
+.dash-card {
+  border: none;
+  border-radius: 1rem;
+}
+
+/* Títulos y subtítulos */
+.dash-title-main {
+  font-weight: 600;
+}
+
+.dash-subtitle {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+/* Chips / badges suaves */
+.dash-chip {
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+/* ---------- BARRAS COMPARATIVAS ---------- */
+
+.dashboard-bar-wrapper {
+  overflow: hidden;
+  width: 100%;
+}
+
+.dashboard-bar-track {
+  height: 10px;
+  background: #ffffff;
+  border-radius: 50px;
+  overflow: hidden;
+  position: relative;
+}
+
+.dashboard-bar-fill {
+  height: 10px;
+  border-radius: 50px;
+  transition: width 0.6s ease-out;
+}
+
+.dashboard-label {
+  white-space: nowrap;
+  font-size: 0.75rem;
+}
+
+.dashboard-bar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+/* ---------- MINI GRÁFICOS DE PRECISIÓN ---------- */
+
+.dash-metric-card {
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  height: 100%;
+}
+
+.dash-metric-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6c757d;
+}
+
+.dash-metric-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.dash-metric-track {
+  background: rgba(15, 118, 110, 0.08);
+}
+
+.dash-metric-bar {
+  background: #0f766e; /* verde energía */
+}
+
+/* chip de estado del modelo */
+.dash-model-tag {
+  font-size: 0.7rem;
+  border-radius: 999px;
+  padding: 0.2rem 0.5rem;
+  background: rgba(59, 130, 246, 0.08);
+  color: #2563eb;
+}
+
+/* Responsive: barras apiladas en móviles */
+@media (max-width: 576px) {
+  .dashboard-bar-row {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+
+  .dashboard-bar-track {
+    width: 100%;
+  }
+}
+</style>
+
 <div class="container my-4">
 
   <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
-      <h1 class="h4 mb-1">Mi panel energético</h1>
-      <p class="text-muted small mb-0">
+      <h1 class="h4 mb-1 dash-title-main">Mi panel energético</h1>
+      <p class="dash-subtitle mb-0">
         Resumen de tu consumo, predicción para las próximas 24 horas y precisión del modelo.
       </p>
     </div>
@@ -20,18 +132,24 @@
     <div class="col-12 col-lg-8">
 
       <!-- Card: Predicción próximas 24h vs hogar chileno -->
-      <div class="card shadow-sm mb-3">
+      <div class="card shadow-sm dash-card mb-3">
         <div class="card-body">
-          <h6 class="card-title mb-2">
-            <i class="fa-solid fa-bolt me-2"></i>Predicción próximas 24 horas (hogar chileno)
-          </h6>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="card-title mb-0">
+              <i class="fa-solid fa-bolt me-2 text-warning"></i>
+              Predicción próximas 24 horas (hogar chileno)
+            </h6>
+            <span id="dash-alert-mini-tag" class="dash-chip badge bg-light text-muted">
+              Modelo en cálculo
+            </span>
+          </div>
 
           <div id="dash-prediction-loading" class="small text-muted">
             Calculando predicción en base a tus dispositivos…
           </div>
 
           <div id="dash-prediction-content" class="d-none">
-            <div class="row g-3 align-items-center mb-2 small">
+            <div class="row g-3 align-items-center mb-3 small">
               <div class="col-6 col-md-3">
                 <div class="fw-semibold">Consumo 24h</div>
                 <div><span id="dash-total-kwh">—</span> kWh</div>
@@ -44,35 +162,51 @@
                 <div class="fw-semibold">Hogar chileno promedio</div>
                 <div><span id="dash-baseline-kwh">7.0</span> kWh/día</div>
               </div>
-              <div class="col-6 col-md-3">
-                <div class="fw-semibold">Nivel de alerta</div>
-                <span id="dash-alert-badge" class="badge bg-secondary">—</span>
+              <div class="col-6 col-md-3 text-md-end">
+                <div class="fw-semibold mb-1">Nivel de alerta</div>
+                <span id="dash-alert-badge" class="badge bg-secondary dash-chip">—</span>
               </div>
             </div>
 
-            <!-- Mini “barras” comparativas -->
-            <div class="mb-2">
+            <!-- Mini “barras” comparativas tipo MideTuConsumo -->
+            <div class="mb-3">
               <div class="d-flex justify-content-between small mb-1">
-                <span>Hogar promedio Chile</span>
-                <span>Tu predicción</span>
+                <span class="text-muted">Comparación en 24h</span>
+                <span class="text-muted">kWh estimados</span>
               </div>
-              <div class="bg-light rounded-3 p-2">
-                <div class="d-flex flex-column gap-2">
-                  <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-outline-secondary border border-secondary text-secondary small">CL</span>
-                    <div class="flex-grow-1 bg-white rounded-pill" style="height: 10px;">
-                      <div id="bar-base" class="bg-secondary rounded-pill" style="height: 10px; width: 0;"></div>
+
+              <div class="bg-light rounded-3 p-3">
+
+                <!-- FILA: HOGAR CHILENO -->
+                <div class="dashboard-bar-row mb-3">
+                  <span class="badge bg-outline-secondary border border-secondary text-secondary dashboard-label">
+                    CL
+                  </span>
+
+                  <div class="flex-grow-1 dashboard-bar-wrapper">
+                    <div class="dashboard-bar-track">
+                      <div id="bar-base" class="dashboard-bar-fill bg-secondary" style="width: 0;"></div>
                     </div>
-                    <span class="small" id="dash-base-label">7.0 kWh</span>
                   </div>
-                  <div class="d-flex align-items-center gap-2">
-                    <span class="badge bg-success small">Tú</span>
-                    <div class="flex-grow-1 bg-white rounded-pill" style="height: 10px;">
-                      <div id="bar-user" class="bg-success rounded-pill" style="height: 10px; width: 0;"></div>
-                    </div>
-                    <span class="small" id="dash-user-label">—</span>
-                  </div>
+
+                  <span id="dash-base-label" class="small dashboard-label">7.0 kWh</span>
                 </div>
+
+                <!-- FILA: TU PREDICCIÓN -->
+                <div class="dashboard-bar-row">
+                  <span class="badge bg-success dashboard-label">
+                    Tú
+                  </span>
+
+                  <div class="flex-grow-1 dashboard-bar-wrapper">
+                    <div class="dashboard-bar-track">
+                      <div id="bar-user" class="dashboard-bar-fill bg-success" style="width: 0;"></div>
+                    </div>
+                  </div>
+
+                  <span id="dash-user-label" class="small dashboard-label">—</span>
+                </div>
+
               </div>
             </div>
 
@@ -87,34 +221,105 @@
         </div>
       </div>
 
-      <!-- Card de precisión del modelo (la que ya tenías) -->
-      <div class="card shadow-sm mb-3">
+      <!-- Card de precisión del modelo con mini-gráficos -->
+      <div class="card shadow-sm dash-card mb-3">
         <div class="card-body">
-          <h6 class="card-title mb-2">
-            <i class="fa-solid fa-bullseye me-2"></i>Precisión del modelo (últimos {{ metrics_window_days }} días)
-          </h6>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="card-title mb-0">
+              <i class="fa-solid fa-bullseye me-2 text-primary"></i>
+              Precisión del modelo (últimos {{ metrics_window_days }} días)
+            </h6>
+            {% if metrics.n %}
+              <span class="dash-model-tag">
+                <i class="fa-solid fa-circle-check me-1"></i>Entrenado con tus datos
+              </span>
+            {% endif %}
+          </div>
+
           {% if metrics.n %}
             <div class="row g-3 small">
-              <div class="col-6 col-md-3">
-                <div class="fw-semibold">Muestras</div>
-                <div>{{ metrics.n }}</div>
+              <!-- Muestras (sin barra, solo dato) -->
+              <div class="col-12 col-md-3">
+                <div class="dash-metric-card text-center h-100">
+                  <div class="dash-metric-label mb-1">Muestras</div>
+                  <div class="dash-metric-value">{{ metrics.n }}</div>
+                  <div class="text-muted mt-1" style="font-size: 0.7rem;">
+                    Confirmaciones reales registradas
+                  </div>
+                </div>
               </div>
-              <div class="col-6 col-md-3">
-                <div class="fw-semibold">MAE</div>
-                <div>{{ metrics.mae|floatformat:2 }} kWh</div>
+
+              <!-- MAE -->
+              <div class="col-12 col-md-3">
+                <div class="dash-metric-card h-100">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="dash-metric-label">MAE</span>
+                    <i class="fa-solid fa-chart-line text-teal-500"></i>
+                  </div>
+                  <div class="dash-metric-value">
+                    {{ metrics.mae|floatformat:2 }} kWh
+                  </div>
+                  <div class="dashboard-bar-wrapper mt-2">
+                    <div class="dashboard-bar-track dash-metric-track">
+                      <div class="dashboard-bar-fill dash-metric-bar dash-metric-bar-mae"
+                           data-value="{{ metrics.mae|floatformat:2 }}"
+                           data-max="5"></div>
+                    </div>
+                  </div>
+                  <div class="mt-1 text-muted" style="font-size: 0.7rem;">
+                    Error absoluto medio
+                  </div>
+                </div>
               </div>
-              <div class="col-6 col-md-3">
-                <div class="fw-semibold">RMSE</div>
-                <div>{{ metrics.rmse|floatformat:2 }} kWh</div>
+
+              <!-- RMSE -->
+              <div class="col-12 col-md-3">
+                <div class="dash-metric-card h-100">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="dash-metric-label">RMSE</span>
+                    <i class="fa-solid fa-wave-square"></i>
+                  </div>
+                  <div class="dash-metric-value">
+                    {{ metrics.rmse|floatformat:2 }} kWh
+                  </div>
+                  <div class="dashboard-bar-wrapper mt-2">
+                    <div class="dashboard-bar-track dash-metric-track">
+                      <div class="dashboard-bar-fill dash-metric-bar dash-metric-bar-rmse"
+                           data-value="{{ metrics.rmse|floatformat:2 }}"
+                           data-max="6"></div>
+                    </div>
+                  </div>
+                  <div class="mt-1 text-muted" style="font-size: 0.7rem;">
+                    Sensible a picos altos
+                  </div>
+                </div>
               </div>
-              <div class="col-6 col-md-3">
-                <div class="fw-semibold">MAPE</div>
-                <div>
-                  {% if metrics.mape %}{{ metrics.mape|floatformat:1 }}%{% else %}—{% endif %}
+
+              <!-- MAPE -->
+              <div class="col-12 col-md-3">
+                <div class="dash-metric-card h-100">
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="dash-metric-label">MAPE</span>
+                    <i class="fa-solid fa-percent"></i>
+                  </div>
+                  <div class="dash-metric-value">
+                    {% if metrics.mape %}{{ metrics.mape|floatformat:1 }}%{% else %}—{% endif %}
+                  </div>
+                  <div class="dashboard-bar-wrapper mt-2">
+                    <div class="dashboard-bar-track dash-metric-track">
+                      <div class="dashboard-bar-fill dash-metric-bar dash-metric-bar-mape"
+                           data-value="{% if metrics.mape %}{{ metrics.mape|floatformat:1 }}{% else %}0{% endif %}"
+                           data-max="30"></div>
+                    </div>
+                  </div>
+                  <div class="mt-1 text-muted" style="font-size: 0.7rem;">
+                    Error porcentual medio
+                  </div>
                 </div>
               </div>
             </div>
-            <div class="form-text mt-2">
+
+            <div class="form-text mt-3">
               MAE: error absoluto medio · RMSE: raíz del error cuadrático medio · MAPE: error porcentual medio absoluto.
             </div>
           {% else %}
@@ -127,10 +332,11 @@
       </div>
 
       <!-- Últimos registros -->
-      <div class="card shadow-sm">
+      <div class="card shadow-sm dash-card">
         <div class="card-body">
           <h6 class="card-title mb-2">
-            <i class="fa-solid fa-clock-rotate-left me-2"></i>Últimos registros de consumo
+            <i class="fa-solid fa-clock-rotate-left me-2 text-muted"></i>
+            Últimos registros de consumo
           </h6>
           {% if registros %}
             <ul class="list-group list-group-flush small">
@@ -160,13 +366,15 @@
 
     <!-- Columna derecha -->
     <div class="col-12 col-lg-4">
-      <div class="card shadow-sm mb-3">
+      <div class="card shadow-sm dash-card mb-3">
         <div class="card-body">
           <h6 class="card-title mb-2">
-            <i class="fa-solid fa-plug-circle-bolt me-2"></i>Tus dispositivos
+            <i class="fa-solid fa-plug-circle-bolt me-2 text-success"></i>
+            Tus dispositivos
           </h6>
           <p class="small mb-1">
-            Recuerda que la predicción usa los dispositivos activos que registraste en <strong>“Mis dispositivos”</strong>.
+            Recuerda que la predicción usa los dispositivos activos que registraste en
+            <strong>“Mis dispositivos”</strong>.
           </p>
           <a href="{% url 'core:mis_dispositivos_list' %}" class="btn btn-sm btn-outline-primary">
             Ver / editar mis dispositivos
@@ -182,7 +390,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const loadingEl = document.getElementById("dash-prediction-loading");
   const contentEl = document.getElementById("dash-prediction-content");
   const errorEl   = document.getElementById("dash-prediction-error");
+  const miniTagEl = document.getElementById("dash-alert-mini-tag");
 
+  // -------- PREDICCIÓN 24H (API) --------
   fetch("{% url 'core:api_predict_next_24h' %}")
     .then(resp => {
       if (!resp.ok) throw new Error("HTTP " + resp.status);
@@ -201,25 +411,39 @@ document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("dash-base-label").textContent = baseline.toFixed(1) + " kWh";
       document.getElementById("dash-user-label").textContent = total.toFixed(2) + " kWh";
 
-      // Barras: base siempre 100%, usuario proporcional (capado a 220% para no romper el diseño)
+      // Barras: base siempre 100%, usuario proporcional (capado a 150% para no romper el diseño)
       document.getElementById("bar-base").style.width = "100%";
-      document.getElementById("bar-user").style.width = Math.min(ratio * 100, 220) + "%";
+      const safeWidth = Math.min(ratio * 100, 150);
+      document.getElementById("bar-user").style.width = safeWidth + "%";
 
       // Nivel de alerta
       const nivel = (data.nivel_alerta || "").toUpperCase();
       const badge = document.getElementById("dash-alert-badge");
       badge.textContent = nivel || "—";
       badge.classList.remove("bg-secondary", "bg-success", "bg-warning", "bg-danger");
+
+      // Mini tag de estado (texto arriba a la derecha)
+      let miniText = "Modelo en cálculo";
+
       if (nivel === "VERDE") {
         badge.classList.add("bg-success");
+        miniText = "Consumo dentro de rango";
       } else if (nivel === "AMARILLO") {
         badge.classList.add("bg-warning");
+        miniText = "Atento a tu consumo";
       } else if (nivel === "NARANJA") {
         badge.classList.add("bg-warning");
+        miniText = "Consumo alto, revisa horarios";
       } else if (nivel === "ROJO") {
         badge.classList.add("bg-danger");
+        miniText = "Consumo muy alto";
       } else {
         badge.classList.add("bg-secondary");
+        miniText = "Modelo en cálculo";
+      }
+
+      if (miniTagEl) {
+        miniTagEl.textContent = miniText;
       }
 
       document.getElementById("dash-alert-text").textContent =
@@ -232,7 +456,23 @@ document.addEventListener("DOMContentLoaded", function () {
       console.error("Error obteniendo predicción 24h:", err);
       loadingEl.classList.add("d-none");
       errorEl.classList.remove("d-none");
+      if (miniTagEl) {
+        miniTagEl.textContent = "Sin conexión al modelo";
+      }
     });
+
+  // -------- MINI GRÁFICOS DE PRECISIÓN --------
+  const metricBars = document.querySelectorAll(".dash-metric-bar");
+  metricBars.forEach(bar => {
+    const value = parseFloat(bar.dataset.value || "0");
+    const max = parseFloat(bar.dataset.max || "1");
+    if (!isNaN(value) && max > 0) {
+      const pct = Math.min((value / max) * 100, 100);
+      bar.style.width = pct + "%";
+    } else {
+      bar.style.width = "0%";
+    }
+  });
 });
 </script>
 {% endblock %}
