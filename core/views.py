@@ -34,6 +34,10 @@ from django.db.models.functions import Abs, Cast, NullIf
 from django.db.models import F, FloatField, ExpressionWrapper, Avg, Count
 import datetime
 from .utils.auth_links import ensure_usuario_for_request
+import json
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+
 
 def _metricas_precision_queryset(user_id, desde=None, hasta=None):
     from .models import PrediccionConsumo
@@ -587,15 +591,40 @@ def profile_view(request):
 
 @login_required
 def consumo_new(request):
+    # Mapeamos user autenticado -> Usuario (UUID interno)
+    usuario = ensure_usuario_for_request(request)
+    if not usuario:
+        messages.error(request, "No se encontró tu registro de usuario en AhorraLuz.")
+        return redirect("core:profile")
+
     if request.method == "POST":
         form = RegistroConsumoForm(request.POST)
+        # limitar el combo de dispositivos solo a los del usuario
+        form.fields["dispositivo"].queryset = Dispositivo.objects.filter(usuario=usuario)
+
         if form.is_valid():
             rc = form.save(commit=False)
-            rc.usuario_id = request.user.id
+            # seguridad: forzamos el usuario y la fecha de creación
+            rc.usuario = usuario
+            if not rc.creado_en:
+                rc.creado_en = timezone.now()
+
+            # validamos que el dispositivo (si viene) pertenezca al usuario
+            if rc.dispositivo_id:
+                if not Dispositivo.objects.filter(
+                    id=rc.dispositivo_id,
+                    usuario=usuario
+                ).exists():
+                    form.add_error("dispositivo", "El dispositivo seleccionado no pertenece a tu cuenta.")
+                    return render(request, "core/consumo_form.html", {"form": form})
+
             rc.save()
-            return redirect('core:consumo_history')
+            messages.success(request, "✅ Lectura registrada correctamente.")
+            return redirect("core:consumo_history")
     else:
         form = RegistroConsumoForm()
+        form.fields["dispositivo"].queryset = Dispositivo.objects.filter(usuario=usuario)
+
     return render(request, "core/consumo_form.html", {"form": form})
 
 @login_required
@@ -1229,3 +1258,84 @@ def mis_dispositivo_delete(request, pk):
         "usuarios/mis_dispositivo_confirm_delete.html",
         {"dispositivo": dispositivo},
     )
+
+
+
+##ENDPOINT IoT Sencillo CAPSTONE PROYECTO TEST:
+@csrf_exempt
+@require_POST
+def api_iot_registro_consumo(request):
+    """
+    Endpoint sencillo para que un dispositivo IoT (o script) envíe lecturas.
+
+    Ejemplo de JSON esperado:
+    {
+      "usuario_id": "00000000-0000-0000-0000-000000000004",
+      "dispositivo_id": 13,
+      "fecha": "2025-11-15",
+      "consumo_kwh": 2.5,
+      "costo_clp": 2500
+    }
+
+    ⚠️ IMPORTANTE (para tu informe):
+    Para simplificar el capstone no usamos token de API,
+    pero en producción deberías proteger esto con un API key / OAuth.
+    """
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except json.JSONDecodeError:
+        return JsonResponse({"ok": False, "error": "JSON inválido"}, status=400)
+
+    usuario_id = payload.get("usuario_id")
+    dispositivo_id = payload.get("dispositivo_id")
+    fecha_str = payload.get("fecha")
+    consumo_kwh = payload.get("consumo_kwh")
+    costo_clp = payload.get("costo_clp", 0)
+
+    if not usuario_id or consumo_kwh is None or not fecha_str:
+        return JsonResponse(
+            {
+                "ok": False,
+                "error": "usuario_id, consumo_kwh y fecha son obligatorios",
+            },
+            status=400,
+        )
+
+    # Buscar Usuario dueño del consumo
+    try:
+        usuario = Usuario.objects.get(pk=usuario_id)
+    except Usuario.DoesNotExist:
+        return JsonResponse({"ok": False, "error": "Usuario no encontrado"}, status=404)
+
+    # Validar dispositivo (si viene)
+    dispositivo = None
+    if dispositivo_id is not None:
+        try:
+            dispositivo = Dispositivo.objects.get(pk=dispositivo_id, usuario=usuario)
+        except Dispositivo.DoesNotExist:
+            return JsonResponse(
+                {"ok": False, "error": "Dispositivo no pertenece a este usuario"},
+                status=404,
+            )
+
+    # Parsear fecha
+    try:
+        fecha = datetime.date.fromisoformat(fecha_str)
+    except ValueError:
+        return JsonResponse(
+            {"ok": False, "error": "fecha debe tener formato YYYY-MM-DD"},
+            status=400,
+        )
+
+    rc = RegistroConsumo(
+        usuario=usuario,
+        fecha=fecha,
+        consumo_kwh=consumo_kwh,
+        costo_clp=costo_clp or 0,
+        dispositivo=dispositivo,
+        fuente="automatica",
+        creado_en=timezone.now(),
+    )
+    rc.save()
+
+    return JsonResponse({"ok": True, "id": rc.id})

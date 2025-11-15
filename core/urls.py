@@ -223,4 +223,11 @@ path(
 ),
 
     
+##IOT SYS
+  path(
+        "api/iot/consumos/",
+        views.api_iot_registro_consumo,
+        name="api_iot_registro_consumo",
+    ),
+
 ]
