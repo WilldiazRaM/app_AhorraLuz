@@ -383,46 +383,53 @@
       const out = document.getElementById('nowcast-output');
       if (!btn || !out) return;
 
-      nowcastBtn.addEventListener("click", async () => {
-  try {
-    nowcastBtn.disabled = true;
-    nowcastBtn.textContent = "Calculando...";
+      
+      btn.addEventListener("click", async () => {
+        try {
+          
+          btn.disabled = true;
+          btn.textContent = "Calculando...";
 
-    const resp = await fetch("{% url 'core:api_predict_next_24h' %}", {
-      method: "GET",
-      headers: {"X-Requested-With": "XMLHttpRequest"}
-    });
+          const resp = await fetch("{% url 'core:api_predict_next_24h' %}", {
+            method: "GET",
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+          });
 
-    if (!resp.ok) {
-      output.textContent = "No se pudo obtener la predicción.";
-      return;
-    }
+          if (!resp.ok) {
+            
+            out.textContent = "No se pudo obtener la predicción.";
+            return;
+          }
 
-    const data = await resp.json();
+          const data = await resp.json();
 
-    if (data.error) {
-      output.textContent = data.error;
-      return;
-    }
+          if (data.error) {
+            
+            out.textContent = data.error;
+            return;
+          }
 
-    const total = data.kwh_total_24h?.toFixed(2) ?? "N/A";
-    const prom  = data.consumo_promedio_h?.toFixed(2) ?? "N/A";
-    const nivel = data.nivel_alerta ?? "DESCONOCIDO";
-    const msg   = data.mensaje_alerta ?? "";
+          const total = data.kwh_total_24h?.toFixed(2) ?? "N/A";
+          const prom = data.consumo_promedio_h?.toFixed(2) ?? "N/A";
+          const nivel = data.nivel_alerta ?? "DESCONOCIDO";
+          const msg = data.mensaje_alerta ?? "";
 
-    output.textContent =
-      `Consumo estimado próximas 24h: ${total} kWh\n` +
-      `Promedio por hora: ${prom} kWh/h\n` +
-      `Nivel de alerta: ${nivel}\n` +
-      `${msg}`;
-  } catch (err) {
-    console.error(err);
-    output.textContent = "Error al obtener la predicción.";
-  } finally {
-    nowcastBtn.disabled = false;
-    nowcastBtn.textContent = "Predicción 24 h";
-  }
-});
+          
+          out.textContent =
+            `Consumo estimado próximas 24h: ${total} kWh\n` +
+            `Promedio por hora: ${prom} kWh/h\n` +
+            `Nivel de alerta: ${nivel}\n` +
+            `${msg}`;
+        } catch (err) {
+          console.error(err);
+          
+          out.textContent = "Error al obtener la predicción.";
+        } finally {
+          
+          btn.disabled = false;
+          btn.textContent = "Ejecutar"; // Lo he cambiado a "Ejecutar" ya que era el texto original del botón.
+        }
+      });
     })();
   </script>
 
