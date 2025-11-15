@@ -1,55 +1,238 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mi panel — AhorraLuz{% endblock %}
+
 {% block content %}
-  <h1>{{ title }}</h1>
-  <p>Últimos registros:</p>
-  <ul>
-    {% for r in registros %}
-      <li>{{ r.fecha }} - {{ r.consumo_kwh }} kWh - {{ r.costo_clp }} CLP</li>
-    {% empty %}
-      <li>No hay registros</li>
-    {% endfor %}
-  </ul>
-  <!-- Card de precisión del modelo -->
-<div class="card shadow-sm mb-3">
-  <div class="card-body">
-    <h6 class="card-title mb-2">
-      <i class="fa-solid fa-bullseye me-2"></i>Precisión del modelo (últimos {{ metrics_window_days }} días)
-    </h6>
-    {% if metrics.n %}
-      <div class="row g-3 small">
-        <div class="col-6 col-md-3">
-          <div class="fw-semibold">Muestras</div>
-          <div>{{ metrics.n }}</div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="fw-semibold">MAE</div>
-          <div>{{ metrics.mae|floatformat:2 }} kWh</div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="fw-semibold">RMSE</div>
-          <div>{{ metrics.rmse|floatformat:2 }} kWh</div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="fw-semibold">MAPE</div>
-          <div>
-            {% if metrics.mape %}{{ metrics.mape|floatformat:1 }}%{% else %}—{% endif %}
+<div class="container my-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h1 class="h4 mb-1">Mi panel energético</h1>
+      <p class="text-muted small mb-0">
+        Resumen de tu consumo, predicción para las próximas 24 horas y precisión del modelo.
+      </p>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Columna izquierda -->
+    <div class="col-12 col-lg-8">
+
+      <!-- Card: Predicción próximas 24h vs hogar chileno -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-body">
+          <h6 class="card-title mb-2">
+            <i class="fa-solid fa-bolt me-2"></i>Predicción próximas 24 horas (hogar chileno)
+          </h6>
+
+          <div id="dash-prediction-loading" class="small text-muted">
+            Calculando predicción en base a tus dispositivos…
+          </div>
+
+          <div id="dash-prediction-content" class="d-none">
+            <div class="row g-3 align-items-center mb-2 small">
+              <div class="col-6 col-md-3">
+                <div class="fw-semibold">Consumo 24h</div>
+                <div><span id="dash-total-kwh">—</span> kWh</div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="fw-semibold">Promedio por hora</div>
+                <div><span id="dash-hourly-kwh">—</span> kWh/h</div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="fw-semibold">Hogar chileno promedio</div>
+                <div><span id="dash-baseline-kwh">7.0</span> kWh/día</div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="fw-semibold">Nivel de alerta</div>
+                <span id="dash-alert-badge" class="badge bg-secondary">—</span>
+              </div>
+            </div>
+
+            <!-- Mini “barras” comparativas -->
+            <div class="mb-2">
+              <div class="d-flex justify-content-between small mb-1">
+                <span>Hogar promedio Chile</span>
+                <span>Tu predicción</span>
+              </div>
+              <div class="bg-light rounded-3 p-2">
+                <div class="d-flex flex-column gap-2">
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-outline-secondary border border-secondary text-secondary small">CL</span>
+                    <div class="flex-grow-1 bg-white rounded-pill" style="height: 10px;">
+                      <div id="bar-base" class="bg-secondary rounded-pill" style="height: 10px; width: 0;"></div>
+                    </div>
+                    <span class="small" id="dash-base-label">7.0 kWh</span>
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success small">Tú</span>
+                    <div class="flex-grow-1 bg-white rounded-pill" style="height: 10px;">
+                      <div id="bar-user" class="bg-success rounded-pill" style="height: 10px; width: 0;"></div>
+                    </div>
+                    <span class="small" id="dash-user-label">—</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p class="mb-0 small text-muted" id="dash-alert-text">
+              <!-- Aquí va el mensaje corto del backend -->
+            </p>
+          </div>
+
+          <div id="dash-prediction-error" class="alert alert-warning small d-none mb-0">
+            No se pudo obtener la predicción en este momento. Inténtalo nuevamente más tarde.
           </div>
         </div>
       </div>
-      <div class="form-text mt-2">
-        MAE: error absoluto medio · RMSE: raíz del error cuadrático medio · MAPE: error porcentual medio absoluto.
+
+      <!-- Card de precisión del modelo (la que ya tenías) -->
+      <div class="card shadow-sm mb-3">
+        <div class="card-body">
+          <h6 class="card-title mb-2">
+            <i class="fa-solid fa-bullseye me-2"></i>Precisión del modelo (últimos {{ metrics_window_days }} días)
+          </h6>
+          {% if metrics.n %}
+            <div class="row g-3 small">
+              <div class="col-6 col-md-3">
+                <div class="fw-semibold">Muestras</div>
+                <div>{{ metrics.n }}</div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="fw-semibold">MAE</div>
+                <div>{{ metrics.mae|floatformat:2 }} kWh</div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="fw-semibold">RMSE</div>
+                <div>{{ metrics.rmse|floatformat:2 }} kWh</div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="fw-semibold">MAPE</div>
+                <div>
+                  {% if metrics.mape %}{{ metrics.mape|floatformat:1 }}%{% else %}—{% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="form-text mt-2">
+              MAE: error absoluto medio · RMSE: raíz del error cuadrático medio · MAPE: error porcentual medio absoluto.
+            </div>
+          {% else %}
+            <div class="alert alert-info mb-0">
+              Aún no hay suficientes confirmaciones de consumo real para calcular precisión.
+              Registra consumos reales desde <a href="{% url 'core:confirmar_real_list' %}">Predicciones pendientes</a>.
+            </div>
+          {% endif %}
+        </div>
       </div>
-    {% else %}
-      <div class="alert alert-info mb-0">
-        Aún no hay suficientes confirmaciones de consumo real para calcular precisión.
-        Registra consumos reales desde <a href="{% url 'core:confirmar_real_list' %}">Predicciones pendientes</a>.
+
+      <!-- Últimos registros -->
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title mb-2">
+            <i class="fa-solid fa-clock-rotate-left me-2"></i>Últimos registros de consumo
+          </h6>
+          {% if registros %}
+            <ul class="list-group list-group-flush small">
+              {% for r in registros %}
+                <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                  <span>
+                    {{ r.fecha }} · {{ r.consumo_kwh }} kWh
+                  </span>
+                  <span class="text-muted">{{ r.costo_clp }} CLP</span>
+                </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p class="small mb-0">Aún no tienes registros. Comienza agregando una lectura.</p>
+          {% endif %}
+          <div class="mt-3">
+            <a href="{% url 'core:consumo_new' %}" class="btn btn-sm btn-primary">
+              <i class="fa-solid fa-plus me-1"></i>Agregar lectura
+            </a>
+            <a href="{% url 'core:consumo_history' %}" class="btn btn-sm btn-outline-secondary">
+              Ver historial completo
+            </a>
+          </div>
+        </div>
       </div>
-    {% endif %}
+    </div>
+
+    <!-- Columna derecha -->
+    <div class="col-12 col-lg-4">
+      <div class="card shadow-sm mb-3">
+        <div class="card-body">
+          <h6 class="card-title mb-2">
+            <i class="fa-solid fa-plug-circle-bolt me-2"></i>Tus dispositivos
+          </h6>
+          <p class="small mb-1">
+            Recuerda que la predicción usa los dispositivos activos que registraste en <strong>“Mis dispositivos”</strong>.
+          </p>
+          <a href="{% url 'core:mis_dispositivos_list' %}" class="btn btn-sm btn-outline-primary">
+            Ver / editar mis dispositivos
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-  <p><a href="{% url 'core:consumo_new' %}">Agregar lectura</a></p>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const loadingEl = document.getElementById("dash-prediction-loading");
+  const contentEl = document.getElementById("dash-prediction-content");
+  const errorEl   = document.getElementById("dash-prediction-error");
+
+  fetch("{% url 'core:api_predict_next_24h' %}")
+    .then(resp => {
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      return resp.json();
+    })
+    .then(data => {
+      const total = data.kwh_total_24h;
+      const hourly = data.consumo_promedio_h;
+      const baseline = data.baseline_kwh_24h || 7.0;
+      const ratio = data.ratio_vs_baseline || (baseline > 0 ? total / baseline : 1.0);
+
+      document.getElementById("dash-total-kwh").textContent = total.toFixed(2);
+      document.getElementById("dash-hourly-kwh").textContent = hourly.toFixed(2);
+      document.getElementById("dash-baseline-kwh").textContent = baseline.toFixed(1);
+
+      document.getElementById("dash-base-label").textContent = baseline.toFixed(1) + " kWh";
+      document.getElementById("dash-user-label").textContent = total.toFixed(2) + " kWh";
+
+      // Barras: base siempre 100%, usuario proporcional (capado a 220% para no romper el diseño)
+      document.getElementById("bar-base").style.width = "100%";
+      document.getElementById("bar-user").style.width = Math.min(ratio * 100, 220) + "%";
+
+      // Nivel de alerta
+      const nivel = (data.nivel_alerta || "").toUpperCase();
+      const badge = document.getElementById("dash-alert-badge");
+      badge.textContent = nivel || "—";
+      badge.classList.remove("bg-secondary", "bg-success", "bg-warning", "bg-danger");
+      if (nivel === "VERDE") {
+        badge.classList.add("bg-success");
+      } else if (nivel === "AMARILLO") {
+        badge.classList.add("bg-warning");
+      } else if (nivel === "NARANJA") {
+        badge.classList.add("bg-warning");
+      } else if (nivel === "ROJO") {
+        badge.classList.add("bg-danger");
+      } else {
+        badge.classList.add("bg-secondary");
+      }
+
+      document.getElementById("dash-alert-text").textContent =
+        data.mensaje_alerta || "Predicción calculada en base a tus dispositivos y un modelo entrenado con datos reales.";
+
+      loadingEl.classList.add("d-none");
+      contentEl.classList.remove("d-none");
+    })
+    .catch(err => {
+      console.error("Error obteniendo predicción 24h:", err);
+      loadingEl.classList.add("d-none");
+      errorEl.classList.remove("d-none");
+    });
+});
+</script>
 {% endblock %}
-
-
-

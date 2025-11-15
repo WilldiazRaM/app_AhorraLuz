@@ -929,25 +929,28 @@ def _signals_from_dispositivos(usuario):
         pot_w = float(d.potencia_promedio_w or 0.0)
         horas = float(d.horas_uso_diario or 0.0)
 
-        # Consumo diario estimado en kWh
+        # kWh consumidos en un día por este dispositivo
+        # Ej: 500 W * 6 h = 3000 Wh = 3 kWh/día
         kwh_dia = pot_w * horas / 1000.0 if horas > 0 else 0.0
 
-        # Consumo "medio" por hora de uso
-        kwh_hora_uso = kwh_dia / max(horas, 1.0) if horas > 0 else 0.0
+        # Promedio por hora repartido en las 24 h del día
+        # Ej: 3 kWh/día / 24 ≈ 0.125 kWh/h
+        kwh_prom_h = kwh_dia / 24.0
 
-        tipo = (d.tipo_dispositivo.nombre or "").lower() if d.tipo_dispositivo else ""
+        # Clasificación muy simple por tipo
+        tipo = (d.tipo_dispositivo.nombre or "").lower()
+        nombre = (d.nombre or "").lower()
 
-        # Mapeo súper simple por categoría
-        if "calef" in tipo or "clima" in tipo or "agua" in tipo:
-            sub1 += kwh_hora_uso       # calefacción / agua caliente
-        elif "cocina" in tipo or "horno" in tipo or "microondas" in tipo:
-            sub2 += kwh_hora_uso       # cocina
-        elif "lavadora" in tipo or "secadora" in tipo or "plancha" in tipo:
-            sub3 += kwh_hora_uso       # lavado / planchado
+        if any(k in tipo for k in ["lavadora", "secadora", "lavavaj", "cocina", "horno", "microondas", "hervidor"]):
+            sub1 += kwh_prom_h
+        elif any(k in tipo for k in ["calefactor", "aire acondicionado", "termovent", "deshumidificador"]):
+            sub2 += kwh_prom_h
+        elif any(k in tipo for k in ["iluminación", "foco", "lámpara", "router", "modem", "consola", "tv", "televisor", "notebook", "computador"]):
+            sub3 += kwh_prom_h
         else:
-            other += kwh_hora_uso      # resto de artefactos
+            other += kwh_prom_h
 
-        total_kw_h += kwh_hora_uso
+        total_kw_h += kwh_prom_h
 
     # En Chile asumimos ~230V monofásico
     voltage = 230.0
