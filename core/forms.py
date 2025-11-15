@@ -343,6 +343,43 @@ class DispositivoForm(forms.ModelForm):
             "activo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
 
+class DispositivoUsuarioForm(forms.ModelForm):
+    """
+    Formulario para que el usuario final gestione sus propios dispositivos.
+    No expone el campo 'usuario'; se setea en la vista a partir del request.
+    """
+    class Meta:
+        model = Dispositivo
+        fields = ["nombre", "tipo_dispositivo",
+                  "potencia_promedio_w", "horas_uso_diario", "activo"]
+        widgets = {
+            "nombre": forms.TextInput(attrs={
+                "class": "form-control",
+                "maxlength": 100,
+                "placeholder": "Ej: Refrigerador"
+            }),
+            "tipo_dispositivo": forms.Select(attrs={"class": "form-select"}),
+            "potencia_promedio_w": forms.NumberInput(attrs={
+                "class": "form-control",
+                "min": "0",
+                "step": "0.01"
+            }),
+            "horas_uso_diario": forms.NumberInput(attrs={
+                "class": "form-control",
+                "min": "0",
+                "max": "24",
+                "step": "0.25"
+            }),
+            "activo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+
+    def clean_nombre(self):
+        nombre = (self.cleaned_data.get("nombre") or "").strip()
+        if not nombre:
+            raise forms.ValidationError("El nombre no puede ir vacío.")
+        return nombre
+
+
     def clean_nombre(self):
         nombre = (self.cleaned_data.get("nombre") or "").strip()
         if not nombre:

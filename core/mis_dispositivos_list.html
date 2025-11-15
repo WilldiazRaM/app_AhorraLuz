@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mis dispositivos — AhorraLuz{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">Mis dispositivos</h1>
+    <a href="{% url 'core:mis_dispositivo_new' %}" class="btn btn-primary btn-sm">
+      <i class="bi bi-plus-circle"></i> Agregar dispositivo
+    </a>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if dispositivos %}
+    <div class="table-responsive">
+      <table class="table table-striped align-middle">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Tipo</th>
+            <th>Potencia promedio (W)</th>
+            <th>Horas uso diario</th>
+            <th>Activo</th>
+            <th class="text-end">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in dispositivos %}
+          <tr>
+            <td>{{ d.nombre }}</td>
+            <td>{{ d.tipo_dispositivo.nombre }}</td>
+            <td>{{ d.potencia_promedio_w }}</td>
+            <td>{{ d.horas_uso_diario }}</td>
+            <td>
+              {% if d.activo %}
+                <span class="badge bg-success">Sí</span>
+              {% else %}
+                <span class="badge bg-secondary">No</span>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <a href="{% url 'core:mis_dispositivo_edit' d.pk %}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-pencil"></i> Editar
+              </a>
+              <a href="{% url 'core:mis_dispositivo_delete' d.pk %}" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash"></i> Eliminar
+              </a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-info">
+      Aún no tienes dispositivos registrados. Haz clic en
+      <strong>“Agregar dispositivo”</strong> para comenzar.
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

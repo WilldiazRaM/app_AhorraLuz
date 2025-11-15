@@ -197,5 +197,30 @@ urlpatterns = [
     path("consumos/nuevo-y-predecir/", views.consumo_new_and_predict, name="consumo_new_and_predict"),
 
     path("predicciones/pendientes/", debug_view(confirmar_consumo_real_list), name="confirmar_real_list"),
-    path("predicciones/<int:pk>/confirmar/", debug_view(confirmar_consumo_real_edit), name="confirmar_consumo_real")
+    path("predicciones/<int:pk>/confirmar/", debug_view(confirmar_consumo_real_edit), name="confirmar_consumo_real"),
+
+
+    # --- Mis dispositivos (usuario final) ---
+path(
+    "mis-dispositivos/",
+    views.mis_dispositivos_list,
+    name="mis_dispositivos_list",
+),
+path(
+    "mis-dispositivos/nuevo/",
+    views.mis_dispositivo_new,
+    name="mis_dispositivo_new",
+),
+path(
+    "mis-dispositivos/<int:pk>/editar/",
+    views.mis_dispositivo_edit,
+    name="mis_dispositivo_edit",
+),
+path(
+    "mis-dispositivos/<int:pk>/eliminar/",
+    views.mis_dispositivo_delete,
+    name="mis_dispositivo_delete",
+),
+
+    
 ]

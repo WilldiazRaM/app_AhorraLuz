@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Eliminar dispositivo — AhorraLuz{% endblock %}
+
+{% block content %}
+<div class="container my-4" style="max-width: 640px;">
+  <div class="card border-danger">
+    <div class="card-header bg-danger text-white">
+      Confirmar eliminación
+    </div>
+    <div class="card-body">
+      <p>¿Estás seguro de que deseas eliminar el dispositivo <strong>{{ dispositivo.nombre }}</strong>?</p>
+      <p class="mb-0 text-muted">Esta acción no se puede deshacer.</p>
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+      <a href="{% url 'core:mis_dispositivos_list' %}" class="btn btn-secondary">
+        Cancelar
+      </a>
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Eliminar</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

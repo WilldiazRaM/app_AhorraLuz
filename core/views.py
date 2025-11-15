@@ -1123,3 +1123,108 @@ def confirmar_consumo_real_edit(request, pk: int):
     else:
         form = PrediccionConsumoRealForm(instance=pred)
     return render(request, "core/confirmar_real_edit.html", {"form": form, "pred": pred})
+
+
+
+
+@login_required
+def mis_dispositivos_list(request):
+    """
+    Lista de dispositivos del usuario final (no admin).
+    """
+    usuario = ensure_usuario_for_request(request)
+    if not usuario:
+        messages.error(request, "No se encontró tu perfil de usuario en el sistema.")
+        return redirect("core:profile")
+
+    dispositivos = (
+        Dispositivo.objects
+        .filter(usuario=usuario)
+        .order_by("-fecha_registro", "nombre")
+    )
+    return render(
+        request,
+        "core/mis_dispositivos_list.html",
+        {"dispositivos": dispositivos},
+    )
+
+
+@login_required
+def mis_dispositivo_new(request):
+    """
+    Crear un nuevo dispositivo asociado al usuario logueado.
+    """
+    usuario = ensure_usuario_for_request(request)
+    if not usuario:
+        messages.error(request, "No se encontró tu perfil de usuario en el sistema.")
+        return redirect("core:profile")
+
+    if request.method == "POST":
+        form = DispositivoUsuarioForm(request.POST)
+        if form.is_valid():
+            disp = form.save(commit=False)
+            disp.usuario = usuario  # 🔗 vínculo al Usuario lógico
+            disp.save()
+            messages.success(request, "Dispositivo agregado correctamente.")
+            return redirect("core:mis_dispositivos_list")
+    else:
+        form = DispositivoUsuarioForm()
+
+    return render(
+        request,
+        "core/mis_dispositivo_form.html",
+        {"form": form, "modo": "crear"},
+    )
+
+
+@login_required
+def mis_dispositivo_edit(request, pk):
+    """
+    Editar un dispositivo del usuario.
+    Sólo permite editar si el dispositivo pertenece al usuario.
+    """
+    usuario = ensure_usuario_for_request(request)
+    if not usuario:
+        messages.error(request, "No se encontró tu perfil de usuario en el sistema.")
+        return redirect("core:profile")
+
+    dispositivo = get_object_or_404(Dispositivo, pk=pk, usuario=usuario)
+
+    if request.method == "POST":
+        form = DispositivoUsuarioForm(request.POST, instance=dispositivo)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Dispositivo actualizado correctamente.")
+            return redirect("core:mis_dispositivos_list")
+    else:
+        form = DispositivoUsuarioForm(instance=dispositivo)
+
+    return render(
+        request,
+        "core/mis_dispositivo_form.html",
+        {"form": form, "modo": "editar", "dispositivo": dispositivo},
+    )
+
+
+@login_required
+def mis_dispositivo_delete(request, pk):
+    """
+    Eliminar un dispositivo del usuario.
+    """
+    usuario = ensure_usuario_for_request(request)
+    if not usuario:
+        messages.error(request, "No se encontró tu perfil de usuario en el sistema.")
+        return redirect("core:profile")
+
+    dispositivo = get_object_or_404(Dispositivo, pk=pk, usuario=usuario)
+
+    if request.method == "POST":
+        dispositivo.delete()
+        messages.success(request, "Dispositivo eliminado correctamente.")
+        return redirect("core:mis_dispositivos_list")
+
+    return render(
+        request,
+        "core/mis_dispositivo_confirm_delete.html",
+        {"dispositivo": dispositivo},
+    )
