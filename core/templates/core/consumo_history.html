@@ -1,12 +1,153 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Historial de consumo — AhorraLuz{% endblock %}
+
 {% block content %}
-  <h2>Historial de consumo</h2>
-  <table>
-    <thead><tr><th>Fecha</th><th>kWh</th><th>Costo</th></tr></thead>
-    <tbody>
-      {% for r in registros %}
-      <tr><td>{{ r.fecha }}</td><td>{{ r.consumo_kwh }}</td><td>{{ r.costo_clp }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+
+      <!-- Encabezado -->
+      <div class="d-flex align-items-center mb-4">
+        <div class="me-3">
+          <i class="fa-solid fa-chart-column fa-2x text-success"></i>
+        </div>
+        <div>
+          <h1 class="h4 mb-1">Historial de consumo del hogar</h1>
+          <p class="mb-0 text-muted small">
+            Aquí encontrarás tus lecturas registradas desde la
+            <strong>boleta eléctrica mensual</strong>. Los montos se muestran en
+            <strong>pesos chilenos (CLP)</strong> y el consumo en <strong>kWh</strong>.
+          </p>
+        </div>
+      </div>
+
+      <!-- Acciones rápidas -->
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="small text-muted">
+          {% if registros %}
+            Mostrando tus últimas {{ registros|length }} boletas registradas.
+          {% else %}
+            Aún no has registrado ninguna boleta.
+          {% endif %}
+        </div>
+        <a href="{% url 'core:consumo_new' %}" class="btn btn-success btn-sm">
+          <i class="fa-solid fa-receipt me-1"></i> Agregar nueva lectura
+        </a>
+      </div>
+
+      {% if registros %}
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col">Fecha boleta</th>
+                    <th scope="col">Periodo</th>
+                    <th scope="col">Consumo (kWh)</th>
+                    <th scope="col">Monto (CLP)</th>
+                    <th scope="col">Equipo principal</th>
+                    <th scope="col">Fuente</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for r in registros %}
+                  <tr>
+                    <!-- Fecha -->
+                    <td>
+                      <span class="fw-semibold">
+                        {{ r.fecha|date:"d-m-Y" }}
+                      </span>
+                    </td>
+
+                    <!-- Periodo (mes/año) -->
+                    <td class="text-muted small">
+                      {{ r.fecha|date:"F Y" }}
+                    </td>
+
+                    <!-- Consumo -->
+                    <td>
+                      <i class="fa-solid fa-bolt text-warning me-1"></i>
+                      {{ r.consumo_kwh }}&nbsp;<span class="text-muted small">kWh</span>
+                    </td>
+
+                    <!-- Costo -->
+                    <td>
+                      <i class="fa-solid fa-sack-dollar text-success me-1"></i>
+                      ${{ r.costo_clp|default:"—" }}
+                    </td>
+
+                    <!-- Dispositivo principal -->
+                    <td>
+                      {% if r.dispositivo %}
+                        <span class="badge bg-outline bg-light text-dark border">
+                          {{ r.dispositivo.nombre }}
+                        </span>
+                      {% else %}
+                        <span class="text-muted small">No especificado</span>
+                      {% endif %}
+                    </td>
+
+                    <!-- Fuente -->
+                    <td>
+                      {% if r.fuente == "manual" %}
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                          <i class="fa-solid fa-keyboard me-1"></i> Manual
+                        </span>
+                      {% elif r.fuente == "automatica" or r.fuente == "automática" %}
+                        <span class="badge bg-info-subtle text-info border border-info-subtle">
+                          <i class="fa-solid fa-wifi me-1"></i> Automática / IoT
+                        </span>
+                      {% else %}
+                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
+                          {{ r.fuente|default:"Otro" }}
+                        </span>
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card-footer small text-muted">
+            Los valores se muestran tal como fueron registrados desde tus boletas.
+            Este historial se usa para construir tus indicadores y mejorar las
+            predicciones de AhorraLuz.
+          </div>
+        </div>
+      {% else %}
+        <!-- Estado vacío -->
+        <div class="card border-0 shadow-sm">
+          <div class="card-body text-center py-5">
+            <div class="mb-3">
+              <i class="fa-regular fa-folder-open fa-3x text-muted"></i>
+            </div>
+            <h2 class="h5 mb-2">Aún no tienes historial de consumo</h2>
+            <p class="text-muted small mb-3">
+              Cuando registres tu primera boleta de electricidad,
+              verás aquí el consumo mensual de tu hogar en Chile.
+            </p>
+            <a href="{% url 'core:consumo_new' %}" class="btn btn-success">
+              <i class="fa-solid fa-receipt me-1"></i> Registrar mi primera boleta
+            </a>
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Nota de contexto Chile -->
+      <div class="alert alert-light border mt-4 small">
+        <i class="fa-solid fa-house-chimney-window me-2 text-success"></i>
+        <strong>Contexto Chile:</strong>
+        un hogar residencial típico en la zona central consume alrededor de
+        150–200 kWh al mes. Este historial te ayudará a comparar tus boletas
+        con tu propio promedio y con ese rango de referencia.
+      </div>
+
+    </div>
+  </div>
+</div>
 {% endblock %}
