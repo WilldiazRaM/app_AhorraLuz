@@ -1,8 +1,251 @@
 {% extends "base.html" %}
-{% block content %}
-  <h2>Agregar Consumo</h2>
-  <form method="post">{% csrf_token %} {{ form.as_p }}
-    <button type="submit">Guardar lectura</button>
-  </form>
-{% endblock %}
+{% load static %}
 
+{% block title %}Agregar lectura mensual — AhorraLuz{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-9">
+
+      <!-- Encabezado -->
+      <div class="d-flex align-items-center mb-4">
+        <div class="me-3">
+          <i class="fa-solid fa-receipt fa-2x text-success"></i>
+        </div>
+        <div>
+          <h1 class="h4 mb-1">Registrar lectura desde tu boleta</h1>
+          <p class="mb-0 text-muted small">
+            Ingresa los datos de tu <strong>boleta mensual</strong> de electricidad del hogar
+            (Chile). Esto alimenta tu historial y las futuras predicciones.
+          </p>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <!-- Columna formulario -->
+        <div class="col-lg-7">
+          <div class="card shadow-sm border-0">
+            <div class="card-body">
+
+              <h2 class="h6 mb-3">
+                <i class="fa-solid fa-pen-to-square me-2 text-success"></i>
+                Datos de la boleta
+              </h2>
+
+              <form method="post" novalidate>
+                {% csrf_token %}
+                {{ form.non_field_errors }}
+
+                <!-- Fecha -->
+                <div class="mb-3">
+                  <label for="{{ form.fecha.id_for_label }}" class="form-label">
+                    <i class="fa-regular fa-calendar-days me-1"></i>
+                    Fecha de la boleta
+                  </label>
+                  {{ form.fecha }}
+                  {% if form.fecha.help_text %}
+                    <div class="form-text">{{ form.fecha.help_text }}</div>
+                  {% endif %}
+                  {% if form.fecha.errors %}
+                    <div class="invalid-feedback d-block">
+                      {{ form.fecha.errors|striptags }}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Consumo kWh -->
+                <div class="mb-3">
+                  <label for="{{ form.consumo_kwh.id_for_label }}" class="form-label">
+                    <i class="fa-solid fa-bolt me-1"></i>
+                    Consumo del periodo (kWh)
+                  </label>
+                  <div class="input-group">
+                    {{ form.consumo_kwh }}
+                    <span class="input-group-text">kWh</span>
+                  </div>
+                  <div class="form-text">
+                    Total de kWh facturados en la boleta del mes (todo el hogar).
+                  </div>
+                  {% if form.consumo_kwh.errors %}
+                    <div class="invalid-feedback d-block">
+                      {{ form.consumo_kwh.errors|striptags }}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Costo CLP -->
+                <div class="mb-3">
+                  <label for="{{ form.costo_clp.id_for_label }}" class="form-label">
+                    <i class="fa-solid fa-sack-dollar me-1"></i>
+                    Monto total de la boleta (CLP)
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    {{ form.costo_clp }}
+                  </div>
+                  <div class="form-text">
+                    Monto total a pagar. Puedes redondear al peso más cercano.
+                  </div>
+                  {% if form.costo_clp.errors %}
+                    <div class="invalid-feedback d-block">
+                      {{ form.costo_clp.errors|striptags }}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Dispositivo -->
+                <div class="mb-3">
+                  <label for="{{ form.dispositivo.id_for_label }}" class="form-label">
+                    <i class="fa-solid fa-plug-circle-bolt me-1"></i>
+                    Equipo principal asociado (opcional)
+                  </label>
+                  {{ form.dispositivo }}
+                  <div class="form-text">
+                    Elige el artefacto que más influye en este periodo
+                    (por ejemplo <em>calefactor eléctrico</em> en invierno).
+                  </div>
+                  {% if form.dispositivo.errors %}
+                    <div class="invalid-feedback d-block">
+                      {{ form.dispositivo.errors|striptags }}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Fuente -->
+                <div class="mb-3">
+                  <label for="{{ form.fuente.id_for_label }}" class="form-label">
+                    <i class="fa-solid fa-database me-1"></i>
+                    Fuente del dato
+                  </label>
+                  {{ form.fuente }}
+                  <div class="form-text">
+                    Normalmente será <strong>Ingreso manual desde boleta</strong>.
+                  </div>
+                  {% if form.fuente.errors %}
+                    <div class="invalid-feedback d-block">
+                      {{ form.fuente.errors|striptags }}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <!-- Temperatura estimada (hidden) -->
+                {{ form.temp_c.as_hidden }}
+                <div class="alert alert-light border d-flex align-items-center small mb-3">
+                  <i class="fa-solid fa-temperature-half me-2 text-primary"></i>
+                  <div id="temp-info">
+                    La temperatura estimada se ajustará automáticamente según el mes de la boleta
+                    (clima típico de la zona central de Chile).
+                  </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                  <a href="{% url 'core:consumo_history' %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="fa-solid fa-arrow-left-long me-1"></i> Volver al historial
+                  </a>
+                  <button type="submit" class="btn btn-success">
+                    <i class="fa-solid fa-floppy-disk me-1"></i> Guardar lectura
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- Columna tips / ayuda -->
+        <div class="col-lg-5">
+          <div class="card border-0 shadow-sm mb-3">
+            <div class="card-body">
+              <h2 class="h6 mb-3">
+                <i class="fa-solid fa-lightbulb me-2 text-warning"></i>
+                ¿Dónde encuentro estos datos?
+              </h2>
+              <ol class="small mb-0 ps-3">
+                <li class="mb-2">
+                  <strong>Fecha de la boleta:</strong> suele estar en la parte superior como
+                  <em>“Fecha de emisión”</em> o <em>“Fecha de vencimiento”</em>.
+                </li>
+                <li class="mb-2">
+                  <strong>Consumo (kWh):</strong> busca el total del periodo de facturación,
+                  normalmente aparece como <em>“Consumo kWh”</em> o <em>“Energía activa”</em>.
+                </li>
+                <li class="mb-2">
+                  <strong>Monto total:</strong> usa el valor final a pagar en pesos chilenos (CLP).
+                </li>
+                <li>
+                  <strong>Equipo principal:</strong> si tuviste alto uso de calefacción,
+                  aire acondicionado u otro equipo, asígnalo para entender mejor tus hábitos.
+                </li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="card border-0 shadow-sm">
+            <div class="card-body small">
+              <h2 class="h6 mb-2">
+                <i class="fa-solid fa-chart-line me-2 text-success"></i>
+                ¿Cómo usa esto AhorraLuz?
+              </h2>
+              <p class="mb-1">
+                Cada lectura mensual alimenta tus <strong>indicadores de consumo</strong> y
+                ayuda a que los modelos de predicción aprendan tu comportamiento.
+              </p>
+              <p class="mb-0">
+                La temperatura estimada se basa en el mes y en el clima promedio de
+                <strong>Santiago / zona central</strong>, pero el diseño es escalable
+                para otras regiones.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div> <!-- col -->
+  </div> <!-- row -->
+</div> <!-- container -->
+
+<!-- JS: estimar temperatura según mes de la boleta (Chile, zona central) -->
+<script>
+(function() {
+  const fechaField = document.getElementById("id_fecha");
+  const tempField  = document.getElementById("id_temp_c");
+  const infoEl     = document.getElementById("temp-info");
+
+  if (!fechaField || !tempField || !infoEl) return;
+
+  // Promedios MUY aproximados para Santiago / zona central (°C)
+  const tempByMonth = {
+    1:  { label: "verano",      temp: 25.0 },
+    2:  { label: "verano",      temp: 24.0 },
+    3:  { label: "transición a otoño", temp: 21.0 },
+    4:  { label: "otoño",       temp: 17.0 },
+    5:  { label: "otoño",       temp: 13.0 },
+    6:  { label: "invierno",    temp: 10.0 },
+    7:  { label: "invierno",    temp: 9.0  },
+    8:  { label: "invierno",    temp: 11.0 },
+    9:  { label: "primavera",   temp: 14.0 },
+    10: { label: "primavera",   temp: 18.0 },
+    11: { label: "primavera",   temp: 21.0 },
+    12: { label: "verano",      temp: 24.0 },
+  };
+
+  function updateTemp() {
+    const v = fechaField.value; // formato YYYY-MM-DD
+    if (!v || v.length < 7) return;
+    const month = parseInt(v.split("-")[1], 10);
+    const cfg = tempByMonth[month];
+    if (!cfg) return;
+
+    tempField.value = cfg.temp.toFixed(1);
+    infoEl.textContent =
+      `Temperatura estimada para Santiago (${cfg.label}): ` +
+      `${cfg.temp.toFixed(1)} °C. ` +
+      `Si en el futuro conectas datos reales de clima, esta estimación se actualizará automáticamente.`;
+  }
+
+  fechaField.addEventListener("change", updateTemp);
+  // intentar estimar al cargar si ya viene con fecha
+  updateTemp();
+})();
+</script>
+{% endblock %}

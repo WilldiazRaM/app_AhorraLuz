@@ -48,29 +48,73 @@ class PerfilForm(forms.ModelForm):
 
 # forms.py
 class RegistroConsumoForm(forms.ModelForm):
+    # Temperatura estimada: la vamos a rellenar por JS según el mes de la boleta
     temp_c = forms.FloatField(
         required=False,
         label="Temperatura (°C)",
         widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.1"})
     )
-    FUENTE_CHOICES = [("manual","Manual"), ("automatica","Automática")]
-    fuente = forms.ChoiceField(choices=FUENTE_CHOICES, widget=forms.Select(attrs={"class": "form-select"}))
+
+    FUENTE_CHOICES = [
+        ("manual", "Ingreso manual desde boleta"),
+        ("automatica", "Registro automático / IoT"),
+    ]
+    fuente = forms.ChoiceField(
+        choices=FUENTE_CHOICES,
+        widget=forms.Select(attrs={"class": "form-select"})
+    )
 
     class Meta:
-        model = RegistroConsumo
+        model = RegistroConsumo  # usuario, fecha, consumo_kwh, costo_clp, dispositivo, fuente :contentReference[oaicite:0]{index=0}
         fields = ["fecha", "consumo_kwh", "costo_clp", "dispositivo", "fuente"]
         widgets = {
-            "fecha": forms.DateInput(attrs={"type": "date", "class": "form-control"}),
-            "consumo_kwh": forms.NumberInput(attrs={"class": "form-control", "min": "0", "step": "0.001"}),
-            "costo_clp": forms.NumberInput(attrs={"class": "form-control", "min": "0", "step": "1"}),
-            "dispositivo": forms.Select(attrs={"class": "form-select"}),
+            "fecha": forms.DateInput(attrs={
+                "type": "date",
+                "class": "form-control",
+            }),
+            "consumo_kwh": forms.NumberInput(attrs={
+                "class": "form-control",
+                "min": "0",
+                "step": "0.001",
+                "placeholder": "Ej: 180"
+            }),
+            "costo_clp": forms.NumberInput(attrs={
+                "class": "form-control",
+                "min": "0",
+                "step": "1",
+                "placeholder": "Ej: 42000"
+            }),
+            "dispositivo": forms.Select(attrs={
+                "class": "form-select",
+            }),
         }
+        labels = {
+            "fecha": "Fecha de la boleta",
+            "consumo_kwh": "Consumo del periodo (kWh)",
+            "costo_clp": "Monto total de la boleta (CLP)",
+            "dispositivo": "Equipo principal asociado (opcional)",
+            "fuente": "Cómo se registró esta lectura",
+        }
+        help_texts = {
+            "fecha": "Usa la fecha de emisión o vencimiento de tu boleta.",
+            "consumo_kwh": "Total de kWh facturados en el periodo (todo el hogar).",
+            "costo_clp": "Monto total a pagar, sin centavos si quieres simplificar.",
+            "dispositivo": "Si quieres, asocia la lectura al equipo que más influye (ej: calefactor, aire acondicionado).",
+            "fuente": "Normalmente será 'Ingreso manual desde boleta'.",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Por defecto, la mayoría de usuarios será 'manual'
+        self.fields["fuente"].initial = "manual"
 
     def clean_fuente(self):
         v = (self.cleaned_data.get("fuente") or "").strip().lower()
-        # tolera entradas antiguas:
-        if v in {"manual", "m", "1"}: return "manual"
-        if v in {"automatica", "automática", "a", "2", "auto"}: return "automatica"
+        # tolera entradas antiguas
+        if v in {"manual", "m", "1"}:
+            return "manual"
+        if v in {"automatica", "automática", "a", "2", "auto"}:
+            return "automatica"
         return v
 
 
