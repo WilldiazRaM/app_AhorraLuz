@@ -85,6 +85,7 @@ urlpatterns = [
     path("password/reset/confirm/", views.password_reset_confirm_view, name="password_reset_confirm"),
     path("contacto/", debug_view(views.contact_public_view), name="contacto"),
     path("api/predict/next-24h/", debug_view(api_predict_next_24h), name="api_predict_next_24h"),
+    path("api/predict-monthly/", views.api_predict_monthly, name="api_predict_monthly"),
     # Comuna
     path("mantenedor/comunas/", debug_view(ComunaListView.as_view()), name="mant_comuna_list"),
     path("mantenedor/comunas/nuevo/", debug_view(ComunaCreateView.as_view()), name="mant_comuna_new"),

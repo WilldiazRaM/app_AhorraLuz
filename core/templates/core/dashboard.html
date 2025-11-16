@@ -404,6 +404,18 @@ document.addEventListener("DOMContentLoaded", function () {
       const baseline = data.baseline_kwh_24h || 7.0;
       const ratio = data.ratio_vs_baseline || (baseline > 0 ? total / baseline : 1.0);
 
+      //Mensual:
+      const btnMonthly       = document.getElementById("btn-monthly-refresh");
+      const monthlyLoading   = document.getElementById("dash-monthly-loading");
+      const monthlyContent   = document.getElementById("dash-monthly-content");
+      const monthlyError     = document.getElementById("dash-monthly-error");
+      const monthlyAlertBadge= document.getElementById("dash-month-alert-badge");
+      const monthlyNameEl    = document.getElementById("dash-month-name");
+      const monthlyDaysEl    = document.getElementById("dash-month-days");
+      const monthlyKwhEl     = document.getElementById("dash-month-kwh");
+      const monthlyDailyEl   = document.getElementById("dash-month-daily-kwh");
+      const monthlyTextEl    = document.getElementById("dash-month-alert-text");
+
       document.getElementById("dash-total-kwh").textContent = total.toFixed(2);
       document.getElementById("dash-hourly-kwh").textContent = hourly.toFixed(2);
       document.getElementById("dash-baseline-kwh").textContent = baseline.toFixed(1);
@@ -474,5 +486,51 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 });
+
+
+function setMonthlyAlertStyle(code) {
+    monthlyAlertBadge.classList.remove("bg-secondary","bg-success","bg-warning","bg-danger");
+    let text = "SIN ALERTA";
+    let cls  = "bg-secondary";
+
+    if (code === "VERDE") { text = "VERDE"; cls = "bg-success"; }
+    else if (code === "AMARILLO") { text = "AMARILLO"; cls = "bg-warning"; }
+    else if (code === "ROJO") { text = "ROJO"; cls = "bg-danger"; }
+
+    monthlyAlertBadge.textContent = text;
+    monthlyAlertBadge.classList.add(cls);
+  }
+
+  if (btnMonthly) {
+    btnMonthly.addEventListener("click", function () {
+      monthlyError.classList.add("d-none");
+      monthlyContent.classList.add("d-none");
+      monthlyLoading.classList.remove("d-none");
+      monthlyLoading.textContent = "Calculando predicción mensual…";
+
+      fetch("{% url 'core:api_predict_monthly' %}")
+        .then(resp => {
+          if (!resp.ok) throw new Error("HTTP " + resp.status);
+          return resp.json();
+        })
+        .then(data => {
+          monthlyLoading.classList.add("d-none");
+          monthlyContent.classList.remove("d-none");
+
+          monthlyNameEl.textContent = data.month_label || "Mes actual";
+          monthlyDaysEl.textContent = data.days_in_month || "—";
+          monthlyKwhEl.textContent = data.kwh_total_month.toFixed(2);
+          monthlyDailyEl.textContent = data.kwh_daily.toFixed(2);
+          monthlyTextEl.textContent = data.mensaje_alerta || "";
+
+          setMonthlyAlertStyle(data.nivel_alerta || null);
+        })
+        .catch(err => {
+          console.error("Error mensual:", err);
+          monthlyLoading.classList.add("d-none");
+          monthlyError.classList.remove("d-none");
+        });
+
+  })}
 </script>
 {% endblock %}

@@ -41,6 +41,8 @@ import requests
 import logging
 from django.core.mail import send_mail
 from django.conf import settings
+import calendar
+from django.db.models.functions import TruncMonth
 
 logger = logging.getLogger("core.views")
 
@@ -1111,6 +1113,68 @@ def api_predict_next_24h(request):
     return JsonResponse(resp)
 
 
+@login_required
+def api_predict_monthly(request):
+    """
+    Predicción de consumo mensual estimada a partir de:
+      - Dispositivos activos del usuario
+      - Modelo de 24h (se escala por días del mes actual)
+    Guarda la predicción en PrediccionConsumo para uso posterior (ETL).
+    """
+    tz = pytz.timezone("America/Santiago")
+    now_utc = timezone.now()
+    usuario = ensure_usuario_for_request(request)
+    if not usuario:
+        return JsonResponse(
+            {"error": "No se encontró tu perfil de usuario energético."},
+            status=400
+        )
+
+    # 1) Predicción 24h con el mismo esquema que la API actual
+    signals = _signals_from_dispositivos(usuario)
+    total_kwh_24h = 0.0
+
+    for h in range(1, 25):
+        ts_local = (now_utc + timedelta(hours=h)).astimezone(tz)
+        row = build_row(
+            signals=signals,
+            calendar=_calendar_feats(ts_local),
+            climate=_climate_stub(ts_local),
+        )
+        total_kwh_24h += predict_one(row)
+
+    # 2) Escalamos al mes actual
+    hoy = timezone.localdate()
+    dias_mes = _days_in_month(hoy)
+    kwh_mes = total_kwh_24h * dias_mes
+    kwh_dia = kwh_mes / dias_mes if dias_mes > 0 else 0.0
+
+    # 3) Baseline mensual del usuario
+    baseline_mes = _user_monthly_baseline_kwh(usuario, ref_dt=hoy)
+
+    # 4) Clasificación y mensaje
+    nivel_code, mensaje_alerta, ratio_user = _classify_alert_monthly(kwh_mes, baseline_mes)
+
+    # 5) Guardar predicción mensual en BD para ETL
+    try:
+        _crear_prediccion_mensual(usuario, hoy, kwh_mes, nivel_code)
+    except Exception as e:
+        logger.exception("[PRED_MENSUAL] Error guardando predicción mensual: %s", e)
+
+    resp = {
+        "month_label": hoy.strftime("%B %Y"),
+        "days_in_month": dias_mes,
+        "kwh_total_month": round(kwh_mes, 2),
+        "kwh_daily": round(kwh_dia, 2),
+        "nivel_alerta": nivel_code,
+        "mensaje_alerta": mensaje_alerta,
+        "ratio_vs_own_baseline": ratio_user,
+        "from_24h_kwh": round(total_kwh_24h, 3),
+    }
+    return JsonResponse(resp)
+
+
+
 
 
 
@@ -1125,6 +1189,60 @@ def _get_or_create_tipo_notificacion(codigo: str, descripcion: str) -> TipoNotif
     obj, _ = TipoNotificacion.objects.get_or_create(codigo=codigo, defaults={"descripcion": descripcion})
     return obj
 
+def _crear_prediccion_mensual(usuario, fecha_referencia, kwh_mes, nivel_code):
+    """
+    Guarda una predicción mensual en PrediccionConsumo para ETL:
+      periodo_inicio = primer día del mes
+      periodo_fin    = último día del mes
+    """
+    from .models import PrediccionConsumo, NivelAlerta, TipoNotificacion, Notificacion
+
+    # Rango del mes
+    dias_mes = _days_in_month(fecha_referencia)
+    mes_inicio = fecha_referencia.replace(day=1)
+    mes_fin = fecha_referencia.replace(day=dias_mes)
+
+    desc_map = {
+        "VERDE": "Consumo mensual dentro de un rango esperado.",
+        "AMARILLO": "Consumo mensual moderadamente alto.",
+        "ROJO": "Consumo mensual alto.",
+    }
+    nivel = _get_or_create_nivel_alerta(
+        nivel_code,
+        desc_map.get(nivel_code, "Alerta de consumo mensual."),
+    )
+
+    pred = PrediccionConsumo.objects.create(
+        usuario=usuario,
+        fecha_prediccion=timezone.localdate(),
+        periodo_inicio=mes_inicio,
+        periodo_fin=mes_fin,
+        consumo_predicho_kwh=kwh_mes,
+        nivel_alerta=nivel,
+        creado_en=timezone.now(),
+    )
+
+    # Tipo de notificación y mensaje cortito
+    tipo = _get_or_create_tipo_notificacion(
+        "PRED_MENSUAL",
+        "Predicción mensual de consumo energético",
+    )
+    mensaje_notif = (
+        f"Para el mes {mes_inicio.strftime('%B %Y')}, se estima un consumo de "
+        f"≈{kwh_mes:.0f} kWh. Nivel de alerta: {nivel_code or 'SIN ALERTA'}."
+    )
+    Notificacion.objects.create(
+        usuario=usuario,
+        tipo=tipo,
+        titulo="Predicción mensual de consumo",
+        mensaje=mensaje_notif,
+        leida=False,
+        creada_en=timezone.now(),
+    )
+
+    return pred
+
+
 def _user_baseline_kwh(usuario, ref_dt):
     """Media de los últimos 7 días; si no hay datos, usa media de últimos 5 registros; si no, 1.0 kWh."""
     q = RegistroConsumo.objects.filter(usuario=usuario, fecha__gte=ref_dt - timedelta(days=7), fecha__lte=ref_dt)
@@ -1133,6 +1251,80 @@ def _user_baseline_kwh(usuario, ref_dt):
         q2 = RegistroConsumo.objects.filter(usuario=usuario).order_by("-fecha")[:5]
         avg = q2.aggregate(x=Avg("consumo_kwh"))["x"]
     return float(avg or 1.0)
+
+# === Helpers para predicción mensual ===
+
+def _days_in_month(dt):
+    """Cantidad de días del mes de la fecha dt."""
+    return calendar.monthrange(dt.year, dt.month)[1]
+
+
+def _user_monthly_baseline_kwh(usuario, ref_dt):
+    """
+    Consumo mensual promedio del usuario (kWh/mes):
+
+    - Promedio de los últimos 6 meses (agrupando por mes).
+    - Si no hay suficientes datos, usa el promedio global de sus registros.
+    """
+    qs = (
+        RegistroConsumo.objects
+        .filter(usuario=usuario)
+        .annotate(mes=TruncMonth("fecha"))
+        .values("mes")
+        .annotate(kwh_mes=Avg("consumo_kwh"))
+        .order_by("-mes")
+    )
+
+    ultimos = list(qs[:6])
+    if ultimos:
+        prom = sum(float(x["kwh_mes"] or 0.0) for x in ultimos) / len(ultimos)
+        return max(prom, 1.0)
+
+    prom_global = RegistroConsumo.objects.filter(usuario=usuario).aggregate(
+        x=Avg("consumo_kwh")
+    )["x"]
+    return float(prom_global or 1.0)
+
+
+def _classify_alert_monthly(total_kwh_mes: float, baseline_kwh_mes: float | None):
+    """
+    Clasificación para predicción mensual.
+
+    Devuelve:
+      - nivel_code ('VERDE', 'AMARILLO', 'ROJO')
+      - mensaje_alerta (texto para el usuario)
+      - ratio_user (total_kwh_mes / baseline_mes_usuario)
+    """
+    baseline_user = float(baseline_kwh_mes or 1.0)
+    baseline_user = max(baseline_user, 1.0)
+
+    ratio_user = total_kwh_mes / baseline_user
+
+    # Umbrales aproximados, ajústalos luego:
+    # Hogar chileno ~ 7 kWh/día ≈ 210 kWh/mes
+    if total_kwh_mes <= 180:
+        nivel = "VERDE"
+    elif total_kwh_mes <= 300:
+        nivel = "AMARILLO"
+    else:
+        nivel = "ROJO"
+
+    if ratio_user >= 5:
+        detalle_user = "más de 5× tu promedio mensual reciente"
+    elif ratio_user <= 0.5:
+        detalle_user = "por debajo de tu promedio mensual"
+    else:
+        detalle_user = f"{(ratio_user - 1) * 100:.0f}% sobre tu promedio mensual"
+
+    mensaje = (
+        f"Consumo estimado del mes: {total_kwh_mes:.2f} kWh. "
+        f"Esto es {detalle_user}. "
+        "Revisa horarios de uso de artefactos intensivos (calefacción, cocina eléctrica, "
+        "lavadora/secadora) para reducir el gasto."
+    )
+
+    return nivel, mensaje, ratio_user
+
 
 NATIONAL_DAILY_KWH = 7.0  # kWh/día
 
