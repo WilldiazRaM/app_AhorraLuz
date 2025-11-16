@@ -122,7 +122,7 @@
     <div>
       <h1 class="h4 mb-1 dash-title-main">Mi panel energético</h1>
       <p class="dash-subtitle mb-0">
-        Resumen de tu consumo, predicción para las próximas 24 horas y precisión del modelo.
+        Resumen de tu consumo, predicción diaria y mensual, y precisión del modelo.
       </p>
     </div>
   </div>
@@ -130,6 +130,71 @@
   <div class="row g-3">
     <!-- Columna izquierda -->
     <div class="col-12 col-lg-8">
+
+      <!-- Card: Predicción mensual estimada -->
+      <div class="card shadow-sm dash-card mb-3">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="card-title mb-0">
+              <i class="fa-solid fa-calendar-days me-2 text-primary"></i>
+              Predicción mensual estimada
+            </h6>
+            <button id="btn-monthly-refresh"
+                    type="button"
+                    class="btn btn-sm btn-outline-primary">
+              Calcular
+            </button>
+          </div>
+
+          <p class="small text-muted mb-2">
+            Estimación del consumo del mes actual en base a tus dispositivos activos
+            y al modelo de 24 horas. Te ayuda a proyectar cuánto podrías pagar
+            si mantienes tus hábitos actuales.
+          </p>
+
+          <div id="dash-monthly-loading" class="small text-muted">
+            Pulsa <strong>Calcular</strong> para obtener la predicción de este mes.
+          </div>
+
+          <div id="dash-monthly-content" class="d-none small">
+            <div class="row g-2 mb-2">
+              <div class="col-7">
+                <div class="fw-semibold">Mes actual</div>
+                <div>
+                  <span id="dash-month-name">—</span>
+                  (<span id="dash-month-days">—</span> días)
+                </div>
+              </div>
+              <div class="col-5 text-end">
+                <div class="fw-semibold">Nivel de alerta</div>
+                <span id="dash-month-alert-badge"
+                      class="badge bg-secondary dash-chip">
+                  —
+                </span>
+              </div>
+            </div>
+
+            <div class="mb-2">
+              <div class="d-flex justify-content-between">
+                <span>Consumo estimado del mes</span>
+                <span><span id="dash-month-kwh">—</span> kWh</span>
+              </div>
+              <div class="d-flex justify-content-between text-muted">
+                <span>Promedio diario estimado</span>
+                <span><span id="dash-month-daily-kwh">—</span> kWh/día</span>
+              </div>
+            </div>
+
+            <p id="dash-month-alert-text" class="mb-0 text-muted"></p>
+          </div>
+
+          <div id="dash-monthly-error"
+               class="alert alert-warning small d-none mb-0">
+            No se pudo calcular la predicción mensual en este momento.
+            Intenta nuevamente más tarde.
+          </div>
+        </div>
+      </div>
 
       <!-- Card: Predicción próximas 24h vs hogar chileno -->
       <div class="card shadow-sm dash-card mb-3">
@@ -312,7 +377,8 @@
                            data-max="30"></div>
                     </div>
                   </div>
-                  <div class="mt-1 text-muted" style="font-size: 0.7rem;">
+                  <div class="mt-1 text-muted" style->
+
                     Error porcentual medio
                   </div>
                 </div>
@@ -394,8 +460,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const miniTagEl = document.getElementById("dash-alert-mini-tag");
 
   // -------- ELEMENTOS (Mensual) --------
-  // MOVIDO: Todas las variables mensuales se declaran aquí arriba
-  // para que sean visibles en todo el 'DOMContentLoaded'
   const btnMonthly = document.getElementById("btn-monthly-refresh");
   const monthlyLoading = document.getElementById("dash-monthly-loading");
   const monthlyContent = document.getElementById("dash-monthly-content");
@@ -418,8 +482,6 @@ document.addEventListener("DOMContentLoaded", function () {
       const hourly = data.consumo_promedio_h;
       const baseline = data.baseline_kwh_24h || 7.0;
       const ratio = data.ratio_vs_baseline || (baseline > 0 ? total / baseline : 1.0);
-
-      // ELIMINADO: Las variables mensuales ya no se declaran aquí
 
       document.getElementById("dash-total-kwh").textContent = total.toFixed(2);
       document.getElementById("dash-hourly-kwh").textContent = hourly.toFixed(2);
@@ -492,11 +554,7 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // -------- LÓGICA MENSUAL --------
-  // MOVIDO: Toda la lógica mensual (función y listener) va aquí dentro
-  // del 'DOMContentLoaded'
-
   function setMonthlyAlertStyle(code) {
-    // 'monthlyAlertBadge' ahora es visible porque se declaró arriba
     monthlyAlertBadge.classList.remove("bg-secondary", "bg-success", "bg-warning", "bg-danger");
     let text = "SIN ALERTA";
     let cls = "bg-secondary";
@@ -509,7 +567,6 @@ document.addEventListener("DOMContentLoaded", function () {
     monthlyAlertBadge.classList.add(cls);
   }
 
-  // 'btnMonthly' ahora es visible
   if (btnMonthly) {
     btnMonthly.addEventListener("click", function () {
       monthlyError.classList.add("d-none");
@@ -542,6 +599,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-}); 
+});
 </script>
 {% endblock %}
