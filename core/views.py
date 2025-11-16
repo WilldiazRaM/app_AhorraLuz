@@ -550,12 +550,20 @@ def register_view(request):
 
 @login_required
 def dashboard(request):
-    # Últimos registros del usuario (ya lo tenías)
-    registros = RegistroConsumo.objects.filter(usuario__id=request.user.id)[:10]
+    # Obtener el Usuario energético (UUID) asociado al user de Django
+    usuario = ensure_usuario_for_request(request)
+    if not usuario:
+        messages.error(request, "No se encontró tu registro de usuario en AhorraLuz.")
+        return redirect("core:profile")
+
+    # Últimos registros de consumo del usuario
+    registros = RegistroConsumo.objects.filter(
+        usuario=usuario
+    ).order_by("-fecha")[:10]
 
     # Métricas de precisión de los últimos 90 días
     desde = timezone.now().date() - datetime.timedelta(days=90)
-    met = _metricas_precision_queryset(request.user.id, desde=desde)
+    met = _metricas_precision_queryset(usuario.id, desde=desde)
 
     context = {
         "title": "Dashboard AhorraLuz",
@@ -564,6 +572,7 @@ def dashboard(request):
         "metrics_window_days": 90,
     }
     return render(request, "core/dashboard.html", context)
+
 
 @login_required
 def profile_view(request):
@@ -630,8 +639,17 @@ def consumo_new(request):
 
 @login_required
 def consumo_history(request):
-    qs = RegistroConsumo.objects.filter(usuario__id=request.user.id).order_by('-fecha')[:100]
+    usuario = ensure_usuario_for_request(request)
+    if not usuario:
+        messages.error(request, "No se encontró tu registro de usuario en AhorraLuz.")
+        return redirect("core:profile")
+
+    qs = RegistroConsumo.objects.filter(
+        usuario=usuario
+    ).order_by("-fecha")[:100]
+
     return render(request, "core/consumo_history.html", {"registros": qs})
+
 
 
 @login_required
