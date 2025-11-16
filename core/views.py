@@ -38,6 +38,12 @@ import json
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 import requests
+import logging
+from django.core.mail import send_mail
+from django.conf import settings
+
+logger = logging.getLogger("core.views")
+
 
 
 def _metricas_precision_queryset(user_id, desde=None, hasta=None):
@@ -601,39 +607,68 @@ def profile_view(request):
 
 @login_required
 def consumo_new(request):
-    # Mapeamos user autenticado -> Usuario (UUID interno)
     usuario = ensure_usuario_for_request(request)
     if not usuario:
-        messages.error(request, "No se encontró tu registro de usuario en AhorraLuz.")
+        messages.error(request, "No se encontró tu perfil de usuario interno.")
         return redirect("core:profile")
 
     if request.method == "POST":
         form = RegistroConsumoForm(request.POST)
-        # limitar el combo de dispositivos solo a los del usuario
-        form.fields["dispositivo"].queryset = Dispositivo.objects.filter(usuario=usuario)
-
         if form.is_valid():
             rc = form.save(commit=False)
-            # seguridad: forzamos el usuario y la fecha de creación
             rc.usuario = usuario
-            if not rc.creado_en:
-                rc.creado_en = timezone.now()
+            rc.creado_en = timezone.now()
 
-            # validamos que el dispositivo (si viene) pertenezca al usuario
+            # --- Validar que no haya otra lectura ese MES ---
+            existe_mes = RegistroConsumo.objects.filter(
+                usuario=usuario,
+                fecha__year=rc.fecha.year,
+                fecha__month=rc.fecha.month,
+            ).exists()
+            if existe_mes:
+                form.add_error(
+                    "fecha",
+                    "Ya registraste una lectura de boleta para este mes. "
+                    "Si necesitas corregirla, edítala desde el historial."
+                )
+                return render(request, "core/consumo_form.html", {"form": form})
+
+            # (opcional) validar pertenencia de dispositivo, igual que en consumo_new_and_predict
             if rc.dispositivo_id:
-                if not Dispositivo.objects.filter(
-                    id=rc.dispositivo_id,
-                    usuario=usuario
-                ).exists():
-                    form.add_error("dispositivo", "El dispositivo seleccionado no pertenece a tu cuenta.")
+                pertenece = Dispositivo.objects.filter(
+                    id=rc.dispositivo_id, usuario=usuario
+                ).exists()
+                if not pertenece:
+                    form.add_error("dispositivo", "El dispositivo no pertenece a tu cuenta.")
                     return render(request, "core/consumo_form.html", {"form": form})
 
             rc.save()
-            messages.success(request, "✅ Lectura registrada correctamente.")
+
+            # --- Generar predicción, notificación y correo ---
+            temp_c = form.cleaned_data.get("temp_c")
+            try:
+                _crear_prediccion_y_alerta_para_registro(
+                    request=request,
+                    usuario=usuario,
+                    rc=rc,
+                    temp_c=temp_c,
+                )
+            except Exception as e:
+                logger.exception(
+                    "[CONSUMO_NEW] Error generando predicción para registro %s: %s",
+                    rc.id,
+                    e,
+                )
+                # no rompemos el flujo del usuario, solo registramos en logs
+
+            messages.success(
+                request,
+                "✅ Lectura registrada. "
+                "Hemos generado una predicción para tu consumo y, si corresponde, una alerta."
+            )
             return redirect("core:consumo_history")
     else:
         form = RegistroConsumoForm()
-        form.fields["dispositivo"].queryset = Dispositivo.objects.filter(usuario=usuario)
 
     return render(request, "core/consumo_form.html", {"form": form})
 
@@ -1062,7 +1097,7 @@ def api_predict_next_24h(request):
             "kwh": round(kwh, 3),
         })
 
-    # 🔧 AQUÍ estaba el bug: _classify_alert devuelve 3 valores
+    
     nivel, mensaje_alerta, ratio = _classify_alert(total_kwh, baseline)
 
     resp = {
@@ -1165,6 +1200,138 @@ def _classify_alert(total_kwh: float, baseline_kwh: float | None):
         )
 
     return nivel, mensaje, ratio_user
+
+
+
+def _get_or_create_nivel_alerta(codigo: str, descripcion: str = ""):
+    if not codigo:
+        return None
+    nivel, _ = NivelAlerta.objects.get_or_create(
+        codigo=codigo,
+        defaults={"descripcion": descripcion},
+    )
+    return nivel
+
+
+def _get_or_create_tipo_notificacion(codigo: str, descripcion: str = ""):
+    tipo, _ = TipoNotificacion.objects.get_or_create(
+        codigo=codigo,
+        defaults={"descripcion": descripcion},
+    )
+    return tipo
+
+
+def _crear_prediccion_y_alerta_para_registro(request, usuario, rc, temp_c=None):
+    """
+    Dado un RegistroConsumo recién creado, genera:
+      - predicción con el modelo HGBR (24h)
+      - nivel de alerta (verde/amarillo/rojo)
+      - Notificación in-app
+      - correo de alerta al usuario
+
+    Devuelve (pred, yhat, nivel_codigo)
+    """
+    # 1) Fecha de referencia para features de calendario
+    dt_local = timezone.make_aware(
+        datetime.datetime.combine(rc.fecha, datetime.time(hour=12)),
+        timezone.get_current_timezone(),
+    )
+
+    # 2) Features de señales a partir de dispositivos del usuario
+    signals = _signals_from_dispositivos(usuario)
+
+    # 3) Calendario
+    calendar = _calendar_feats(dt_local)
+
+    # 4) Clima: usamos Temp_C del form si viene; si no, stub
+    if temp_c is not None:
+        try:
+            temp_val = float(temp_c)
+        except (TypeError, ValueError):
+            temp_val = None
+    else:
+        temp_val = None
+
+    if temp_val is not None:
+        climate = {"Temp_C": temp_val}
+    else:
+        climate = _climate_stub(dt_local)
+
+    # 5) Construir row y predecir
+    row = build_row(signals, calendar, climate)
+    yhat = float(predict_one(row))
+
+    # 6) Comparar con baseline del usuario y clasificar alerta
+    baseline = _user_baseline_kwh(usuario, ref_dt=rc.fecha)
+    nivel_code, mensaje_alerta, ratio = _classify_alert(yhat, baseline)
+
+    # 7) Nivel de alerta (catálogo)
+    desc_map = {
+        "VERDE": "Consumo dentro de un rango esperado según tu historial.",
+        "AMARILLO": "Consumo moderadamente alto en comparación a tu historial.",
+        "ROJO": "Consumo alto: revisa horarios y uso de equipos intensivos.",
+    }
+    nivel = _get_or_create_nivel_alerta(
+        nivel_code,
+        desc_map.get(nivel_code, "Alerta de consumo energético."),
+    )
+
+    # 8) Guardar predicción
+    hoy = timezone.localdate()
+    pred = PrediccionConsumo.objects.create(
+        usuario=usuario,
+        fecha_prediccion=hoy,
+        periodo_inicio=rc.fecha,      # 24h ligadas a la fecha de la boleta
+        periodo_fin=rc.fecha,
+        consumo_predicho_kwh=yhat,
+        nivel_alerta=nivel,
+        creado_en=timezone.now(),
+    )
+
+    # 9) Notificación in-app
+    tipo = _get_or_create_tipo_notificacion(
+        "ALERTA_CONSUMO",
+        "Alerta por predicción de consumo",
+    )
+    Notificacion.objects.create(
+        usuario=usuario,
+        tipo=tipo,
+        titulo="Predicción de consumo para las próximas 24 horas",
+        mensaje=f"{mensaje_alerta} (≈ {yhat:.2f} kWh en 24 h).",
+        leida=False,
+        creada_en=timezone.now(),
+    )
+
+    # 10) Correo al usuario
+    try:
+        identidad = AuthIdentidad.objects.filter(usuario=usuario).first()
+        to_email = identidad.email if identidad else getattr(request.user, "email", None)
+
+        if to_email:
+            subject = "AhorraLuz – alerta de consumo para tu hogar"
+            cuerpo = (
+                "Hola,\n\n"
+                f"Nuestra app AhorraLuz estimó un consumo de aproximadamente "
+                f"{yhat:.2f} kWh para las próximas 24 horas.\n"
+                f"Nivel de alerta: {nivel_code or 'SIN ALERTA'}.\n"
+                f"{mensaje_alerta}\n\n"
+                "Puedes revisar los detalles e ingresar el consumo real desde tu panel,\n"
+                "en la sección \"Predicciones pendientes\".\n\n"
+                "Saludos,\n"
+                "Equipo AhorraLuz"
+            )
+
+            send_mail(
+                subject,
+                cuerpo,
+                settings.DEFAULT_FROM_EMAIL,
+                [to_email],
+                fail_silently=True,
+            )
+    except Exception as e:
+        logger.exception("[ALERTA_CONSUMO] Error enviando correo: %s", e)
+
+    return pred, yhat, nivel_code
 
 def _build_feature_row_from_form(form):
     """Arma signals/calendar/climate con defaults si el usuario no los ingresó."""
@@ -1325,29 +1492,52 @@ def nowcast_preview(request, pk: int):
 
 @login_required
 def confirmar_consumo_real_list(request):
-    """Lista de predicciones del usuario sin consumo_real_kwh (pendientes de confirmación)."""
-    pend = (PrediccionConsumo.objects
-            .filter(usuario__id=request.user.id, consumo_real_kwh__isnull=True)
-            .order_by("-fecha_prediccion"))
+    """
+    Lista de predicciones del usuario sin consumo_real_kwh (pendientes de confirmación).
+    """
+    usuario = ensure_usuario_for_request(request)
+    if not usuario:
+        messages.error(request, "No se encontró tu perfil de usuario en el sistema.")
+        return redirect("core:profile")
+
+    pend = (
+        PrediccionConsumo.objects
+        .filter(usuario=usuario, consumo_real_kwh__isnull=True)
+        .order_by("-fecha_prediccion")
+    )
     page = Paginator(pend, 10).get_page(request.GET.get("page"))
     return render(request, "core/confirmar_real_list.html", {"page_obj": page})
 
+
 @login_required
 def confirmar_consumo_real_edit(request, pk: int):
-    """Formulario para ingresar el consumo real a una predicción concreta."""
-    pred = get_object_or_404(PrediccionConsumo, pk=pk, usuario__id=request.user.id)
+    """
+    Formulario para ingresar el consumo real a una predicción concreta.
+    """
+    usuario = ensure_usuario_for_request(request)
+    if not usuario:
+        messages.error(request, "No se encontró tu perfil de usuario en el sistema.")
+        return redirect("core:profile")
+
+    pred = get_object_or_404(PrediccionConsumo, pk=pk, usuario=usuario)
+
     if request.method == "POST":
         form = PrediccionConsumoRealForm(request.POST, instance=pred)
         if form.is_valid():
             obj = form.save(commit=False)
-            # (opcional) podrías guardar un timestamp de confirmación usando actualizado_en si lo agregas al modelo
+            # si más adelante agregas un campo "confirmado_en", aquí lo setearías
             obj.save()
             messages.success(request, "✅ Consumo real confirmado.")
             return redirect("core:confirmar_real_list")
         messages.error(request, "⚠️ Revisa el valor ingresado.")
     else:
         form = PrediccionConsumoRealForm(instance=pred)
-    return render(request, "core/confirmar_real_edit.html", {"form": form, "pred": pred})
+
+    return render(
+        request,
+        "core/confirmar_real_edit.html",
+        {"form": form, "pred": pred},
+    )
 
 
 
