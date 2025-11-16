@@ -387,10 +387,25 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+  // -------- ELEMENTOS (Predicción 24h) --------
   const loadingEl = document.getElementById("dash-prediction-loading");
   const contentEl = document.getElementById("dash-prediction-content");
-  const errorEl   = document.getElementById("dash-prediction-error");
+  const errorEl = document.getElementById("dash-prediction-error");
   const miniTagEl = document.getElementById("dash-alert-mini-tag");
+
+  // -------- ELEMENTOS (Mensual) --------
+  // MOVIDO: Todas las variables mensuales se declaran aquí arriba
+  // para que sean visibles en todo el 'DOMContentLoaded'
+  const btnMonthly = document.getElementById("btn-monthly-refresh");
+  const monthlyLoading = document.getElementById("dash-monthly-loading");
+  const monthlyContent = document.getElementById("dash-monthly-content");
+  const monthlyError = document.getElementById("dash-monthly-error");
+  const monthlyAlertBadge = document.getElementById("dash-month-alert-badge");
+  const monthlyNameEl = document.getElementById("dash-month-name");
+  const monthlyDaysEl = document.getElementById("dash-month-days");
+  const monthlyKwhEl = document.getElementById("dash-month-kwh");
+  const monthlyDailyEl = document.getElementById("dash-month-daily-kwh");
+  const monthlyTextEl = document.getElementById("dash-month-alert-text");
 
   // -------- PREDICCIÓN 24H (API) --------
   fetch("{% url 'core:api_predict_next_24h' %}")
@@ -404,17 +419,7 @@ document.addEventListener("DOMContentLoaded", function () {
       const baseline = data.baseline_kwh_24h || 7.0;
       const ratio = data.ratio_vs_baseline || (baseline > 0 ? total / baseline : 1.0);
 
-      //Mensual:
-      const btnMonthly       = document.getElementById("btn-monthly-refresh");
-      const monthlyLoading   = document.getElementById("dash-monthly-loading");
-      const monthlyContent   = document.getElementById("dash-monthly-content");
-      const monthlyError     = document.getElementById("dash-monthly-error");
-      const monthlyAlertBadge= document.getElementById("dash-month-alert-badge");
-      const monthlyNameEl    = document.getElementById("dash-month-name");
-      const monthlyDaysEl    = document.getElementById("dash-month-days");
-      const monthlyKwhEl     = document.getElementById("dash-month-kwh");
-      const monthlyDailyEl   = document.getElementById("dash-month-daily-kwh");
-      const monthlyTextEl    = document.getElementById("dash-month-alert-text");
+      // ELIMINADO: Las variables mensuales ya no se declaran aquí
 
       document.getElementById("dash-total-kwh").textContent = total.toFixed(2);
       document.getElementById("dash-hourly-kwh").textContent = hourly.toFixed(2);
@@ -423,7 +428,7 @@ document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("dash-base-label").textContent = baseline.toFixed(1) + " kWh";
       document.getElementById("dash-user-label").textContent = total.toFixed(2) + " kWh";
 
-      // Barras: base siempre 100%, usuario proporcional (capado a 150% para no romper el diseño)
+      // Barras
       document.getElementById("bar-base").style.width = "100%";
       const safeWidth = Math.min(ratio * 100, 150);
       document.getElementById("bar-user").style.width = safeWidth + "%";
@@ -434,7 +439,7 @@ document.addEventListener("DOMContentLoaded", function () {
       badge.textContent = nivel || "—";
       badge.classList.remove("bg-secondary", "bg-success", "bg-warning", "bg-danger");
 
-      // Mini tag de estado (texto arriba a la derecha)
+      // Mini tag de estado
       let miniText = "Modelo en cálculo";
 
       if (nivel === "VERDE") {
@@ -485,13 +490,16 @@ document.addEventListener("DOMContentLoaded", function () {
       bar.style.width = "0%";
     }
   });
-});
 
+  // -------- LÓGICA MENSUAL --------
+  // MOVIDO: Toda la lógica mensual (función y listener) va aquí dentro
+  // del 'DOMContentLoaded'
 
-function setMonthlyAlertStyle(code) {
-    monthlyAlertBadge.classList.remove("bg-secondary","bg-success","bg-warning","bg-danger");
+  function setMonthlyAlertStyle(code) {
+    // 'monthlyAlertBadge' ahora es visible porque se declaró arriba
+    monthlyAlertBadge.classList.remove("bg-secondary", "bg-success", "bg-warning", "bg-danger");
     let text = "SIN ALERTA";
-    let cls  = "bg-secondary";
+    let cls = "bg-secondary";
 
     if (code === "VERDE") { text = "VERDE"; cls = "bg-success"; }
     else if (code === "AMARILLO") { text = "AMARILLO"; cls = "bg-warning"; }
@@ -501,6 +509,7 @@ function setMonthlyAlertStyle(code) {
     monthlyAlertBadge.classList.add(cls);
   }
 
+  // 'btnMonthly' ahora es visible
   if (btnMonthly) {
     btnMonthly.addEventListener("click", function () {
       monthlyError.classList.add("d-none");
@@ -530,7 +539,9 @@ function setMonthlyAlertStyle(code) {
           monthlyLoading.classList.add("d-none");
           monthlyError.classList.remove("d-none");
         });
+    });
+  }
 
-  })}
+}); 
 </script>
 {% endblock %}
