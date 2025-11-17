@@ -238,23 +238,24 @@ else:
 # Content Security Policy
 CSP_DEFAULT_POLICY = (
     "default-src 'self'; "
-    # JS: Bootstrap/FontAwesome via CDN (ajusta según tus CDNs reales)
-    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
-    # CSS: Bootstrap, FontAwesome, Google Fonts
-    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
-    # Fuentes
-    "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
-    # Imágenes (self + data + https)
+    # JS: Django, Bootstrap (jsDelivr), CDNs varios, Font Awesome Kit
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://kit.fontawesome.com; "
+    # CSS: propio, Bootstrap, CDNs, Google Fonts, Font Awesome
+    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://kit-free.fontawesome.com; "
+    # Fuentes: propias, Google Fonts, Font Awesome
+    "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com https://ka-f.fontawesome.com; "
+    # Imágenes desde tu dominio + cualquier HTTPS + data: (por si usas base64)
     "img-src 'self' data: https:; "
-    # Solo conectamos contra el mismo origen (API propia)
+    # Conexiones XHR/Fetch solo a tu dominio
     "connect-src 'self'; "
-    # No permitir que otros sitios embezan AhorraLuz en iframes
+    # No permitir que otros te embeban en iframes
     "frame-ancestors 'self'; "
-    # Formularios solo hacia nuestro dominio
+    # Formularios solo hacia tu dominio
     "form-action 'self'; "
-    # Evita trucos con <base>
-    "base-uri 'self'; "
+    # Evitar trucos con <base>
+    "base-uri 'self';"
 )
+
 
 # Permissions Policy (antes Feature-Policy)
 PERMISSIONS_POLICY = (

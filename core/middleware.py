@@ -45,12 +45,12 @@ class GlobalExceptionMiddleware:
 
 class SecurityHeadersMiddleware:
     """
-    Agrega headers de seguridad a TODAS las respuestas HTTP:
+    Agrega headers de seguridad a todas las respuestas HTTP.
 
     - Strict-Transport-Security (solo producción + HTTPS)
     - Content-Security-Policy (desde settings.CSP_DEFAULT_POLICY)
     - Permissions-Policy (desde settings.PERMISSIONS_POLICY)
-    - X-Content-Type-Options, Referrer-Policy de regalo
+    - X-Content-Type-Options, Referrer-Policy
     """
 
     def __init__(self, get_response):
@@ -66,17 +66,30 @@ class SecurityHeadersMiddleware:
                 "max-age=31536000; includeSubDomains; preload",
             )
 
-        # CSP y Permissions Policy desde settings
+        # CSP
         csp = getattr(settings, "CSP_DEFAULT_POLICY", None)
         if csp:
-            response.headers.setdefault("Content-Security-Policy", csp)
+            # Normalizamos whitespace: quita \n, \r, tabs, dobles espacios, etc.
+            safe_csp = " ".join(str(csp).split()).strip()
+            try:
+                response.headers.setdefault("Content-Security-Policy", safe_csp)
+            except Exception:
+                logger.exception("Error al establecer Content-Security-Policy")
+                # NO rompemos la respuesta aunque el header falle
 
+        # Permissions-Policy
         pp = getattr(settings, "PERMISSIONS_POLICY", None)
         if pp:
-            response.headers.setdefault("Permissions-Policy", pp)
+            safe_pp = " ".join(str(pp).split()).strip()
+            try:
+                response.headers.setdefault("Permissions-Policy", safe_pp)
+            except Exception:
+                logger.exception("Error al establecer Permissions-Policy")
 
-        # Extras recomendados
+        # Otros headers recomendados
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
-        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.setdefault(
+            "Referrer-Policy", "strict-origin-when-cross-origin"
+        )
 
         return response
