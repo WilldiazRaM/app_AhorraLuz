@@ -223,6 +223,9 @@
             <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:consumo_history' %}">
               <i class="fa-solid fa-clock-rotate-left"></i> Historial de consumos
             </a>
+            <a class="list-group-item list-group-item-action quick-link" href="{% url 'core:confirmar_real_list' %}">
+              <i class="fa-solid fa-circle-check"></i> Confirmar consumo real
+            </a>
         </div>
 
         <!-- Predicción rápida (API pública 24h) -->
@@ -383,10 +386,10 @@
       const out = document.getElementById('nowcast-output');
       if (!btn || !out) return;
 
-      
+
       btn.addEventListener("click", async () => {
         try {
-          
+
           btn.disabled = true;
           btn.textContent = "Calculando...";
 
@@ -396,7 +399,7 @@
           });
 
           if (!resp.ok) {
-            
+
             out.textContent = "No se pudo obtener la predicción.";
             return;
           }
@@ -404,7 +407,7 @@
           const data = await resp.json();
 
           if (data.error) {
-            
+
             out.textContent = data.error;
             return;
           }
@@ -414,7 +417,7 @@
           const nivel = data.nivel_alerta ?? "DESCONOCIDO";
           const msg = data.mensaje_alerta ?? "";
 
-          
+
           out.textContent =
             `Consumo estimado próximas 24h: ${total} kWh\n` +
             `Promedio por hora: ${prom} kWh/h\n` +
@@ -422,10 +425,10 @@
             `${msg}`;
         } catch (err) {
           console.error(err);
-          
+
           out.textContent = "Error al obtener la predicción.";
         } finally {
-          
+
           btn.disabled = false;
           btn.textContent = "Ejecutar"; // Lo he cambiado a "Ejecutar" ya que era el texto original del botón.
         }

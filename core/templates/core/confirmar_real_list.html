@@ -1,52 +1,337 @@
 {% extends "base.html" %}
-{% block title %}Confirmar consumo real{% endblock %}
+{% load static %}
+
+{% block title %}Confirmar consumo real — AhorraLuz{% endblock %}
+
 {% block content %}
-<div class="card shadow-sm">
-  <div class="card-body">
-    <h5 class="card-title mb-3"><i class="fa-solid fa-gauge-high me-2"></i>Confirmar consumo real</h5>
-    {% if page_obj.object_list %}
-      <div class="table-responsive">
-        <table class="table table-sm align-middle">
-          <thead>
-            <tr>
-              <th>Predicción</th>
-              <th>Periodo</th>
-              <th>kWh predicho</th>
-              <th>Real</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for p in page_obj.object_list %}
-              <tr>
-                <td>{{ p.fecha_prediccion }}</td>
-                <td>{{ p.periodo_inicio }} → {{ p.periodo_fin }}</td>
-                <td>{{ p.consumo_predicho_kwh|floatformat:2 }}</td>
-                <td>{% if p.consumo_real_kwh %}{{ p.consumo_real_kwh|floatformat:2 }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
-                <td>
-                  <a class="btn btn-sm btn-primary" href="{% url 'core:confirmar_consumo_real' p.id %}">
-                    Ingresar real
-                  </a>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+
+{# ====== Estilos específicos de esta vista (inline) ====== #}
+<style>
+  .confirm-wrapper {
+    max-width: 960px;
+    margin: 1.5rem auto;
+  }
+
+  .confirm-card {
+    border-radius: 0.8rem;
+    overflow: hidden;
+  }
+
+  .confirm-card .card-header {
+    border-bottom: 0;
+    background: linear-gradient(90deg, rgba(13,110,253,0.08), rgba(25,135,84,0.08));
+  }
+
+  .confirm-card .card-header h1 {
+    font-size: 1.1rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .confirm-card .card-header p {
+    font-size: 0.8rem;
+    margin-bottom: 0;
+  }
+
+  .confirm-badge-pill {
+    border-radius: 999px;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.7rem;
+  }
+
+  .confirm-table thead th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #6c757d;
+    border-bottom-width: 1px;
+  }
+
+  .confirm-table tbody td {
+    font-size: 0.85rem;
+    vertical-align: middle;
+  }
+
+  .confirm-row.is-pending {
+    background: #fff;
+  }
+
+  .confirm-row:hover {
+    cursor: pointer;
+    background: #f7fbff;
+    transition: background 0.15s ease-in-out;
+  }
+
+  .confirm-period {
+    font-weight: 500;
+  }
+
+  .confirm-kwh {
+    font-weight: 600;
+  }
+
+  .kwh-muted {
+    color: #6c757d;
+    font-size: 0.8rem;
+  }
+
+  .badge-soft-green {
+    background-color: rgba(25,135,84,0.09);
+    color: #198754;
+  }
+
+  .badge-soft-yellow {
+    background-color: rgba(255,193,7,0.16);
+    color: #856404;
+  }
+
+  .badge-soft-red {
+    background-color: rgba(220,53,69,0.12);
+    color: #b02a37;
+  }
+
+  .badge-soft-gray {
+    background-color: rgba(108,117,125,0.12);
+    color: #495057;
+  }
+
+  .alert-hint {
+    font-size: 0.8rem;
+    border-radius: 0.6rem;
+  }
+
+  .alert-hint i {
+    font-size: 1rem;
+  }
+
+  .confirm-legend {
+    font-size: 0.75rem;
+  }
+
+  .confirm-legend span {
+    margin-right: 0.35rem;
+  }
+
+  .confirm-empty {
+    border-radius: 0.7rem;
+  }
+
+  .confirm-pagination .page-link {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.6rem;
+  }
+
+  @media (max-width: 576px) {
+    .confirm-card .card-header {
+      padding: 0.85rem 1rem;
+    }
+    .confirm-card .card-body {
+      padding: 0.85rem 1rem 1rem 1rem;
+    }
+    .confirm-table thead {
+      display: none;
+    }
+    .confirm-table tbody tr {
+      display: block;
+      margin-bottom: 0.65rem;
+      border-radius: 0.6rem;
+      border: 1px solid #e9ecef;
+      padding: 0.35rem 0.6rem;
+    }
+    .confirm-table tbody td {
+      display: block;
+      border-bottom: 0;
+      padding: 0.15rem 0;
+    }
+    .confirm-td-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #6c757d;
+      display: block;
+    }
+    .confirm-row .btn {
+      width: 100%;
+      margin-top: 0.4rem;
+    }
+  }
+</style>
+
+<div class="confirm-wrapper">
+  <div class="card shadow-sm confirm-card">
+    <div class="card-header d-flex justify-content-between align-items-start">
+      <div>
+        <h1 class="h5 mb-1">
+          <i class="fa-solid fa-gauge-high me-2 text-primary"></i>
+          Confirmar consumo real
+        </h1>
+        <p class="text-muted">
+          Revisa las predicciones generadas por AhorraLuz y registra el consumo real de tu boleta.
+        </p>
       </div>
-      <nav class="mt-2">
-        <ul class="pagination pagination-sm">
-          {% if page_obj.has_previous %}
-            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">«</a></li>
-          {% endif %}
-          <li class="page-item disabled"><a class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</a></li>
-          {% if page_obj.has_next %}
-            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">»</a></li>
-          {% endif %}
-        </ul>
-      </nav>
-    {% else %}
-      <div class="alert alert-info mb-0">No tienes predicciones pendientes de confirmación.</div>
-    {% endif %}
+      <div class="text-end d-none d-sm-block">
+        <span class="confirm-badge-pill bg-light text-muted">
+          <i class="fa-solid fa-receipt me-1"></i>
+          Paso clave para medir precisión
+        </span>
+      </div>
+    </div>
+
+    <div class="card-body">
+
+      {% if page_obj.object_list %}
+        <div class="alert alert-info alert-hint d-flex align-items-center mb-3">
+          <i class="fa-solid fa-lightbulb me-2 text-warning"></i>
+          <div>
+            Tienes <strong>{{ page_obj.paginator.count }}</strong>
+            predicción{% if page_obj.paginator.count != 1 %}es{% endif %}
+            pendiente{% if page_obj.paginator.count != 1 %}s{% endif %} de confirmar.
+            Una vez que tengas la boleta del periodo,
+            haz clic en <strong>Ingresar real</strong> para registrar el kWh facturado.
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-2 confirm-legend">
+          <div>
+            <span class="badge badge-soft-green"><i class="fa-solid fa-circle me-1"></i>Verde</span>
+            <span class="badge badge-soft-yellow"><i class="fa-solid fa-circle me-1"></i>Amarillo</span>
+            <span class="badge badge-soft-red"><i class="fa-solid fa-circle me-1"></i>Rojo</span>
+            <span class="text-muted ms-1">· nivel estimado de consumo</span>
+          </div>
+          <div class="d-none d-sm-block text-muted">
+            Consejo: puedes hacer clic en toda la fila para abrir el formulario.
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0 confirm-table">
+            <thead>
+              <tr>
+                <th>Predicción</th>
+                <th>Periodo</th>
+                <th>kWh predicho</th>
+                <th>Real</th>
+                <th class="text-end"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in page_obj.object_list %}
+                <tr class="confirm-row is-pending"
+                    data-href="{% url 'core:confirmar_consumo_real' p.id %}">
+                  <td>
+                    <span class="confirm-td-label d-sm-none">Predicción</span>
+                    <div class="fw-semibold">
+                      {{ p.fecha_prediccion }}
+                    </div>
+                    {% if p.nivel_alerta %}
+                      <span
+                        class="confirm-badge-pill
+                          {% if p.nivel_alerta.codigo == 'ROJO' %}badge-soft-red
+                          {% elif p.nivel_alerta.codigo == 'AMARILLO' %}badge-soft-yellow
+                          {% elif p.nivel_alerta.codigo == 'VERDE' %}badge-soft-green
+                          {% else %}badge-soft-gray{% endif %}">
+                        <i class="fa-solid fa-circle me-1"></i>
+                        {{ p.nivel_alerta.codigo }}
+                      </span>
+                    {% else %}
+                      <span class="confirm-badge-pill badge-soft-gray">
+                        <i class="fa-regular fa-circle me-1"></i>
+                        Sin alerta
+                      </span>
+                    {% endif %}
+                  </td>
+
+                  <td>
+                    <span class="confirm-td-label d-sm-none">Periodo</span>
+                    <span class="confirm-period">
+                      {{ p.periodo_inicio }} → {{ p.periodo_fin }}
+                    </span>
+                  </td>
+
+                  <td>
+                    <span class="confirm-td-label d-sm-none">kWh predicho</span>
+                    <div class="confirm-kwh">
+                      {{ p.consumo_predicho_kwh|floatformat:2 }} kWh
+                    </div>
+                    <div class="kwh-muted">
+                      Estimado por el modelo
+                    </div>
+                  </td>
+
+                  <td>
+                    <span class="confirm-td-label d-sm-none">Real</span>
+                    {% if p.consumo_real_kwh %}
+                      <span class="confirm-kwh text-success">
+                        {{ p.consumo_real_kwh|floatformat:2 }} kWh
+                      </span>
+                      <div class="kwh-muted">Confirmado</div>
+                    {% else %}
+                      <span class="text-muted">
+                        — pendiente
+                      </span>
+                    {% endif %}
+                  </td>
+
+                  <td class="text-end">
+                    <a class="btn btn-sm btn-primary"
+                       href="{% url 'core:confirmar_consumo_real' p.id %}"
+                       onclick="event.stopPropagation();">
+                      <i class="fa-solid fa-pen-to-square me-1"></i>
+                      Ingresar real
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <nav class="mt-3 confirm-pagination">
+          <ul class="pagination pagination-sm justify-content-center mb-0">
+            {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a>
+              </li>
+            {% endif %}
+            <li class="page-item disabled">
+              <span class="page-link">
+                Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+              </span>
+            </li>
+            {% if page_obj.has_next %}
+              <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a>
+              </li>
+            {% endif %}
+          </ul>
+        </nav>
+
+      {% else %}
+        <div class="alert alert-info confirm-empty d-flex align-items-center">
+          <i class="fa-regular fa-circle-check me-2 text-success"></i>
+          <div>
+            No tienes predicciones pendientes de confirmación.
+            Cuando registres nuevas lecturas y se generen predicciones,
+            aparecerán aquí para que puedas ingresar el consumo real de tu boleta.
+          </div>
+        </div>
+      {% endif %}
+    </div>
   </div>
 </div>
+
+{# ====== JS pequeño para hacer la fila clicable ====== #}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const rows = document.querySelectorAll(".confirm-row[data-href]");
+    rows.forEach(function (row) {
+      row.addEventListener("click", function () {
+        const url = row.getAttribute("data-href");
+        if (url) {
+          window.location.href = url;
+        }
+      });
+    });
+  });
+</script>
+
 {% endblock %}

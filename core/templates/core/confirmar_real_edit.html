@@ -1,27 +1,221 @@
 {% extends "base.html" %}
 {% block title %}Ingresar consumo real{% endblock %}
+
 {% block content %}
-<div class="card shadow-sm">
-  <div class="card-body">
-    <h5 class="card-title mb-3"><i class="fa-solid fa-pen-to-square me-2"></i>Ingresar consumo real</h5>
+<style>
+  /* ======== Confirmar consumo real ======== */
+  .real-card-wrapper {
+    max-width: 760px;
+    margin: 0 auto;
+  }
 
-    <div class="mb-2 small text-muted">
-      Predicción del {{ pred.fecha_prediccion }} ({{ pred.periodo_inicio }} → {{ pred.periodo_fin }}) ·
-      Estimado: <strong>{{ pred.consumo_predicho_kwh|floatformat:2 }} kWh</strong>
+  .real-card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  }
+
+  .real-header-pill {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(34, 197, 94, 0.08);
+    color: #16a34a;
+  }
+
+  .real-meta {
+    font-size: 0.85rem;
+    color: #6b7280;
+  }
+
+  .real-meta strong {
+    color: #111827;
+  }
+
+  .real-chip-alerta {
+    font-size: 0.75rem;
+    border-radius: 999px;
+    padding: 0.2rem 0.55rem;
+  }
+
+  .real-chip-verde {
+    background: rgba(34, 197, 94, 0.1);
+    color: #15803d;
+  }
+
+  .real-chip-amarillo {
+    background: rgba(234, 179, 8, 0.1);
+    color: #b45309;
+  }
+
+  .real-chip-rojo {
+    background: rgba(248, 113, 113, 0.12);
+    color: #b91c1c;
+  }
+
+  .real-diff-box {
+    font-size: 0.85rem;
+    border-radius: 0.75rem;
+    padding: 0.6rem 0.8rem;
+    background: #f9fafb;
+  }
+
+  .real-diff-box.positivo {
+    border-left: 4px solid #16a34a;
+  }
+
+  .real-diff-box.negativo {
+    border-left: 4px solid #b91c1c;
+  }
+
+  .real-diff-box.neutro {
+    border-left: 4px solid #6b7280;
+  }
+
+  @media (max-width: 576px) {
+    .real-card-wrapper {
+      padding-inline: 0.25rem;
+    }
+  }
+</style>
+
+<div class="real-card-wrapper my-4">
+  <div class="card real-card">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <div>
+          <span class="real-header-pill mb-2 d-inline-flex align-items-center gap-1">
+            <i class="fa-solid fa-gauge-high"></i> Confirmar consumo real
+          </span>
+          <h5 class="card-title mt-2 mb-1">Revisar predicción y registrar tu lectura</h5>
+          <p class="real-meta mb-1">
+            Predicción generada el <strong>{{ pred.fecha_prediccion }}</strong><br>
+            Periodo estimado: <strong>{{ pred.periodo_inicio }} → {{ pred.periodo_fin }}</strong>
+          </p>
+          <p class="real-meta mb-0">
+            Consumo estimado: <strong>{{ pred.consumo_predicho_kwh|floatformat:2 }} kWh</strong>
+            {% if pred.costo_estimado_clp %}
+              · Costo estimado: <strong>${{ pred.costo_estimado_clp|floatformat:0 }} CLP</strong>
+            {% endif %}
+          </p>
+        </div>
+
+        {% if pred.nivel_alerta %}
+          {% with nivel=pred.nivel_alerta.codigo|default:pred.nivel_alerta.nombre %}
+          <span class="
+              real-chip-alerta
+              {% if 'ROJO' in nivel|upper %}real-chip-rojo
+              {% elif 'AMARILLO' in nivel|upper %}real-chip-amarillo
+              {% else %}real-chip-verde{% endif %}
+            ">
+            <i class="fa-solid fa-triangle-exclamation me-1"></i>
+            {{ pred.nivel_alerta.nombre }}
+          </span>
+          {% endwith %}
+        {% endif %}
+      </div>
+
+      <hr>
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger">
+          {% for error in form.non_field_errors %}
+            <div>{{ error }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="post" class="row g-3"
+            id="real-form"
+            data-pred="{{ pred.consumo_predicho_kwh|default_if_none:'0' }}">
+        {% csrf_token %}
+
+        <div class="col-12 col-md-6">
+          <label class="form-label" for="{{ form.consumo_real_kwh.id_for_label }}">
+            Consumo real del periodo (kWh)
+          </label>
+          <div class="input-group">
+            {{ form.consumo_real_kwh }}
+            <span class="input-group-text">kWh</span>
+          </div>
+          <div class="form-text">
+            Usa el valor que aparece en tu boleta para este periodo.
+          </div>
+          {% for error in form.consumo_real_kwh.errors %}
+            <div class="text-danger small">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="col-12 col-md-6">
+          <div id="real-diff-box" class="real-diff-box neutro">
+            <strong>Comparación con la predicción</strong>
+            <div id="real-diff-text" class="mt-1 text-muted">
+              Ingresa el consumo real para ver qué tan cerca estuvo el modelo.
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 d-flex flex-wrap justify-content-between align-items-center mt-2">
+          <a class="btn btn-outline-secondary mb-2" href="{% url 'core:confirmar_real_list' %}">
+            <i class="fa-solid fa-arrow-left"></i> Volver a predicciones pendientes
+          </a>
+          <button class="btn btn-brand mb-2" type="submit">
+            <i class="fa-solid fa-floppy-disk me-1"></i> Guardar consumo real
+          </button>
+        </div>
+      </form>
     </div>
-
-    <form method="post" class="row g-3">
-      {% csrf_token %}
-      <div class="col-md-4">
-        {{ form.consumo_real_kwh.label_tag }}
-        {{ form.consumo_real_kwh }}
-        <div class="form-text">Ingresa el consumo real medido.</div>
-      </div>
-      <div class="col-12">
-        <button class="btn btn-brand" type="submit">Guardar</button>
-        <a class="btn btn-outline-secondary ms-2" href="{% url 'core:confirmar_real_list' %}">Volver</a>
-      </div>
-    </form>
   </div>
 </div>
+
+<script>
+  // Comparación dinámicamente (real vs predicho)
+  (function () {
+    const form = document.getElementById('real-form');
+    if (!form) return;
+
+    const pred = parseFloat(form.dataset.pred || '0');
+    const input = document.getElementById('id_consumo_real_kwh');
+    const box = document.getElementById('real-diff-box');
+    const text = document.getElementById('real-diff-text');
+
+    if (!input || !box || !text || !pred) return;
+
+    const updateDiff = () => {
+      const val = parseFloat(input.value.replace(',', '.'));
+      if (isNaN(val) || val <= 0) {
+        box.classList.remove('positivo', 'negativo');
+        box.classList.add('neutro');
+        text.textContent = 'Ingresa el consumo real para ver qué tan cerca estuvo el modelo.';
+        return;
+      }
+
+      const diff = val - pred;
+      const pct = (diff / pred) * 100;
+
+      let msg;
+      if (Math.abs(pct) < 5) {
+        box.classList.remove('positivo', 'negativo');
+        box.classList.add('neutro');
+        msg = `Muy cercano a lo estimado: variación de ${pct.toFixed(1)} %.`;
+      } else if (diff > 0) {
+        box.classList.remove('neutro', 'positivo');
+        box.classList.add('negativo');
+        msg = `Tu consumo real fue mayor al estimado (+${diff.toFixed(2)} kWh, ${pct.toFixed(1)} % por sobre la predicción).`;
+      } else {
+        box.classList.remove('neutro', 'negativo');
+        box.classList.add('positivo');
+        msg = `¡Buen trabajo! Consumiste menos de lo estimado (${Math.abs(diff).toFixed(2)} kWh, ${Math.abs(pct).toFixed(1)} % por debajo).`;
+      }
+
+      text.textContent = msg;
+    };
+
+    input.addEventListener('input', updateDiff);
+    // primer cálculo si viene valor precargado
+    updateDiff();
+  })();
+</script>
 {% endblock %}
