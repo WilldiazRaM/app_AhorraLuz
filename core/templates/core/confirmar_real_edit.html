@@ -103,15 +103,15 @@
         </div>
 
         {% if pred.nivel_alerta %}
-          {% with nivel=pred.nivel_alerta.codigo|default:pred.nivel_alerta.nombre %}
+          {% with nivel=pred.nivel_alerta.codigo|upper %}
           <span class="
               real-chip-alerta
-              {% if 'ROJO' in nivel|upper %}real-chip-rojo
-              {% elif 'AMARILLO' in nivel|upper %}real-chip-amarillo
+              {% if nivel == 'ROJO' %}real-chip-rojo
+              {% elif nivel == 'AMARILLO' %}real-chip-amarillo
               {% else %}real-chip-verde{% endif %}
             ">
             <i class="fa-solid fa-triangle-exclamation me-1"></i>
-            {{ pred.nivel_alerta.nombre }}
+            {{ pred.nivel_alerta.descripcion|default:pred.nivel_alerta.codigo }}
           </span>
           {% endwith %}
         {% endif %}
@@ -171,7 +171,7 @@
 </div>
 
 <script>
-  // Comparación dinámicamente (real vs predicho)
+  // Comparación dinámica (real vs predicho)
   (function () {
     const form = document.getElementById('real-form');
     if (!form) return;
@@ -184,7 +184,7 @@
     if (!input || !box || !text || !pred) return;
 
     const updateDiff = () => {
-      const val = parseFloat(input.value.replace(',', '.'));
+      const val = parseFloat((input.value || '').replace(',', '.'));
       if (isNaN(val) || val <= 0) {
         box.classList.remove('positivo', 'negativo');
         box.classList.add('neutro');
@@ -193,7 +193,7 @@
       }
 
       const diff = val - pred;
-      const pct = (diff / pred) * 100;
+      const pct = pred > 0 ? (diff / pred) * 100 : 0;
 
       let msg;
       if (Math.abs(pct) < 5) {
