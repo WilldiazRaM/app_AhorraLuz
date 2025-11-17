@@ -10,6 +10,7 @@ from uuid import uuid4
 from django.contrib.auth import get_user_model
 from decimal import Decimal
 
+
 User = get_user_model()
 
 class UserProfileForm(forms.ModelForm):
@@ -392,6 +393,28 @@ class DispositivoUsuarioForm(forms.ModelForm):
     Formulario para que el usuario final gestione sus propios dispositivos.
     No expone el campo 'usuario'; se setea en la vista a partir del request.
     """
+
+    def __init__(self, *args, **kwargs):
+        # Sacamos 'usuario' de kwargs para que no llegue al BaseModelForm
+        self.usuario = kwargs.pop("usuario", None)
+        super().__init__(*args, **kwargs)
+
+        # Etiquetas y ayudas más “humanas”
+        self.fields["nombre"].label = "Nombre del dispositivo"
+        self.fields["nombre"].help_text = "Ej: Refrigerador cocina, TV living, Lavadora, etc."
+
+        self.fields["tipo_dispositivo"].label = "Tipo de dispositivo"
+        self.fields["tipo_dispositivo"].help_text = "Nos ayuda a entender mejor el uso (iluminación, climatización, cocina, etc.)."
+
+        self.fields["potencia_promedio_w"].label = "Potencia promedio (W)"
+        self.fields["potencia_promedio_w"].help_text = "Si no la conoces exacta, puedes aproximar (ej: 120 W, 800 W)."
+
+        self.fields["horas_uso_diario"].label = "Horas de uso promedio al día"
+        self.fields["horas_uso_diario"].help_text = "Ej: 0.5 = 30 minutos, 1 = 1 hora, 4 = 4 horas."
+
+        self.fields["activo"].label = "Usar este dispositivo en las predicciones"
+        self.fields["activo"].help_text = "Puedes desactivarlo temporalmente sin eliminarlo."
+
     class Meta:
         model = Dispositivo
         fields = ["nombre", "tipo_dispositivo",
@@ -400,19 +423,21 @@ class DispositivoUsuarioForm(forms.ModelForm):
             "nombre": forms.TextInput(attrs={
                 "class": "form-control",
                 "maxlength": 100,
-                "placeholder": "Ej: Refrigerador"
+                "placeholder": "Ej: Refrigerador cocina"
             }),
             "tipo_dispositivo": forms.Select(attrs={"class": "form-select"}),
             "potencia_promedio_w": forms.NumberInput(attrs={
                 "class": "form-control",
                 "min": "0",
-                "step": "0.01"
+                "step": "1",
+                "placeholder": "Ej: 120"
             }),
             "horas_uso_diario": forms.NumberInput(attrs={
                 "class": "form-control",
                 "min": "0",
                 "max": "24",
-                "step": "0.25"
+                "step": "0.25",
+                "placeholder": "Ej: 4"
             }),
             "activo": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
@@ -421,13 +446,21 @@ class DispositivoUsuarioForm(forms.ModelForm):
         nombre = (self.cleaned_data.get("nombre") or "").strip()
         if not nombre:
             raise forms.ValidationError("El nombre no puede ir vacío.")
-        return nombre
 
-
-    def clean_nombre(self):
-        nombre = (self.cleaned_data.get("nombre") or "").strip()
-        if not nombre:
-            raise forms.ValidationError("El nombre no puede ir vacío.")
+        # Evitar duplicados por usuario (ej: dos “Refrigerador cocina” activos)
+        usuario = getattr(self, "usuario", None)
+        if usuario:
+            qs = Dispositivo.objects.filter(
+                usuario=usuario,
+                nombre__iexact=nombre,
+            )
+            if self.instance.pk:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError(
+                    "Ya tienes un dispositivo con este nombre. "
+                    "Puedes editar el existente o elegir un nombre distinto."
+                )
         return nombre
 
     def clean_potencia_promedio_w(self):
@@ -436,6 +469,8 @@ class DispositivoUsuarioForm(forms.ModelForm):
             return Decimal("0")
         if p < 0:
             raise forms.ValidationError("La potencia debe ser ≥ 0 W.")
+        if p > 10000:
+            raise forms.ValidationError("¿Seguro? Esta potencia parece demasiado alta.")
         return p
 
     def clean_horas_uso_diario(self):
@@ -445,7 +480,7 @@ class DispositivoUsuarioForm(forms.ModelForm):
         if h < 0 or h > 24:
             raise forms.ValidationError("Las horas de uso deben estar entre 0 y 24.")
         return h
-
+    
 class RegistroConsumoAdminForm(forms.ModelForm):
     class Meta:
         model = RegistroConsumo  # usuario, fecha, consumo_kwh, costo_clp, dispositivo, fuente :contentReference[oaicite:12]{index=12}
