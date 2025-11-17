@@ -1767,7 +1767,7 @@ def mis_dispositivo_new(request):
         return redirect("core:profile")
 
     if request.method == "POST":
-        form = DispositivoUsuarioForm(request.POST)
+        form = DispositivoUsuarioForm(request.POST, usuario=usuario)
         if form.is_valid():
             disp = form.save(commit=False)
             disp.usuario = usuario  # 🔗 vínculo al Usuario lógico
@@ -1775,13 +1775,14 @@ def mis_dispositivo_new(request):
             messages.success(request, "Dispositivo agregado correctamente.")
             return redirect("core:mis_dispositivos_list")
     else:
-        form = DispositivoUsuarioForm()
+        form = DispositivoUsuarioForm(usuario=usuario)
 
     return render(
         request,
         "usuarios/mis_dispositivo_form.html",
         {"form": form, "modo": "crear"},
     )
+
 
 
 @login_required

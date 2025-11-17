@@ -6,45 +6,273 @@
 {% endblock %}
 
 {% block content %}
-<div class="container my-4" style="max-width: 720px;">
-  <h1 class="h4 mb-3">
-    {% if modo == "editar" %}
-      Editar dispositivo
-    {% else %}
-      Nuevo dispositivo
-    {% endif %}
-  </h1>
+<style>
+  .device-wrapper {
+    max-width: 860px;
+  }
 
-  <form method="post" novalidate>
-    {% csrf_token %}
+  .device-card {
+    border: none;
+    border-radius: 1rem;
+  }
 
-    {% if form.non_field_errors %}
-      <div class="alert alert-danger">
-        {{ form.non_field_errors }}
-      </div>
-    {% endif %}
+  .device-preview-card {
+    background: linear-gradient(135deg, #0f766e 0%, #0891b2 70%);
+    color: #ffffff;
+    border-radius: 1rem;
+  }
 
-    {% for field in form %}
-      <div class="mb-3">
-        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-        {{ field }}
-        {% if field.help_text %}
-          <div class="form-text">{{ field.help_text }}</div>
+  .device-preview-kwh {
+    font-size: 1.6rem;
+    font-weight: 600;
+  }
+
+  .device-chip {
+    font-size: 0.7rem;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.25rem 0.6rem;
+  }
+
+  .device-quick-hours .btn {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+  }
+
+  @media (max-width: 767.98px) {
+    .device-preview-card {
+      margin-top: 1rem;
+    }
+  }
+</style>
+
+<div class="container my-4 device-wrapper">
+  <div class="row g-3">
+    <div class="col-12">
+      <h1 class="h4 mb-1">
+        {% if modo == "editar" %}
+          <i class="fa-solid fa-pen-to-square me-2 text-primary"></i>
+          Editar dispositivo
+        {% else %}
+          <i class="fa-solid fa-plug-circle-bolt me-2 text-success"></i>
+          Nuevo dispositivo
         {% endif %}
-        {% for error in field.errors %}
-          <div class="text-danger small">{{ error }}</div>
-        {% endfor %}
-      </div>
-    {% endfor %}
-
-    <div class="d-flex justify-content-between">
-      <a href="{% url 'core:mis_dispositivos_list' %}" class="btn btn-link">
-        Cancelar
-      </a>
-      <button type="submit" class="btn btn-primary">
-        {% if modo == "editar" %}Guardar cambios{% else %}Guardar dispositivo{% endif %}
-      </button>
+      </h1>
+      <p class="text-muted small mb-3">
+        Agrega los artefactos eléctricos que usas en tu hogar. A partir de ellos,
+        AhorraLuz estima tu consumo y te muestra alertas personalizadas.
+      </p>
     </div>
-  </form>
+
+    <!-- Columna principal: formulario -->
+    <div class="col-12 col-md-7">
+      <div class="card shadow-sm device-card">
+        <div class="card-body">
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger small">
+                {{ form.non_field_errors }}
+              </div>
+            {% endif %}
+
+            <!-- Nombre -->
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.nombre.id_for_label }}">
+                {{ form.nombre.label }}
+              </label>
+              {{ form.nombre }}
+              {% if form.nombre.help_text %}
+                <div class="form-text">{{ form.nombre.help_text }}</div>
+              {% endif %}
+              {% for error in form.nombre.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <!-- Tipo -->
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.tipo_dispositivo.id_for_label }}">
+                {{ form.tipo_dispositivo.label }}
+              </label>
+              {{ form.tipo_dispositivo }}
+              {% if form.tipo_dispositivo.help_text %}
+                <div class="form-text">{{ form.tipo_dispositivo.help_text }}</div>
+              {% endif %}
+              {% for error in form.tipo_dispositivo.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <!-- Potencia -->
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.potencia_promedio_w.id_for_label }}">
+                {{ form.potencia_promedio_w.label }}
+              </label>
+              <div class="input-group">
+                {{ form.potencia_promedio_w }}
+                <span class="input-group-text">W</span>
+              </div>
+              {% if form.potencia_promedio_w.help_text %}
+                <div class="form-text">{{ form.potencia_promedio_w.help_text }}</div>
+              {% endif %}
+              {% for error in form.potencia_promedio_w.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <!-- Horas de uso diario + chips rápidos -->
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.horas_uso_diario.id_for_label }}">
+                {{ form.horas_uso_diario.label }}
+              </label>
+              <div class="input-group mb-2">
+                {{ form.horas_uso_diario }}
+                <span class="input-group-text">h/día</span>
+              </div>
+              <div class="device-quick-hours mb-1">
+                <span class="text-muted small me-2">Atajos rápidos:</span>
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                        data-hours="0.5">30 min</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                        data-hours="1">1 h</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                        data-hours="4">4 h</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                        data-hours="8">8 h</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                        data-hours="24">24 h</button>
+              </div>
+              {% if form.horas_uso_diario.help_text %}
+                <div class="form-text">{{ form.horas_uso_diario.help_text }}</div>
+              {% endif %}
+              {% for error in form.horas_uso_diario.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <!-- Activo -->
+            <div class="mb-3 form-check">
+              {{ form.activo }}
+              <label class="form-check-label" for="{{ form.activo.id_for_label }}">
+                {{ form.activo.label }}
+              </label>
+              {% if form.activo.help_text %}
+                <div class="form-text">{{ form.activo.help_text }}</div>
+              {% endif %}
+              {% for error in form.activo.errors %}
+                <div class="text-danger small">{{ error }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="d-flex justify-content-between">
+              <a href="{% url 'core:mis_dispositivos_list' %}" class="btn btn-link">
+                Cancelar
+              </a>
+              <button type="submit" class="btn btn-primary">
+                {% if modo == "editar" %}
+                  <i class="fa-solid fa-floppy-disk me-1"></i>Guardar cambios
+                {% else %}
+                  <i class="fa-solid fa-check me-1"></i>Guardar dispositivo
+                {% endif %}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Columna derecha: preview de consumo -->
+    <div class="col-12 col-md-5">
+      <div class="device-preview-card p-3 shadow-sm h-100 d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <div>
+            <div class="device-chip bg-white text-teal-700 mb-1">
+              <i class="fa-solid fa-gauge-high me-1"></i>Impacto estimado
+            </div>
+            <h2 class="h6 mb-0">Consumo aproximado de este dispositivo</h2>
+          </div>
+          <i class="fa-solid fa-plug fa-lg"></i>
+        </div>
+
+        <p class="small mb-2">
+          AhorraLuz usa estos datos para estimar el aporte de cada artefacto
+          a tu consumo diario y mensual. Son valores aproximados.
+        </p>
+
+        <div class="mt-2">
+          <div class="small text-white-50 mb-1">Consumo diario estimado</div>
+          <div class="device-preview-kwh mb-2">
+            <span id="preview-daily-kwh">—</span> kWh/día
+          </div>
+        </div>
+
+        <div class="mt-1">
+          <div class="small text-white-50 mb-1">Consumo mensual estimado</div>
+          <div class="fw-semibold">
+            <span id="preview-monthly-kwh">—</span> kWh/mes
+          </div>
+          <div class="small text-white-50">
+            Suponiendo 30 días de uso al mes.
+          </div>
+        </div>
+
+        <div class="mt-auto pt-3 small text-white-50">
+          Tip: Si desactivas un dispositivo muy intensivo en horas punta
+          (noche / tarde), tus alertas de alto consumo bajarán de nivel.
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const potenciaInput = document.getElementById("id_potencia_promedio_w");
+    const horasInput = document.getElementById("id_horas_uso_diario");
+    const dailyEl = document.getElementById("preview-daily-kwh");
+    const monthlyEl = document.getElementById("preview-monthly-kwh");
+
+    function parseNumber(el) {
+      if (!el) return 0;
+      const v = parseFloat(el.value.replace(",", "."));
+      return isNaN(v) ? 0 : v;
+    }
+
+    function updatePreview() {
+      const p = parseNumber(potenciaInput); // W
+      const h = parseNumber(horasInput);    // h/día
+      if (p <= 0 || h <= 0) {
+        dailyEl.textContent = "—";
+        monthlyEl.textContent = "—";
+        return;
+      }
+      const daily = (p * h) / 1000.0;  // Wh -> kWh
+      const monthly = daily * 30;      // aproximado
+
+      dailyEl.textContent = daily.toFixed(2);
+      monthlyEl.textContent = monthly.toFixed(1);
+    }
+
+    if (potenciaInput) potenciaInput.addEventListener("input", updatePreview);
+    if (horasInput) horasInput.addEventListener("input", updatePreview);
+
+    // Atajos rápidos para horas de uso
+    document.querySelectorAll(".device-quick-hours button[data-hours]").forEach(btn => {
+      btn.addEventListener("click", function () {
+        const hours = this.getAttribute("data-hours");
+        if (horasInput) {
+          horasInput.value = hours;
+          horasInput.dispatchEvent(new Event("input"));
+        }
+      });
+    });
+
+    // Inicializar preview con valores existentes (modo editar)
+    updatePreview();
+  });
+</script>
 {% endblock %}
