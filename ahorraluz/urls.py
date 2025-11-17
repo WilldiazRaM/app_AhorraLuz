@@ -21,3 +21,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('core.urls')),
 ]
+
+
+# Handlers globales de error
+handler400 = "core.views.global_error_400"
+handler403 = "core.views.global_error_403"
+handler404 = "core.views.global_error_404"
+handler500 = "core.views.global_error_500"

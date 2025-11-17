@@ -43,8 +43,53 @@ from django.core.mail import send_mail
 from django.conf import settings
 import calendar
 from django.db.models.functions import TruncMonth
+from django.http import JsonResponse
+from django.shortcuts import render
 
 logger = logging.getLogger("core.views")
+error_logger = logging.getLogger("core.errors")
+
+## MANEJO DE ERRORES GLOBAL:
+def _wants_json(request):
+  """
+  Usamos este helper para que:
+  - /api/... y AJAX (XHR/Fetch) reciban JSON
+  - El resto reciba HTML
+  """
+  if request.headers.get("x-requested-with") == "XMLHttpRequest":
+      return True
+  if request.path.startswith("/api/"):
+      return True
+  accept = request.headers.get("Accept", "")
+  return "application/json" in accept and "text/html" not in accept
+
+
+def global_error_400(request, exception):
+  error_logger.warning("400 Bad Request path=%s user=%s", request.path, getattr(request.user, "id", None))
+  if _wants_json(request):
+      return JsonResponse({"detail": "Solicitud inválida."}, status=400)
+  return render(request, "errors/400.html", status=400)
+
+
+def global_error_403(request, exception):
+  error_logger.warning("403 Forbidden path=%s user=%s", request.path, getattr(request.user, "id", None))
+  if _wants_json(request):
+      return JsonResponse({"detail": "Acceso denegado."}, status=403)
+  return render(request, "errors/403.html", status=403)
+
+
+def global_error_404(request, exception):
+  error_logger.info("404 Not Found path=%s user=%s", request.path, getattr(request.user, "id", None))
+  if _wants_json(request):
+      return JsonResponse({"detail": "Recurso no encontrado."}, status=404)
+  return render(request, "errors/404.html", status=404)
+
+
+def global_error_500(request):
+  error_logger.exception("500 Internal Server Error path=%s user=%s", request.path, getattr(request.user, "id", None))
+  if _wants_json(request):
+      return JsonResponse({"detail": "Ha ocurrido un error inesperado. Intenta más tarde."}, status=500)
+  return render(request, "errors/500.html", status=500)
 
 
 

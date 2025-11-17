@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Error 404 — AhorraLuz{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+      <h1 class="display-4 mb-3">404</h1>
+      <p class="lead mb-4">
+        Ups, no encontramos la página que estás buscando.
+      </p>
+      <a href="{% url 'core:home' %}" class="btn btn-primary" data-spinner>Volver al inicio</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

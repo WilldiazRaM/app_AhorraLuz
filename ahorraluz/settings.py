@@ -65,19 +65,27 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+
+    # Global exception handler
+    "core.middleware.GlobalExceptionMiddleware",
+
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+
+    # Security headers 
+    "core.middleware.SecurityHeadersMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
+
 AUTHENTICATION_BACKENDS = [
-    "core.auth_backend.AuthIdentidadBackend",  # nuestro backend que verifica AuthIdentidad
-    "django.contrib.auth.backends.ModelBackend",  # fallback a backend por defecto
+    "core.auth_backend.AuthIdentidadBackend",  
+    "django.contrib.auth.backends.ModelBackend",  
 ]
 
 ROOT_URLCONF = 'ahorraluz.urls'
@@ -223,3 +231,38 @@ else:
     EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
     if not DEFAULT_FROM_EMAIL:
         DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+# === Security Headers ===
+
+# Content Security Policy
+CSP_DEFAULT_POLICY = (
+    "default-src 'self'; "
+    # JS: Bootstrap/FontAwesome via CDN (ajusta según tus CDNs reales)
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+    # CSS: Bootstrap, FontAwesome, Google Fonts
+    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+    # Fuentes
+    "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
+    # Imágenes (self + data + https)
+    "img-src 'self' data: https:; "
+    # Solo conectamos contra el mismo origen (API propia)
+    "connect-src 'self'; "
+    # No permitir que otros sitios embezan AhorraLuz en iframes
+    "frame-ancestors 'self'; "
+    # Formularios solo hacia nuestro dominio
+    "form-action 'self'; "
+    # Evita trucos con <base>
+    "base-uri 'self'; "
+)
+
+# Permissions Policy (antes Feature-Policy)
+PERMISSIONS_POLICY = (
+    "geolocation=(), "
+    "camera=(), "
+    "microphone=(), "
+    "payment=(), "
+    "usb=(), "
+    "fullscreen=(self), "
+    "interest-cohort=()"  # desactiva FLoC/cohortes
+)
