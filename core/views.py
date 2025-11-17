@@ -587,25 +587,84 @@ def profile_view(request):
     """
     Mostrar y editar datos básicos del usuario autenticado.
     Usa UserProfileForm que edita first_name, last_name, email.
+    Además permite guardar comuna y dirección (modelo Direccion).
     """
     user = request.user
+    # Usuario lógico de la app (tabla usuarios)
+    usuario = ensure_usuario_for_request(request)
+
+    # Comunas para el dropdown
+    comunas = Comuna.objects.order_by("nombre")
+
+    # Dirección actual (si existe)
+    direccion = None
+    if usuario:
+        direccion = (
+            Direccion.objects
+            .filter(usuario=usuario)
+            .select_related("comuna")
+            .order_by("-creado_en")
+            .first()
+        )
+
     if request.method == "POST":
         form = UserProfileForm(request.POST, instance=user)
         if form.is_valid():
-            form.save()
+            with transaction.atomic():
+                # 1) Guardar datos básicos del User
+                form.save()
+
+                # 2) Guardar comuna y dirección en Direccion
+                if usuario:
+                    comuna_id = request.POST.get("comuna_id") or None
+                    texto_dir = (request.POST.get("direccion") or "").strip()
+
+                    comuna = None
+                    if comuna_id:
+                        try:
+                            comuna = Comuna.objects.get(pk=comuna_id)
+                        except Comuna.DoesNotExist:
+                            comuna = None
+
+                    from django.utils import timezone
+
+                    if direccion:
+                        # Actualizar registro existente
+                        direccion.calle = texto_dir or direccion.calle
+                        direccion.comuna = comuna
+                        direccion.actualizado_en = timezone.now()
+                        direccion.save()
+                    else:
+                        # Crear nueva dirección solo si hay algo que guardar
+                        if texto_dir or comuna:
+                            Direccion.objects.create(
+                                usuario=usuario,
+                                calle=texto_dir or "",
+                                comuna=comuna,
+                                creado_en=timezone.now(),
+                                actualizado_en=timezone.now(),
+                            )
+
             messages.success(request, "Perfil actualizado correctamente.")
             logger.info("[PROFILE] Usuario %s actualizó su perfil", user.username)
-            return redirect('core:profile')
+            return redirect("core:profile")
         else:
             messages.error(request, "Por favor corrige los errores en el formulario.")
             logger.debug("[PROFILE] Errores en formulario: %s", form.errors.as_json())
     else:
         form = UserProfileForm(instance=user)
 
-    return render(request, "core/profile.html", {
-        "form": form,
-        "user": user,
-    })
+    return render(
+        request,
+        "core/profile.html",
+        {
+            "form": form,
+            "user": user,
+            "comunas": comunas,
+            "direccion": direccion,
+        },
+    )
+
 
 @login_required
 def consumo_new(request):

@@ -3,7 +3,8 @@
 {% block title %}Perfil — AhorraLuz{% endblock %}
 
 {% block extra_css %}
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+  crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <link rel="stylesheet" href="{% static 'core/css/profile.css' %}">
 
@@ -104,7 +105,8 @@
               Perfil de Usuario
             </h2>
             <small class="text-muted">
-              Bienvenido{% if user.first_name %}, {{ user.first_name }}{% endif %}. Mantén tus datos al día para mejorar tus recomendaciones.
+              Bienvenido{% if user.first_name %}, {{ user.first_name }}{% endif %}. Mantén tus datos al día para mejorar
+              tus recomendaciones.
             </small>
           </div>
           <div class="d-flex gap-2">
@@ -115,26 +117,21 @@
         </div>
 
         {% if messages %}
-          {% for m in messages %}
-            <div class="alert alert-{{ m.tags }} alert-dismissible fade show" role="alert">
-              {{ m }}
-              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-            </div>
-          {% endfor %}
+        {% for m in messages %}
+        <div class="alert alert-{{ m.tags }} alert-dismissible fade show" role="alert">
+          {{ m }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        </div>
+        {% endfor %}
         {% endif %}
 
         {% if form.errors %}
-          <div class="alert alert-danger small">
-            <strong><i class="fa-solid fa-circle-exclamation me-1"></i>Revisa los campos marcados:</strong>
-            <ul class="mb-0 mt-1">
-              {% for field, errors in form.errors.items %}
-                {% for error in errors %}
-                  <li><strong>{{ form[field].label|default:field }}:</strong> {{ error }}</li>
-                {% endfor %}
-              {% endfor %}
-            </ul>
-          </div>
+        <div class="alert alert-danger small">
+          <i class="fa-solid fa-circle-exclamation me-1"></i>
+          Revisa los campos marcados en rojo antes de guardar.
+        </div>
         {% endif %}
+
 
         <form method="post" novalidate class="row g-3">
           {% csrf_token %}
@@ -185,17 +182,12 @@
             <label for="id_comuna" class="form-label">
               <i class="fa-solid fa-location-dot me-1 text-success"></i> Comuna
             </label>
-            <select
-              name="comuna_id"
-              id="id_comuna"
-              class="form-select"
-            >
+            <select name="comuna_id" id="id_comuna" class="form-select">
               <option value="">Selecciona tu comuna</option>
               {% for c in comunas %}
-                <option value="{{ c.id }}"
-                        {% if direccion and direccion.comuna_id == c.id %}selected{% endif %}>
-                  {{ c.nombre }}
-                </option>
+              <option value="{{ c.id }}" {% if direccion and direccion.comuna_id==c.id %}selected{% endif %}>
+                {{ c.nombre }}
+              </option>
               {% endfor %}
             </select>
             <div class="form-text">
@@ -208,15 +200,8 @@
             <label for="id_direccion" class="form-label">
               <i class="fa-solid fa-road me-1 text-success"></i> Dirección
             </label>
-            <input
-              type="text"
-              name="direccion"
-              id="id_direccion"
-              class="form-control"
-              maxlength="180"
-              placeholder="Ej: Av. Siempre Viva 742, Depto 301"
-              value="{{ direccion.calle|default_if_none:'' }}"
-            >
+            <input type="text" name="direccion" id="id_direccion" class="form-control" maxlength="180"
+              placeholder="Ej: Av. Siempre Viva 742, Depto 301" value="{{ direccion.calle|default_if_none:'' }}">
             <div class="form-text">
               Solo se usa para cálculos agregados y jamás se muestra públicamente.
             </div>
@@ -245,12 +230,13 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+  crossorigin="anonymous"></script>
 <script src="{% static 'core/js/profile.js' %}"></script>
 
 <script>
   // Marcar cambios sin guardar cuando se modifican campos del formulario
-  (function() {
+  (function () {
     const form = document.querySelector("form");
     if (!form) return;
     const unsavedHint = document.getElementById("unsaved-hint");
