@@ -1,0 +1,52 @@
+/* Overlay full-screen */
+.spinner-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55); /* negro azulado translúcido */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-out;
+}
+
+/* Visible */
+.spinner-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.spinner-box {
+  background: rgba(15, 23, 42, 0.9);
+  border-radius: 16px;
+  padding: 24px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+}
+
+.spinner-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  border: 4px solid #e5e7eb;        /* gris claro */
+  border-top-color: #22c55e;         /* verde ahorro energía */
+  animation: spin 0.9s linear infinite;
+}
+
+.spinner-text {
+  margin: 0;
+  color: #e5e7eb;
+  font-size: 0.95rem;
+}
+
+/* Animación de giro */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
