@@ -240,14 +240,14 @@ CSP_DEFAULT_POLICY = (
     "default-src 'self'; "
     # JS: Django, Bootstrap (jsDelivr), CDNs varios, Font Awesome Kit
     "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://kit.fontawesome.com; "
-    # CSS: propio, Bootstrap, CDNs, Google Fonts, Font Awesome
-    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://kit-free.fontawesome.com; "
+    # CSS: propio, Bootstrap, CDNs, Google Fonts, Font Awesome (kit-free + ka-f)
+    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://kit-free.fontawesome.com https://ka-f.fontawesome.com; "
     # Fuentes: propias, Google Fonts, Font Awesome
     "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com https://ka-f.fontawesome.com; "
     # Imágenes desde tu dominio + cualquier HTTPS + data: (por si usas base64)
     "img-src 'self' data: https:; "
-    # Conexiones XHR/Fetch solo a tu dominio
-    "connect-src 'self'; "
+    # Conexiones XHR/Fetch: tu dominio + Font Awesome kit backend
+    "connect-src 'self' https://ka-f.fontawesome.com; "
     # No permitir que otros te embeban en iframes
     "frame-ancestors 'self'; "
     # Formularios solo hacia tu dominio
@@ -255,6 +255,7 @@ CSP_DEFAULT_POLICY = (
     # Evitar trucos con <base>
     "base-uri 'self';"
 )
+
 
 
 # Permissions Policy (antes Feature-Policy)
