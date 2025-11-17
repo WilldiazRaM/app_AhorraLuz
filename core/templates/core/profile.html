@@ -185,7 +185,7 @@
             <select name="comuna_id" id="id_comuna" class="form-select">
               <option value="">Selecciona tu comuna</option>
               {% for c in comunas %}
-              <option value="{{ c.id }}" {% if direccion and direccion.comuna_id==c.id %}selected{% endif %}>
+              <option value="{{ c.id }}" {% if direccion and direccion.comuna_id == c.id %}selected{% endif %}>
                 {{ c.nombre }}
               </option>
               {% endfor %}
