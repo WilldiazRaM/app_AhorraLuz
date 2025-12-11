@@ -1,127 +1,167 @@
-# ⚡ App Web de Ahorro Energético para Hogares
-
-##  Descripción General
-La **App Web de Ahorro Energético para Hogares** es un proyecto académico desarrollado con **Django (Python)** y **PostgreSQL**, cuyo objetivo principal es ayudar a los usuarios a **registrar, monitorear y optimizar el consumo energético de sus hogares**.  
-
-La aplicación ofrece estadísticas claras, predicciones de consumo, y recomendaciones personalizadas para fomentar el ahorro energético, en un contexto de **alzas tarifarias de electricidad en Chile**.
+# ⚡ AhorraLuz — Plataforma Web de Monitoreo y Predicción de Consumo Energético  
+**Proyecto CAPSTONE – Ingeniería en Informática, DUOC UC (2025)**  
+Desarrollado con **Django + PostgreSQL + ML + IoT Simulation**
 
 ---
 
-##  Objetivos Principales
-1. Fomentar el ahorro energético en los hogares mediante recomendaciones basadas en el comportamiento del usuario.  
-2. Proporcionar indicadores claros y medibles de consumo y ahorro.  
-3. Incorporar técnicas de **minería de datos** para predecir patrones de alto consumo y alertar al usuario de forma preventiva.  
+## 🧭 Descripción General
 
----
+**AhorraLuz** es una plataforma web diseñada para que los hogares puedan:
+
+- Registrar su consumo eléctrico mensual o automático (IoT).
+- Visualizar KPIs energéticos y métricas de ahorro.
+- Recibir alertas y notificaciones cuando se detectan patrones de alto consumo.
+- Obtener **predicciones de consumo** basadas en modelos de minería de datos.
+- Administrar dispositivos eléctricos conectados.
+
+Es un proyecto desarrollado como **Trabajo de Título (CAPSTONE 2025)** aplicando conocimientos de:
+
+- Programación Web (Django)
+- Bases de Datos relacionales (PostgreSQL)
+- Seguridad informática
+- Arquitectura de software
+- Minería de datos y Machine Learning
+- Gestión de proyectos TI
+
+La aplicación está **desplegada en Render** y es totalmente funcional.
+
 ---
 
 ## 🌐 Demo en Producción
 
-La aplicación se encuentra desplegada en Render y puede ser accedida desde el siguiente enlace:  
+🔗 **https://app-ahorraluz.onrender.com**
 
-🔗 [App AhorraLuz – Producción](https://app-ahorraluz.onrender.com/)
-
-> ⚠️ Nota: Esta es una versión inicial de la aplicación, pueden existir limitaciones de rendimiento o disponibilidad debido al plan gratuito de Render.
+> Incluye login, dashboard, historial de consumo, predicción de consumo y módulo administrativo (RBAC).
 
 ---
 
+## 🚀 Características Principales
 
+### ✔ Gestión completa de usuarios
+- Registro e inicio de sesión mediante backend propio `AuthIdentidad` (bcrypt).
+- Asociación automática con entidad interna `Usuario` (UUID).
+- Perfil editable: nombre, comuna, dirección, tipo de vivienda.
 
+### ✔ Registro de consumo eléctrico
+- Ingreso manual de boletas mediante formulario validado.
+- Ingreso automático vía **IoT** mediante endpoint público `/api/iot/consumos/`.
 
-##  Funcionalidades (MVP v1.0)
+### ✔ Predicción energética (ML)
+- Predicción de consumo diario/mensual usando modelos basados en patrones históricos.
+- Métricas del modelo: MAE, RMSE, MAPE.
 
-- **Autenticación y autorización de usuarios** (usuarios y administradores).  
-- **Gestión de perfil de usuario** con datos del hogar y dispositivos.  
-- **Registro manual de consumo eléctrico** (kWh y costos).  
-- **Dashboard principal** con KPIs:  
-  - Consumo promedio mensual (kWh).  
-  - Ahorro acumulado ($).  
-  - Reducción estimada de huella de carbono (kg CO₂eq).  
-- **Visualización del historial de consumo** (gráficos y tablas por día, semana, mes y año).  
-- **Predicción de consumo energético** mediante minería de datos.  
-- **Alertas y notificaciones** (ej: alto consumo, logros de ahorro).  
-- **Cálculo de ahorro económico y reducción de huella de carbono** en métricas comprensibles.  
-- **Administración de usuarios (Backoffice)** y gestión de roles (RBAC).  
+### ✔ Dashboard energético
+Incluye:
+- Últimos registros de consumo
+- Métricas globales
+- Comparación de precisión del modelo
+- KPIs energéticos y económicos
 
----
+### ✔ Sistema de alertas automáticas
+- Alertas cuando se detecta consumo inusual.
+- Notificaciones internas con categorías.
 
-## 🛡️ Requisitos No Funcionales (principales)
+### ✔ Módulo administrativo (Backoffice)
+Con control de acceso (RBAC):
+- CRUD de usuarios, dispositivos, tipos, comunas, viviendas
+- Auditoría completa del sistema
 
-- Seguridad contra ataques comunes (SQL Injection, XSS, CSRF).  
-- Cifrado de contraseñas y gestión segura de cookies/sesiones.  
-- Validación y sanitización de entradas.  
-- Base de datos normalizada (mínimo 3NF) con índices y mantenimiento automático.  
-- Escalabilidad para integración futura con **ETL / BI**.  
-- Métricas de rendimiento y alertas automáticas.  
-- Interfaz web responsiva e intuitiva.  
-
----
-
-## 🛠️ Tecnologías
-
-- **Backend:** Python 3 + Django  
-- **Base de datos:** PostgreSQL  
-- **Frontend:** HTML5, CSS3, JavaScript, Bootstrap  
-- **Minería de datos:** Scikit-learn, Pandas, NumPy  
-- **BI / Reportes:** Power BI (integración futura)  
-- **Control de versiones:** Git + GitHub
-- **Proximamente integracion de Github Action:** para automatizar Pruebas Integracion y Unitarias
+### ✔ Seguridad avanzada (Middleware)
+Incluye middleware propio:
+- Manejo global de excepciones
+- CSP, HSTS, Permissions Policy
+- X-Content-Type-Options, Referrer-Policy
 
 ---
 
-## 📂 Estructura del Repositorio (inicial)
+## 🔌 Integración IoT – Simulador incluido
+
+```bash
+python iot_simulador.py
 ```
-ahorraluz/
+
+El script envía lecturas automáticas al backend Django usando datos del usuario y dispositivo configurados.
+
+---
+
+## 🛠️ Tecnologías Utilizadas
+
+| Capa | Tecnología |
+|------|------------|
+| Backend | Django 5, Python 3 |
+| Base de datos | PostgreSQL |
+| Machine Learning | NumPy, Pandas, SciKit-Learn |
+| Seguridad | bcrypt, middleware CSP/HSTS |
+| Frontend | Bootstrap 5 |
+| Despliegue | Render.com |
+
+---
+
+## 📊 Modelo de Datos (resumen)
+
+Modelos principales:
+- Usuario / AuthIdentidad / Perfil
+- Dispositivo / TipoDispositivo
+- RegistroConsumo
+- PrediccionConsumo
+- Notificacion
+- AuditoriaEvento
+- Catálogos: Comuna, TipoVivienda, NivelAlerta, TipoNotificacion
+
+---
+
+## 📂 Estructura del Proyecto
+
+```plaintext
+Aplicacion/
 ├── ahorraluz/
-│   ├── __pycache__/
-│   ├── __init__.py
-│   ├── asgi.py
-│   ├── settings.py
-│   ├── urls.py
-│   └── wsgi.py
 ├── core/
-│   ├── migrations/
-│   ├── __pycache__/
-│   ├── __init__.py
-│   ├── admin.py
-│   ├── apps.py
 │   ├── models.py
-│   ├── tests.py
+│   ├── views.py
 │   ├── urls.py
-│   └── views.py
-├── homepage/
-├── venv/
-├── __pycache__/
-├── .env
-├── .gitignore
+│   ├── forms.py
+│   ├── middleware.py
+│   └── utils/
+├── templates/
+├── static/
+├── iot_simulador.py
 ├── manage.py
 ├── render.yaml
 └── requirements.txt
 ```
 
+---
 
+## 🧩 Instalación Local
+
+```bash
+git clone https://github.com/WilldiazRaM/AhorraLuz.git
+cd Aplicacion
+python -m venv .venv
+source .venv/Scripts/activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
 
 ---
 
-## 📅 Cronograma de Entregables
+## 👥 Equipo CAPSTONE
 
-- **Fase 1 (Agosto – Septiembre 2025):** Acta de Constitución, Requerimientos, Mockups.  
-- **Fase 2 (Octubre – Noviembre 2025):** Desarrollo de la aplicación y modelo arquitectónico.  
-- **Fase 3 (Diciembre 2025):** Presentación final ante comisión evaluadora.  
+- **William Díaz Santander** – Backend, Arquitectura, BD, ML, Seguridad  
+- **Álvaro Campos** – Frontend  
+- **Alexander Palma** – Jefe de Proyecto  
 
----
-
-## 👥 Equipo de Proyecto CAPSTONE
-
-- **Patrocinador Principal:** Fabián Enrique Saldano Pérez – Profesor DUOC UC  
-- **Jefe de Proyecto:** Alexander Yerco Eduardo Palma Maldonado  
-- **Gerente de Proyecto:** William Díaz Santander  
-
-**Integrantes del Equipo de Desarrollo:**  
-- Álvaro Campos – Desarrollo Frontend e Integración  
-- Alexander Palma – Jefe de Proyecto / Coordinación  
-- William Díaz – Backend y Gestión de Base de Datos  
+Patrocinado por **DUOC UC – Ingeniería en Informática 2025**
 
 ---
 
-## 🚀 Instalación y Uso (próximamente)
+## 📜 Licencia
+
+Proyecto académico — libre para revisión como portafolio.
+
+---
+
+## ⭐ Contribuye
+
+Si te gustó este proyecto, ¡deja una ⭐ en GitHub!
